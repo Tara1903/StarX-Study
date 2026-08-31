@@ -136,7 +136,7 @@ export default function RegisterPage() {
                 disabled={isLoading}
                 className={`block w-full h-11 rounded-lg border ${
                   errors.fullName ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-indigo-500 focus:ring-indigo-500'
-                } pl-10 px-3 py-2 text-sm placeholder-gray-400 focus:outline-none focus:ring-2`}
+                } pl-10 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2`}
                 placeholder="John Doe"
               />
             </div>
@@ -161,7 +161,7 @@ export default function RegisterPage() {
                 disabled={isLoading}
                 className={`block w-full h-11 rounded-lg border ${
                   errors.email ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-indigo-500 focus:ring-indigo-500'
-                } pl-10 px-3 py-2 text-sm placeholder-gray-400 focus:outline-none focus:ring-2`}
+                } pl-10 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2`}
                 placeholder="you@example.com"
               />
             </div>
@@ -186,7 +186,7 @@ export default function RegisterPage() {
                 disabled={isLoading}
                 className={`block w-full h-11 rounded-lg border ${
                   errors.password ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-indigo-500 focus:ring-indigo-500'
-                } pl-10 pr-10 px-3 py-2 text-sm placeholder-gray-400 focus:outline-none focus:ring-2`}
+                } pl-10 pr-10 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2`}
                 placeholder="••••••••"
               />
               <button
@@ -223,7 +223,7 @@ export default function RegisterPage() {
                 disabled={isLoading}
                 className={`block w-full h-11 rounded-lg border ${
                   errors.confirmPassword ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-indigo-500 focus:ring-indigo-500'
-                } pl-10 pr-10 px-3 py-2 text-sm placeholder-gray-400 focus:outline-none focus:ring-2`}
+                } pl-10 pr-10 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2`}
                 placeholder="••••••••"
               />
             </div>
