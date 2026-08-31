@@ -24,8 +24,12 @@ export default function ErrorBoundary({
             <AlertTriangle className="h-8 w-8" />
           </div>
           <CardTitle className="text-xl">Page Error</CardTitle>
-          <CardDescription>
-            We encountered an unexpected error while loading this page.
+          <CardDescription className="text-left mt-4 text-xs whitespace-pre-wrap break-all bg-muted p-2 rounded">
+            <strong>Error:</strong> {error.message || 'Unknown error'}
+            <br />
+            <strong>Digest:</strong> {error.digest || 'No digest'}
+            <br />
+            {error.stack}
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col items-center pt-4">

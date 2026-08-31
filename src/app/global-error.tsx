@@ -27,9 +27,14 @@ export default function GlobalError({
             <h1 className="mb-2 text-2xl font-bold tracking-tight text-foreground">
               Something went wrong!
             </h1>
-            <p className="mb-8 text-sm text-muted-foreground">
-              A critical error occurred. Please try again or contact support if the
-              problem persists.
+            <p className="mb-8 text-sm text-muted-foreground whitespace-pre-wrap text-left break-all">
+              A critical error occurred. Please try again.
+              <br /><br />
+              <strong>Error:</strong> {error.message || 'Unknown error'}
+              <br />
+              <strong>Digest:</strong> {error.digest || 'No digest'}
+              <br />
+              <span className="text-xs">{error.stack}</span>
             </p>
             <div className="flex gap-4">
               <Button onClick={() => reset()} size="lg" className="gap-2">
