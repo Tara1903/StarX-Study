@@ -8,19 +8,55 @@
 -- PHASE 0: NUKE EVERYTHING (clean slate)
 -- ============================================
 
--- Drop triggers first
-DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
-DROP TRIGGER IF EXISTS profiles_updated_at ON public.profiles;
-DROP TRIGGER IF EXISTS universities_updated_at ON public.universities;
-DROP TRIGGER IF EXISTS assignments_updated_at ON public.assignments;
-DROP TRIGGER IF EXISTS submissions_updated_at ON public.assignment_submissions;
-DROP TRIGGER IF EXISTS moderation_profiles_updated_at ON public.moderation_profiles;
-DROP TRIGGER IF EXISTS ensure_profile_security_insert ON public.profiles;
-DROP TRIGGER IF EXISTS ensure_profile_security ON public.profiles;
-DROP TRIGGER IF EXISTS ensure_submission_security_insert ON public.assignment_submissions;
-DROP TRIGGER IF EXISTS ensure_submission_security ON public.assignment_submissions;
-DROP TRIGGER IF EXISTS ensure_message_security_insert ON public.messages;
-DROP TRIGGER IF EXISTS ensure_message_security ON public.messages;
+-- Drop triggers safely (tables may not exist on fresh DB)
+DO $$ BEGIN
+  DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+EXCEPTION WHEN undefined_table THEN NULL;
+END $$;
+DO $$ BEGIN
+  DROP TRIGGER IF EXISTS profiles_updated_at ON public.profiles;
+EXCEPTION WHEN undefined_table THEN NULL;
+END $$;
+DO $$ BEGIN
+  DROP TRIGGER IF EXISTS universities_updated_at ON public.universities;
+EXCEPTION WHEN undefined_table THEN NULL;
+END $$;
+DO $$ BEGIN
+  DROP TRIGGER IF EXISTS assignments_updated_at ON public.assignments;
+EXCEPTION WHEN undefined_table THEN NULL;
+END $$;
+DO $$ BEGIN
+  DROP TRIGGER IF EXISTS submissions_updated_at ON public.assignment_submissions;
+EXCEPTION WHEN undefined_table THEN NULL;
+END $$;
+DO $$ BEGIN
+  DROP TRIGGER IF EXISTS moderation_profiles_updated_at ON public.moderation_profiles;
+EXCEPTION WHEN undefined_table THEN NULL;
+END $$;
+DO $$ BEGIN
+  DROP TRIGGER IF EXISTS ensure_profile_security_insert ON public.profiles;
+EXCEPTION WHEN undefined_table THEN NULL;
+END $$;
+DO $$ BEGIN
+  DROP TRIGGER IF EXISTS ensure_profile_security ON public.profiles;
+EXCEPTION WHEN undefined_table THEN NULL;
+END $$;
+DO $$ BEGIN
+  DROP TRIGGER IF EXISTS ensure_submission_security_insert ON public.assignment_submissions;
+EXCEPTION WHEN undefined_table THEN NULL;
+END $$;
+DO $$ BEGIN
+  DROP TRIGGER IF EXISTS ensure_submission_security ON public.assignment_submissions;
+EXCEPTION WHEN undefined_table THEN NULL;
+END $$;
+DO $$ BEGIN
+  DROP TRIGGER IF EXISTS ensure_message_security_insert ON public.messages;
+EXCEPTION WHEN undefined_table THEN NULL;
+END $$;
+DO $$ BEGIN
+  DROP TRIGGER IF EXISTS ensure_message_security ON public.messages;
+EXCEPTION WHEN undefined_table THEN NULL;
+END $$;
 
 -- Drop all tables (CASCADE handles foreign keys, policies, indexes)
 DROP TABLE IF EXISTS public.audit_logs CASCADE;
@@ -890,9 +926,18 @@ FOR ALL USING (bucket_id = 'attachments' AND auth.uid() = owner);
 -- PHASE 9: REALTIME
 -- ============================================
 
-ALTER PUBLICATION supabase_realtime ADD TABLE public.messages;
-ALTER PUBLICATION supabase_realtime ADD TABLE public.notifications;
-ALTER PUBLICATION supabase_realtime ADD TABLE public.announcements;
+DO $$ BEGIN
+  ALTER PUBLICATION supabase_realtime ADD TABLE public.messages;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+DO $$ BEGIN
+  ALTER PUBLICATION supabase_realtime ADD TABLE public.notifications;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+DO $$ BEGIN
+  ALTER PUBLICATION supabase_realtime ADD TABLE public.announcements;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 
 -- ============================================
