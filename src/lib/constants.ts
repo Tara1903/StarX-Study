@@ -2,8 +2,8 @@
 // EduConnect Constants
 // ============================================
 
-export const APP_NAME = "EduConnect";
-export const APP_DESCRIPTION = "Where learning connects";
+export const APP_NAME = "studchat";
+export const APP_DESCRIPTION = "Chat. Share. Learn. Together.";
 
 // File upload limits (in bytes)
 export const MAX_AVATAR_SIZE = 2 * 1024 * 1024; // 2 MB

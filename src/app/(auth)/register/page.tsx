@@ -106,7 +106,7 @@ export default function RegisterPage() {
       <div className="text-center sm:text-left">
         <h1 className="text-3xl font-bold tracking-tight text-gray-900">Create an account</h1>
         <p className="mt-2 text-sm text-gray-500">
-          Join EduConnect to start your learning journey
+          Join studchat to start your learning journey
         </p>
       </div>
 

@@ -7,7 +7,7 @@ import { ROUTES } from '@/lib/constants';
 import { getInitials } from '@/lib/utils';
 import { ThemeToggle } from '@/components/layout/theme-toggle';
 import {
-  GraduationCap,
+  MessageCircle,
   ChevronDown,
   LayoutDashboard,
   BookOpen,
@@ -87,9 +87,9 @@ export function Sidebar() {
       <div className="h-16 flex items-center px-6 border-b border-sidebar-border">
         <Link href={ROUTES.DASHBOARD} className="flex items-center gap-2 text-sidebar-foreground hover:opacity-80 transition-opacity">
           <div className="bg-primary/10 p-1.5 rounded-lg">
-            <GraduationCap className="w-6 h-6 text-primary" />
+            <MessageCircle className="w-6 h-6 text-primary" />
           </div>
-          <span className="font-bold text-lg tracking-tight">EduConnect</span>
+          <span className="font-bold text-lg tracking-tight">studchat</span>
         </Link>
       </div>
 

@@ -16,10 +16,10 @@ const jetbrainsMono = JetBrains_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "EduConnect",
-    template: "%s | EduConnect",
+    default: "studchat",
+    template: "%s | studchat",
   },
-  description: "Where learning connects — A premium student & teacher communication platform",
+  description: "Chat. Share. Learn. Together. - A premium student & teacher communication platform",
   keywords: ["education", "student", "teacher", "school", "communication", "platform"],
 };
 
