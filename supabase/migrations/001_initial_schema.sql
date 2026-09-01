@@ -14,7 +14,7 @@ CREATE TYPE public.member_status AS ENUM ('active', 'inactive', 'suspended');
 CREATE TYPE public.subject_role AS ENUM ('teacher', 'student');
 CREATE TYPE public.message_status AS ENUM ('published', 'blocked', 'deleted', 'pending_review');
 CREATE TYPE public.announcement_priority AS ENUM ('normal', 'important', 'urgent');
-CREATE TYPE public.announcement_target_type AS ENUM ('school', 'class', 'section', 'subject');
+CREATE TYPE public.announcement_target_type AS ENUM ('university', 'class', 'semester', 'subject');
 CREATE TYPE public.submission_status AS ENUM ('pending', 'submitted', 'late', 'graded', 'returned');
 CREATE TYPE public.notification_type AS ENUM (
     'announcement', 'message_mention', 'assignment_created',
@@ -49,7 +49,7 @@ CREATE TABLE public.profiles (
 -- ============================================
 -- 2. SCHOOLS
 -- ============================================
-CREATE TABLE public.schools (
+CREATE TABLE public.universities (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name TEXT NOT NULL,
     slug TEXT UNIQUE NOT NULL,
@@ -63,77 +63,77 @@ CREATE TABLE public.schools (
 -- ============================================
 -- 3. SCHOOL MEMBERSHIPS
 -- ============================================
-CREATE TABLE public.school_memberships (
+CREATE TABLE public.university_memberships (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    school_id UUID REFERENCES public.schools(id) ON DELETE CASCADE NOT NULL,
+    university_id UUID REFERENCES public.universities(id) ON DELETE CASCADE NOT NULL,
     user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
     role user_role NOT NULL CHECK (role IN ('school_admin', 'teacher', 'student')),
     status member_status DEFAULT 'active' NOT NULL,
     joined_at TIMESTAMPTZ DEFAULT now() NOT NULL,
-    UNIQUE(school_id, user_id, role)
+    UNIQUE(university_id, user_id, role)
 );
-CREATE INDEX idx_memberships_user ON public.school_memberships(user_id);
-CREATE INDEX idx_memberships_school_role ON public.school_memberships(school_id, role);
+CREATE INDEX idx_memberships_user ON public.university_memberships(user_id);
+CREATE INDEX idx_memberships_school_role ON public.university_memberships(university_id, role);
 
 -- ============================================
 -- 4. ACADEMIC YEARS
 -- ============================================
-CREATE TABLE public.academic_years (
+CREATE TABLE public.institutes (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    school_id UUID REFERENCES public.schools(id) ON DELETE CASCADE NOT NULL,
+    university_id UUID REFERENCES public.universities(id) ON DELETE CASCADE NOT NULL,
     name TEXT NOT NULL,
     start_date DATE NOT NULL,
     end_date DATE NOT NULL,
     is_current BOOLEAN DEFAULT FALSE NOT NULL,
     created_at TIMESTAMPTZ DEFAULT now() NOT NULL,
-    UNIQUE(school_id, name)
+    UNIQUE(university_id, name)
 );
-CREATE INDEX idx_academic_years_school ON public.academic_years(school_id);
+CREATE INDEX idx_institutes_university ON public.institutes(university_id);
 
 -- ============================================
 -- 5. CLASSES
 -- ============================================
-CREATE TABLE public.classes (
+CREATE TABLE public.departments (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    academic_year_id UUID REFERENCES public.academic_years(id) ON DELETE CASCADE NOT NULL,
-    school_id UUID REFERENCES public.schools(id) ON DELETE CASCADE NOT NULL,
+    institute_id UUID REFERENCES public.institutes(id) ON DELETE CASCADE NOT NULL,
+    university_id UUID REFERENCES public.universities(id) ON DELETE CASCADE NOT NULL,
     name TEXT NOT NULL,
     sort_order INT DEFAULT 0 NOT NULL,
     created_at TIMESTAMPTZ DEFAULT now() NOT NULL,
-    UNIQUE(academic_year_id, name)
+    UNIQUE(institute_id, name)
 );
-CREATE INDEX idx_classes_year ON public.classes(academic_year_id);
-CREATE INDEX idx_classes_school ON public.classes(school_id);
+CREATE INDEX idx_departments_year ON public.departments(institute_id);
+CREATE INDEX idx_departments_university ON public.departments(university_id);
 
 -- ============================================
 -- 6. SECTIONS
 -- ============================================
-CREATE TABLE public.sections (
+CREATE TABLE public.semesters (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    class_id UUID REFERENCES public.classes(id) ON DELETE CASCADE NOT NULL,
-    school_id UUID REFERENCES public.schools(id) ON DELETE CASCADE NOT NULL,
+    department_id UUID REFERENCES public.departments(id) ON DELETE CASCADE NOT NULL,
+    university_id UUID REFERENCES public.universities(id) ON DELETE CASCADE NOT NULL,
     name TEXT NOT NULL,
     created_at TIMESTAMPTZ DEFAULT now() NOT NULL,
-    UNIQUE(class_id, name)
+    UNIQUE(department_id, name)
 );
-CREATE INDEX idx_sections_class ON public.sections(class_id);
+CREATE INDEX idx_semesters_class ON public.semesters(department_id);
 
 -- ============================================
 -- 7. SUBJECTS
 -- ============================================
 CREATE TABLE public.subjects (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    section_id UUID REFERENCES public.sections(id) ON DELETE CASCADE NOT NULL,
-    school_id UUID REFERENCES public.schools(id) ON DELETE CASCADE NOT NULL,
+    semester_id UUID REFERENCES public.semesters(id) ON DELETE CASCADE NOT NULL,
+    university_id UUID REFERENCES public.universities(id) ON DELETE CASCADE NOT NULL,
     name TEXT NOT NULL,
     description TEXT,
     color TEXT DEFAULT '#4F46E5',
     icon TEXT DEFAULT 'book',
     created_at TIMESTAMPTZ DEFAULT now() NOT NULL,
-    UNIQUE(section_id, name)
+    UNIQUE(semester_id, name)
 );
-CREATE INDEX idx_subjects_section ON public.subjects(section_id);
-CREATE INDEX idx_subjects_school ON public.subjects(school_id);
+CREATE INDEX idx_subjects_semester ON public.subjects(semester_id);
+CREATE INDEX idx_subjects_university ON public.subjects(university_id);
 
 -- ============================================
 -- 8. SUBJECT MEMBERS
@@ -213,7 +213,7 @@ CREATE TABLE public.message_read_cursors (
 -- ============================================
 CREATE TABLE public.announcements (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    school_id UUID REFERENCES public.schools(id) ON DELETE CASCADE NOT NULL,
+    university_id UUID REFERENCES public.universities(id) ON DELETE CASCADE NOT NULL,
     author_id UUID REFERENCES public.profiles(id) ON DELETE SET NULL NOT NULL,
     title TEXT NOT NULL,
     content TEXT NOT NULL,
@@ -228,7 +228,7 @@ CREATE TABLE public.announcements (
     created_at TIMESTAMPTZ DEFAULT now() NOT NULL
 );
 CREATE INDEX idx_announcements_target ON public.announcements(target_type, target_id, published_at DESC);
-CREATE INDEX idx_announcements_school ON public.announcements(school_id, published_at DESC);
+CREATE INDEX idx_announcements_university ON public.announcements(university_id, published_at DESC);
 
 -- ============================================
 -- 14. ANNOUNCEMENT READS
@@ -326,7 +326,7 @@ CREATE INDEX idx_notifications_user_unread ON public.notifications(user_id, is_r
 -- ============================================
 CREATE TABLE public.reports (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    school_id UUID REFERENCES public.schools(id) ON DELETE CASCADE NOT NULL,
+    university_id UUID REFERENCES public.universities(id) ON DELETE CASCADE NOT NULL,
     reporter_id UUID REFERENCES public.profiles(id) ON DELETE SET NULL NOT NULL,
     reported_user_id UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
     message_id UUID REFERENCES public.messages(id) ON DELETE SET NULL,
@@ -338,14 +338,14 @@ CREATE TABLE public.reports (
     created_at TIMESTAMPTZ DEFAULT now() NOT NULL,
     resolved_at TIMESTAMPTZ
 );
-CREATE INDEX idx_reports_school_status ON public.reports(school_id, status, created_at DESC);
+CREATE INDEX idx_reports_school_status ON public.reports(university_id, status, created_at DESC);
 
 -- ============================================
 -- 20. MODERATION PROFILES
 -- ============================================
 CREATE TABLE public.moderation_profiles (
     user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
-    school_id UUID REFERENCES public.schools(id) ON DELETE CASCADE NOT NULL,
+    university_id UUID REFERENCES public.universities(id) ON DELETE CASCADE NOT NULL,
     active_strikes INT DEFAULT 0 NOT NULL,
     total_violations INT DEFAULT 0 NOT NULL,
     status moderation_status DEFAULT 'active' NOT NULL,
@@ -353,7 +353,7 @@ CREATE TABLE public.moderation_profiles (
     last_violation_at TIMESTAMPTZ,
     created_at TIMESTAMPTZ DEFAULT now() NOT NULL,
     updated_at TIMESTAMPTZ DEFAULT now() NOT NULL,
-    PRIMARY KEY (user_id, school_id)
+    PRIMARY KEY (user_id, university_id)
 );
 
 -- ============================================
@@ -361,7 +361,7 @@ CREATE TABLE public.moderation_profiles (
 -- ============================================
 CREATE TABLE public.moderation_logs (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    school_id UUID REFERENCES public.schools(id) ON DELETE CASCADE NOT NULL,
+    university_id UUID REFERENCES public.universities(id) ON DELETE CASCADE NOT NULL,
     user_id UUID REFERENCES public.profiles(id) ON DELETE SET NULL NOT NULL,
     action moderation_action NOT NULL,
     reason TEXT NOT NULL,
@@ -370,7 +370,7 @@ CREATE TABLE public.moderation_logs (
     metadata JSONB DEFAULT '{}',
     created_at TIMESTAMPTZ DEFAULT now() NOT NULL
 );
-CREATE INDEX idx_mod_logs_school ON public.moderation_logs(school_id, created_at DESC);
+CREATE INDEX idx_mod_logs_university ON public.moderation_logs(university_id, created_at DESC);
 CREATE INDEX idx_mod_logs_user ON public.moderation_logs(user_id);
 
 -- ============================================
@@ -382,12 +382,12 @@ CREATE TABLE public.audit_logs (
     action TEXT NOT NULL,
     resource_type TEXT NOT NULL,
     resource_id UUID,
-    school_id UUID,
+    university_id UUID,
     details JSONB DEFAULT '{}',
     ip_address TEXT,
     created_at TIMESTAMPTZ DEFAULT now() NOT NULL
 );
-CREATE INDEX idx_audit_school ON public.audit_logs(school_id, created_at DESC);
+CREATE INDEX idx_audit_university ON public.audit_logs(university_id, created_at DESC);
 CREATE INDEX idx_audit_actor ON public.audit_logs(actor_id);
 
 -- ============================================
@@ -433,8 +433,8 @@ CREATE TRIGGER profiles_updated_at
   BEFORE UPDATE ON public.profiles
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at();
 
-CREATE TRIGGER schools_updated_at
-  BEFORE UPDATE ON public.schools
+CREATE TRIGGER universities_updated_at
+  BEFORE UPDATE ON public.universities
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at();
 
 CREATE TRIGGER assignments_updated_at

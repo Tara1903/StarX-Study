@@ -6,19 +6,19 @@ export default async function AdminUsersPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  // Find school for this admin
+  // Find university for this admin
   const { data: membership } = await supabase
-    .from('school_memberships')
-    .select('school_id')
+    .from('university_memberships')
+    .select('university_id')
     .eq('user_id', user?.id)
     .in('role', ['teacher_admin', 'student_admin'])
     .limit(1)
     .maybeSingle();
 
   let members: any[] = [];
-  if (membership?.school_id) {
+  if (membership?.university_id) {
     const { data } = await supabase
-      .from('school_memberships')
+      .from('university_memberships')
       .select(`
         id,
         role,
@@ -30,7 +30,7 @@ export default async function AdminUsersPage() {
           avatar_url
         )
       `)
-      .eq('school_id', membership.school_id);
+      .eq('university_id', membership.university_id);
     
     members = data || [];
   }
@@ -40,7 +40,7 @@ export default async function AdminUsersPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Users</h1>
-          <p className="text-slate-500 dark:text-slate-400 mt-1">Manage school staff, teachers, and students.</p>
+          <p className="text-slate-500 dark:text-slate-400 mt-1">Manage university staff, teachers, and students.</p>
         </div>
         <button className="flex items-center space-x-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md font-medium transition-colors">
           <UserPlus className="h-4 w-4" />

@@ -28,7 +28,7 @@ import {
 
 export function Sidebar() {
   const pathname = usePathname();
-  const { profile, activeSchool, activeRole } = useUser();
+  const { profile, activeUniversity, activeRole } = useUser();
 
   const mainLinks = [
     { name: 'Dashboard', href: ROUTES.DASHBOARD, icon: LayoutDashboard },
@@ -40,7 +40,7 @@ export function Sidebar() {
 
   const adminLinks = [
     { name: 'Users', href: ROUTES.ADMIN_USERS, icon: Users },
-    { name: 'Classes', href: ROUTES.ADMIN_CLASSES, icon: Layers },
+    { name: 'Departments', href: ROUTES.ADMIN_DEPARTMENTS, icon: Layers },
     { name: 'Subjects', href: ROUTES.ADMIN_SUBJECTS, icon: BookMarked },
     { name: 'Enrollment', href: ROUTES.ADMIN_ENROLLMENT, icon: UserPlus },
     { name: 'Moderation', href: ROUTES.ADMIN_MODERATION, icon: Shield },
@@ -83,11 +83,11 @@ export function Sidebar() {
         </Link>
       </div>
 
-      {/* School Selector Placeholder */}
-      {activeSchool && (
+      {/* University Selector Placeholder */}
+      {activeUniversity && (
         <div className="px-4 py-4">
           <button className="w-full flex items-center justify-between bg-sidebar-accent/30 hover:bg-sidebar-accent/50 text-sidebar-foreground border border-sidebar-border rounded-xl px-3 py-2 transition-colors">
-            <span className="text-sm font-semibold truncate">{activeSchool.name}</span>
+            <span className="text-sm font-semibold truncate">{activeUniversity.name}</span>
             <ChevronDown className="w-4 h-4 opacity-50" />
           </button>
         </div>
@@ -109,7 +109,7 @@ export function Sidebar() {
           )}
       </div>
 
-      {/* User Section */}
+      {/* User Semester */}
       <div className="p-4 border-t border-sidebar-border">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3 overflow-hidden">

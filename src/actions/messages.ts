@@ -16,15 +16,15 @@ export async function sendMessage(data: any) {
   if (!parsed.success) return { success: false, error: 'Invalid data' };
   const { subject_id, content, reply_to_id } = parsed.data;
 
-  // 1. Check membership and get school_id
+  // 1. Check membership and get university_id
   const { data: subject, error: subjectError } = await supabase
     .from('subjects')
-    .select('school_id, id')
+    .select('university_id, id')
     .eq('id', subject_id)
     .single();
 
   if (subjectError || !subject) return { success: false, error: 'Subject not found' };
-  const schoolId = subject.school_id;
+  const schoolId = subject.university_id;
 
   const { data: membership, error: membershipError } = await supabase
     .from('subject_members')
@@ -40,7 +40,7 @@ export async function sendMessage(data: any) {
     .from('moderation_profiles')
     .select('*')
     .eq('user_id', user.id)
-    .eq('school_id', schoolId)
+    .eq('university_id', schoolId)
     .single();
 
   let strikes = 0;
@@ -68,7 +68,7 @@ export async function sendMessage(data: any) {
     // update moderation_profiles
     await (await createAdminClient()).from('moderation_profiles').upsert({
       sender_id: user.id,
-      school_id: schoolId,
+      university_id: schoolId,
       strikes,
       last_strike_at: new Date().toISOString(),
       status,
@@ -77,7 +77,7 @@ export async function sendMessage(data: any) {
 
     await (await createAdminClient()).from('moderation_logs').insert({
       sender_id: user.id,
-      school_id: schoolId,
+      university_id: schoolId,
       content,
       decision: 'block',
       reason: decision.reason
@@ -91,7 +91,7 @@ export async function sendMessage(data: any) {
   // Update last message at
   await (await createAdminClient()).from('moderation_profiles').upsert({
     sender_id: user.id,
-    school_id: schoolId,
+    university_id: schoolId,
     last_message_at: new Date().toISOString()
   });
 
@@ -108,7 +108,7 @@ export async function sendMessage(data: any) {
   if (decision.decision === 'flag') {
     await (await createAdminClient()).from('moderation_logs').insert({
       sender_id: user.id,
-      school_id: schoolId,
+      university_id: schoolId,
       message_id: message.id,
       content,
       decision: 'flag',

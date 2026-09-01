@@ -13,10 +13,10 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   
 
-  // Check if school admin
+  // Check if university admin
   const { data: membership } = await supabase
-    .from('school_memberships')
-    .select('role, school_id')
+    .from('university_memberships')
+    .select('role, university_id')
     .eq('user_id', user.id)
     .in('role', ['teacher_admin', 'student_admin'])
     .limit(1)
@@ -28,7 +28,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   const navItems = [
     { name: 'Users', href: '/admin/users', icon: Users },
-    { name: 'Classes', href: '/admin/classes', icon: BookCopy },
+    { name: 'Departments', href: '/admin/departments', icon: BookCopy },
     { name: 'Subjects', href: '/admin/subjects', icon: BookOpen },
     { name: 'Enrollment', href: '/admin/enrollment', icon: GraduationCap },
     { name: 'Moderation', href: '/admin/moderation', icon: ShieldAlert },
@@ -42,7 +42,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       <aside className="w-full md:w-64 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex-shrink-0">
         <div className="p-4">
           <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-4">
-            School Administration
+            University Administration
           </h2>
           <nav className="space-y-1">
             {navItems.map((item) => {

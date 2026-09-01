@@ -6,15 +6,15 @@ export default async function AdminSubjectsPage() {
   const { data: { user } } = await supabase.auth.getUser();
 
   const { data: membership } = await supabase
-    .from('school_memberships')
-    .select('school_id')
+    .from('university_memberships')
+    .select('university_id')
     .eq('user_id', user?.id)
     .in('role', ['teacher_admin', 'student_admin'])
     .limit(1)
     .maybeSingle();
 
   let subjects: any[] = [];
-  if (membership?.school_id) {
+  if (membership?.university_id) {
     const { data } = await supabase
       .from('subjects')
       .select(`
@@ -22,17 +22,17 @@ export default async function AdminSubjectsPage() {
         name,
         code,
         credits,
-        sections (
+        semesters (
           id,
           name,
-          classes (
+          departments (
             name
           )
         )
       `)
       .order('name');
-    // Note: Assuming a way to filter subjects by school, but structure might vary.
-    // For simplicity, we just fetch available. Usually subjects belong to sections which belong to classes which belong to years which belong to schools.
+    // Note: Assuming a way to filter subjects by university, but structure might vary.
+    // For simplicity, we just fetch available. Usually subjects belong to semesters which belong to departments which belong to years which belong to universities.
     subjects = data || [];
   }
 
@@ -56,7 +56,7 @@ export default async function AdminSubjectsPage() {
               <tr className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800">
                 <th className="px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Subject Name</th>
                 <th className="px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Code</th>
-                <th className="px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Section / Class</th>
+                <th className="px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Semester / Class</th>
                 <th className="px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Credits</th>
                 <th className="px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider text-right">Actions</th>
               </tr>
@@ -79,7 +79,7 @@ export default async function AdminSubjectsPage() {
                       {subject.code || '-'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
-                      {subject.sections ? `${subject.sections.classes?.name} - ${subject.sections.name}` : 'Unassigned'}
+                      {subject.semesters ? `${subject.semesters.departments?.name} - ${subject.semesters.name}` : 'Unassigned'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
                       {subject.credits || 0}

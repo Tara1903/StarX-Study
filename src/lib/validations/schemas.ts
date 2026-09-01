@@ -39,8 +39,8 @@ export const updateProfileSchema = z.object({
 // Academic Schemas
 // ============================================
 
-export const createSchoolSchema = z.object({
-  name: z.string().min(2, "School name must be at least 2 characters"),
+export const createUniversitySchema = z.object({
+  name: z.string().min(2, "University name must be at least 2 characters"),
   slug: z
     .string()
     .min(2, "Slug must be at least 2 characters")
@@ -48,8 +48,8 @@ export const createSchoolSchema = z.object({
   address: z.string().optional(),
 });
 
-export const createAcademicYearSchema = z.object({
-  school_id: z.string().uuid(),
+export const createInstituteSchema = z.object({
+  university_id: z.string().uuid(),
   name: z.string().min(1, "Name is required"),
   start_date: z.string(),
   end_date: z.string(),
@@ -57,21 +57,21 @@ export const createAcademicYearSchema = z.object({
 });
 
 export const createClassSchema = z.object({
-  academic_year_id: z.string().uuid(),
-  school_id: z.string().uuid(),
-  name: z.string().min(1, "Class name is required"),
+  institute_id: z.string().uuid(),
+  university_id: z.string().uuid(),
+  name: z.string().min(1, "Department name is required"),
   sort_order: z.number().int().default(0),
 });
 
-export const createSectionSchema = z.object({
-  class_id: z.string().uuid(),
-  school_id: z.string().uuid(),
-  name: z.string().min(1, "Section name is required"),
+export const createSemesterSchema = z.object({
+  department_id: z.string().uuid(),
+  university_id: z.string().uuid(),
+  name: z.string().min(1, "Semester name is required"),
 });
 
 export const createSubjectSchema = z.object({
-  section_id: z.string().uuid(),
-  school_id: z.string().uuid(),
+  semester_id: z.string().uuid(),
+  university_id: z.string().uuid(),
   name: z.string().min(1, "Subject name is required"),
   description: z.string().optional(),
   color: z.string().default("#4F46E5"),
@@ -104,11 +104,11 @@ export const editMessageSchema = z.object({
 // ============================================
 
 export const createAnnouncementSchema = z.object({
-  school_id: z.string().uuid(),
+  university_id: z.string().uuid(),
   title: z.string().min(1, "Title is required").max(200, "Title is too long"),
   content: z.string().min(1, "Content is required"),
   priority: z.enum(["normal", "important", "urgent"]).default("normal"),
-  target_type: z.enum(["school", "class", "section", "subject"]),
+  target_type: z.enum(["university", "department", "semester", "subject"]),
   target_id: z.string().uuid(),
   scheduled_at: z.string().optional().nullable(),
 });
@@ -145,7 +145,7 @@ export const gradeSubmissionSchema = z.object({
 // ============================================
 
 export const createReportSchema = z.object({
-  school_id: z.string().uuid(),
+  university_id: z.string().uuid(),
   reported_user_id: z.string().uuid().optional(),
   message_id: z.string().uuid().optional(),
   category: z.enum([
@@ -169,10 +169,10 @@ export type LoginInput = z.infer<typeof loginSchema>;
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type ForgotPasswordInput = z.infer<typeof forgotPasswordSchema>;
 export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;
-export type CreateSchoolInput = z.infer<typeof createSchoolSchema>;
-export type CreateAcademicYearInput = z.infer<typeof createAcademicYearSchema>;
+export type CreateUniversityInput = z.infer<typeof createUniversitySchema>;
+export type CreateInstituteInput = z.infer<typeof createInstituteSchema>;
 export type CreateClassInput = z.infer<typeof createClassSchema>;
-export type CreateSectionInput = z.infer<typeof createSectionSchema>;
+export type CreateSemesterInput = z.infer<typeof createSemesterSchema>;
 export type CreateSubjectInput = z.infer<typeof createSubjectSchema>;
 export type EnrollMemberInput = z.infer<typeof enrollMemberSchema>;
 export type SendMessageInput = z.infer<typeof sendMessageSchema>;

@@ -35,7 +35,7 @@ export function calculateEscalation(
       restrictionExpiresAt: null, // manual review required
       action: "suspended",
       message:
-        "Your account has been suspended due to a serious policy violation. Please contact your school administrator.",
+        "Your account has been suspended due to a serious policy violation. Please contact your university administrator.",
     };
   }
 

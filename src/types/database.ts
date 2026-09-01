@@ -7,7 +7,7 @@ export type MemberStatus = "active" | "inactive" | "suspended";
 export type SubjectRole = "teacher" | "student";
 export type MessageStatus = "published" | "blocked" | "deleted" | "pending_review";
 export type AnnouncementPriority = "normal" | "important" | "urgent";
-export type AnnouncementTargetType = "school" | "class" | "section" | "subject";
+export type AnnouncementTargetType = "university" | "department" | "semester" | "subject";
 export type SubmissionStatus = "pending" | "submitted" | "late" | "graded" | "returned";
 export type NotificationType =
   | "announcement"
@@ -47,7 +47,7 @@ export interface Profile {
   updated_at: string;
 }
 
-export interface School {
+export interface University {
   id: string;
   name: string;
   slug: string;
@@ -58,18 +58,18 @@ export interface School {
   updated_at: string;
 }
 
-export interface SchoolMembership {
+export interface UniversityMembership {
   id: string;
-  school_id: string;
+  university_id: string;
   user_id: string;
   role: UserRole;
   status: MemberStatus;
   joined_at: string;
 }
 
-export interface AcademicYear {
+export interface Institute {
   id: string;
-  school_id: string;
+  university_id: string;
   name: string;
   start_date: string;
   end_date: string;
@@ -77,27 +77,27 @@ export interface AcademicYear {
   created_at: string;
 }
 
-export interface Class {
+export interface Department {
   id: string;
-  academic_year_id: string;
-  school_id: string;
+  institute_id: string;
+  university_id: string;
   name: string;
   sort_order: number;
   created_at: string;
 }
 
-export interface Section {
+export interface Semester {
   id: string;
-  class_id: string;
-  school_id: string;
+  department_id: string;
+  university_id: string;
   name: string;
   created_at: string;
 }
 
 export interface Subject {
   id: string;
-  section_id: string;
-  school_id: string;
+  semester_id: string;
+  university_id: string;
   name: string;
   description: string | null;
   color: string;
@@ -154,7 +154,7 @@ export interface MessageReadCursor {
 
 export interface Announcement {
   id: string;
-  school_id: string;
+  university_id: string;
   author_id: string;
   title: string;
   content: string;
@@ -239,7 +239,7 @@ export interface Notification {
 
 export interface Report {
   id: string;
-  school_id: string;
+  university_id: string;
   reporter_id: string;
   reported_user_id: string | null;
   message_id: string | null;
@@ -254,7 +254,7 @@ export interface Report {
 
 export interface ModerationProfile {
   user_id: string;
-  school_id: string;
+  university_id: string;
   active_strikes: number;
   total_violations: number;
   status: ModerationUserStatus;
@@ -266,7 +266,7 @@ export interface ModerationProfile {
 
 export interface ModerationLog {
   id: string;
-  school_id: string;
+  university_id: string;
   user_id: string;
   action: ModerationAction;
   reason: string;
@@ -282,7 +282,7 @@ export interface AuditLog {
   action: string;
   resource_type: string;
   resource_id: string | null;
-  school_id: string | null;
+  university_id: string | null;
   details: Record<string, unknown>;
   ip_address: string | null;
   created_at: string;
@@ -302,9 +302,9 @@ export interface MessageWithSender extends Message {
 }
 
 export interface SubjectWithDetails extends Subject {
-  section: Section & {
-    class: Class & {
-      academic_year: AcademicYear;
+  semester: Semester & {
+    department: Department & {
+      institute: Institute;
     };
   };
   member_count: number;
@@ -336,8 +336,8 @@ export interface ReportWithDetails extends Report {
 
 export interface UserContext {
   profile: Profile;
-  memberships: (SchoolMembership & { school: School })[];
-  activeSchool: School | null;
+  memberships: (UniversityMembership & { university: University })[];
+  activeUniversity: University | null;
   activeRole: UserRole;
   isSuperAdmin: boolean;
 }

@@ -25,16 +25,16 @@ export default async function PlatformLayout({ children }: { children: React.Rea
   }
 
   const { data: membershipsData } = await supabase
-    .from('school_memberships')
+    .from('university_memberships')
     .select(`
       *,
-      school:schools(*)
+      university:universities(*)
     `)
     .eq('user_id', user.id);
     
   const memberships = membershipsData || [];
   
-  const activeSchool = memberships.length > 0 ? memberships[0].school : null;
+  const activeUniversity = memberships.length > 0 ? memberships[0].university : null;
   const activeRole = memberships.length > 0 ? memberships[0].role : 'student';
 
   return (
@@ -42,7 +42,7 @@ export default async function PlatformLayout({ children }: { children: React.Rea
       value={{
         profile,
         memberships,
-        activeSchool,
+        activeUniversity,
         activeRole
       }}
     >

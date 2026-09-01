@@ -64,13 +64,13 @@ CREATE OR REPLACE FUNCTION public.protect_message_status() RETURNS TRIGGER AS $$
 BEGIN
   IF TG_OP = 'INSERT' THEN
     IF NEW.status != 'published' THEN
-       IF NOT (auth.role() = 'service_role' OR public.has_school_role((SELECT school_id FROM public.subjects WHERE id = NEW.subject_id), 'school_admin')) THEN
+       IF NOT (auth.role() = 'service_role' OR public.has_school_role((SELECT university_id FROM public.subjects WHERE id = NEW.subject_id), 'school_admin')) THEN
          RAISE EXCEPTION 'Unauthorized to set message status on insert';
        END IF;
     END IF;
   ELSIF TG_OP = 'UPDATE' THEN
     IF NEW.status IS DISTINCT FROM OLD.status THEN
-      IF NOT (auth.role() = 'service_role' OR public.has_school_role((SELECT school_id FROM public.subjects WHERE id = NEW.subject_id), 'school_admin')) THEN
+      IF NOT (auth.role() = 'service_role' OR public.has_school_role((SELECT university_id FROM public.subjects WHERE id = NEW.subject_id), 'school_admin')) THEN
         RAISE EXCEPTION 'Unauthorized to modify message status';
       END IF;
     END IF;
@@ -118,12 +118,12 @@ FOR DELETE USING (target_type = 'subject' AND public.is_subject_teacher(target_i
 -- Fix public profiles data leak
 DROP POLICY IF EXISTS "Public profiles are viewable by everyone" ON public.profiles;
 
-CREATE POLICY "Users can view own profile and school members" ON public.profiles
+CREATE POLICY "Users can view own profile and university members" ON public.profiles
 FOR SELECT USING (
   auth.uid() = id OR 
   EXISTS (
-    SELECT 1 FROM public.school_memberships m1
-    JOIN public.school_memberships m2 ON m1.school_id = m2.school_id
+    SELECT 1 FROM public.university_memberships m1
+    JOIN public.university_memberships m2 ON m1.university_id = m2.university_id
     WHERE m1.user_id = auth.uid() AND m2.user_id = public.profiles.id
   ) OR
   public.is_super_admin()

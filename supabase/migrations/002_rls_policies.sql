@@ -24,26 +24,26 @@ AS $$
   );
 $$;
 
-CREATE OR REPLACE FUNCTION public.has_school_role(p_school_id UUID, p_role user_role)
+CREATE OR REPLACE FUNCTION public.has_school_role(p_university_id UUID, p_role user_role)
 RETURNS BOOLEAN
 LANGUAGE sql STABLE SECURITY DEFINER
 AS $$
   SELECT EXISTS (
-    SELECT 1 FROM public.school_memberships
-    WHERE school_id = p_school_id 
+    SELECT 1 FROM public.university_memberships
+    WHERE university_id = p_university_id 
       AND user_id = auth.uid() 
       AND role = p_role 
       AND status = 'active'
   );
 $$;
 
-CREATE OR REPLACE FUNCTION public.is_school_member(p_school_id UUID)
+CREATE OR REPLACE FUNCTION public.is_school_member(p_university_id UUID)
 RETURNS BOOLEAN
 LANGUAGE sql STABLE SECURITY DEFINER
 AS $$
   SELECT EXISTS (
-    SELECT 1 FROM public.school_memberships
-    WHERE school_id = p_school_id 
+    SELECT 1 FROM public.university_memberships
+    WHERE university_id = p_university_id 
       AND user_id = auth.uid() 
       AND status = 'active'
   );
@@ -77,11 +77,11 @@ $$;
 -- ============================================
 
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.schools ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.school_memberships ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.academic_years ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.classes ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.sections ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.universities ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.university_memberships ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.institutes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.departments ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.semesters ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.subjects ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.subject_members ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.messages ENABLE ROW LEVEL SECURITY;
@@ -105,11 +105,11 @@ ALTER TABLE public.audit_logs ENABLE ROW LEVEL SECURITY;
 
 -- Super admin policy for all tables
 CREATE POLICY super_admin_all ON public.profiles FOR ALL USING (is_super_admin());
-CREATE POLICY super_admin_all ON public.schools FOR ALL USING (is_super_admin());
-CREATE POLICY super_admin_all ON public.school_memberships FOR ALL USING (is_super_admin());
-CREATE POLICY super_admin_all ON public.academic_years FOR ALL USING (is_super_admin());
-CREATE POLICY super_admin_all ON public.classes FOR ALL USING (is_super_admin());
-CREATE POLICY super_admin_all ON public.sections FOR ALL USING (is_super_admin());
+CREATE POLICY super_admin_all ON public.universities FOR ALL USING (is_super_admin());
+CREATE POLICY super_admin_all ON public.university_memberships FOR ALL USING (is_super_admin());
+CREATE POLICY super_admin_all ON public.institutes FOR ALL USING (is_super_admin());
+CREATE POLICY super_admin_all ON public.departments FOR ALL USING (is_super_admin());
+CREATE POLICY super_admin_all ON public.semesters FOR ALL USING (is_super_admin());
 CREATE POLICY super_admin_all ON public.subjects FOR ALL USING (is_super_admin());
 CREATE POLICY super_admin_all ON public.subject_members FOR ALL USING (is_super_admin());
 CREATE POLICY super_admin_all ON public.messages FOR ALL USING (is_super_admin());
@@ -139,60 +139,60 @@ CREATE POLICY "Users can update own profile" ON public.profiles
 FOR UPDATE USING (auth.uid() = id);
 
 
--- Schools
-CREATE POLICY "School members can view school" ON public.schools
+-- Universitys
+CREATE POLICY "University members can view university" ON public.universities
 FOR SELECT USING (is_school_member(id));
 
-CREATE POLICY "School admins can update school" ON public.schools
+CREATE POLICY "University admins can update university" ON public.universities
 FOR UPDATE USING (has_school_role(id, 'school_admin'));
 
 
--- School Memberships
-CREATE POLICY "School members can view memberships" ON public.school_memberships
-FOR SELECT USING (is_school_member(school_id));
+-- University Memberships
+CREATE POLICY "University members can view memberships" ON public.university_memberships
+FOR SELECT USING (is_school_member(university_id));
 
-CREATE POLICY "School admins can manage memberships" ON public.school_memberships
-FOR ALL USING (has_school_role(school_id, 'school_admin'));
+CREATE POLICY "University admins can manage memberships" ON public.university_memberships
+FOR ALL USING (has_school_role(university_id, 'school_admin'));
 
 
 -- Academic Years
-CREATE POLICY "School members can view academic years" ON public.academic_years
-FOR SELECT USING (is_school_member(school_id));
+CREATE POLICY "University members can view academic years" ON public.institutes
+FOR SELECT USING (is_school_member(university_id));
 
-CREATE POLICY "School admins can manage academic years" ON public.academic_years
-FOR ALL USING (has_school_role(school_id, 'school_admin'));
-
-
--- Classes
-CREATE POLICY "School members can view classes" ON public.classes
-FOR SELECT USING (is_school_member(school_id));
-
-CREATE POLICY "School admins can manage classes" ON public.classes
-FOR ALL USING (has_school_role(school_id, 'school_admin'));
+CREATE POLICY "University admins can manage academic years" ON public.institutes
+FOR ALL USING (has_school_role(university_id, 'school_admin'));
 
 
--- Sections
-CREATE POLICY "School members can view sections" ON public.sections
-FOR SELECT USING (is_school_member(school_id));
+-- Departments
+CREATE POLICY "University members can view departments" ON public.departments
+FOR SELECT USING (is_school_member(university_id));
 
-CREATE POLICY "School admins can manage sections" ON public.sections
-FOR ALL USING (has_school_role(school_id, 'school_admin'));
+CREATE POLICY "University admins can manage departments" ON public.departments
+FOR ALL USING (has_school_role(university_id, 'school_admin'));
+
+
+-- Semesters
+CREATE POLICY "University members can view semesters" ON public.semesters
+FOR SELECT USING (is_school_member(university_id));
+
+CREATE POLICY "University admins can manage semesters" ON public.semesters
+FOR ALL USING (has_school_role(university_id, 'school_admin'));
 
 
 -- Subjects
-CREATE POLICY "School members can view subjects" ON public.subjects
-FOR SELECT USING (is_school_member(school_id));
+CREATE POLICY "University members can view subjects" ON public.subjects
+FOR SELECT USING (is_school_member(university_id));
 
-CREATE POLICY "School admins can manage subjects" ON public.subjects
-FOR ALL USING (has_school_role(school_id, 'school_admin'));
+CREATE POLICY "University admins can manage subjects" ON public.subjects
+FOR ALL USING (has_school_role(university_id, 'school_admin'));
 
 
 -- Subject Members
-CREATE POLICY "School members can view subject members" ON public.subject_members
-FOR SELECT USING (is_school_member((SELECT school_id FROM public.subjects WHERE id = subject_id)));
+CREATE POLICY "University members can view subject members" ON public.subject_members
+FOR SELECT USING (is_school_member((SELECT university_id FROM public.subjects WHERE id = subject_id)));
 
-CREATE POLICY "School admins can manage subject members" ON public.subject_members
-FOR ALL USING (has_school_role((SELECT school_id FROM public.subjects WHERE id = subject_id), 'school_admin'));
+CREATE POLICY "University admins can manage subject members" ON public.subject_members
+FOR ALL USING (has_school_role((SELECT university_id FROM public.subjects WHERE id = subject_id), 'school_admin'));
 
 
 -- Messages
@@ -237,11 +237,11 @@ FOR ALL USING (auth.uid() = user_id);
 
 
 -- Announcements
-CREATE POLICY "School members can view announcements" ON public.announcements
-FOR SELECT USING (is_school_member(school_id));
+CREATE POLICY "University members can view announcements" ON public.announcements
+FOR SELECT USING (is_school_member(university_id));
 
-CREATE POLICY "School admins can manage announcements" ON public.announcements
-FOR ALL USING (has_school_role(school_id, 'school_admin'));
+CREATE POLICY "University admins can manage announcements" ON public.announcements
+FOR ALL USING (has_school_role(university_id, 'school_admin'));
 
 CREATE POLICY "Teachers can create announcements for their subjects" ON public.announcements
 FOR INSERT WITH CHECK (target_type = 'subject' AND is_subject_teacher(target_id) AND auth.uid() = author_id);
@@ -294,29 +294,29 @@ FOR UPDATE USING (auth.uid() = user_id);
 
 
 -- Reports
-CREATE POLICY "School members can insert reports" ON public.reports
-FOR INSERT WITH CHECK (is_school_member(school_id));
+CREATE POLICY "University members can insert reports" ON public.reports
+FOR INSERT WITH CHECK (is_school_member(university_id));
 
-CREATE POLICY "School admins can view reports" ON public.reports
-FOR SELECT USING (has_school_role(school_id, 'school_admin'));
+CREATE POLICY "University admins can view reports" ON public.reports
+FOR SELECT USING (has_school_role(university_id, 'school_admin'));
 
-CREATE POLICY "School admins can update reports" ON public.reports
-FOR UPDATE USING (has_school_role(school_id, 'school_admin'));
+CREATE POLICY "University admins can update reports" ON public.reports
+FOR UPDATE USING (has_school_role(university_id, 'school_admin'));
 
 
 -- Moderation Profiles
 CREATE POLICY "Users can view own moderation profile" ON public.moderation_profiles
 FOR SELECT USING (auth.uid() = user_id);
 
-CREATE POLICY "School admins can manage moderation profiles" ON public.moderation_profiles
-FOR ALL USING (has_school_role(school_id, 'school_admin'));
+CREATE POLICY "University admins can manage moderation profiles" ON public.moderation_profiles
+FOR ALL USING (has_school_role(university_id, 'school_admin'));
 
 
 -- Moderation Logs
-CREATE POLICY "School admins can view moderation logs" ON public.moderation_logs
-FOR SELECT USING (has_school_role(school_id, 'school_admin'));
+CREATE POLICY "University admins can view moderation logs" ON public.moderation_logs
+FOR SELECT USING (has_school_role(university_id, 'school_admin'));
 
 
 -- Audit Logs
-CREATE POLICY "School admins can view audit logs" ON public.audit_logs
-FOR SELECT USING (has_school_role(school_id, 'school_admin'));
+CREATE POLICY "University admins can view audit logs" ON public.audit_logs
+FOR SELECT USING (has_school_role(university_id, 'school_admin'));

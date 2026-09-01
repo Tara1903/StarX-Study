@@ -82,7 +82,7 @@ export const ROUTES = {
   SETTINGS: "/settings",
   ADMIN: "/admin",
   ADMIN_USERS: "/admin/users",
-  ADMIN_CLASSES: "/admin/classes",
+  ADMIN_DEPARTMENTS: "/admin/departments",
   ADMIN_SUBJECTS: "/admin/subjects",
   ADMIN_ENROLLMENT: "/admin/enrollment",
   ADMIN_MODERATION: "/admin/moderation",

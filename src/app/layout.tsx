@@ -20,7 +20,7 @@ export const metadata: Metadata = {
     template: "%s | studchat",
   },
   description: "Chat. Share. Learn. Together. - A premium student & teacher communication platform",
-  keywords: ["education", "student", "teacher", "school", "communication", "platform"],
+  keywords: ["education", "student", "teacher", "university", "communication", "platform"],
 };
 
 export default function RootLayout({

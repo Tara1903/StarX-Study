@@ -1,12 +1,12 @@
 'use client';
 
 import { createContext, useContext, type ReactNode } from 'react';
-import type { Profile, SchoolMembership, School, UserRole } from '@/types';
+import type { Profile, UniversityMembership, University, UserRole } from '@/types';
 
 interface UserContextValue {
   profile: Profile;
-  memberships: (SchoolMembership & { school: School })[];
-  activeSchool: School | null;
+  memberships: (UniversityMembership & { university: University })[];
+  activeUniversity: University | null;
   activeRole: UserRole;
 }
 

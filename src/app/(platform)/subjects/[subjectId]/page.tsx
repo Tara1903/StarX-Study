@@ -42,11 +42,11 @@ export default async function SubjectOverviewPage({ params }: PageProps) {
     .from('subjects')
     .select(`
       *,
-      sections (
+      semesters (
         name,
-        classes (
+        departments (
           name,
-          academic_years (name)
+          institutes (name)
         )
       )
     `)
@@ -81,11 +81,11 @@ export default async function SubjectOverviewPage({ params }: PageProps) {
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
         <div className="relative z-10 flex flex-col gap-2">
           <div className="flex items-center gap-2 text-sm font-medium opacity-90">
-            <span>{subject.sections?.classes?.academic_years?.name}</span>
+            <span>{subject.semesters?.departments?.institutes?.name}</span>
             <ChevronRight className="h-4 w-4" />
-            <span>{subject.sections?.classes?.name}</span>
+            <span>{subject.semesters?.departments?.name}</span>
             <ChevronRight className="h-4 w-4" />
-            <span>{subject.sections?.name}</span>
+            <span>{subject.semesters?.name}</span>
           </div>
           <h1 className="text-3xl lg:text-4xl font-bold tracking-tight">{subject.name}</h1>
         </div>

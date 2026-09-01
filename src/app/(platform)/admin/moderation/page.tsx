@@ -7,8 +7,8 @@ export default async function AdminModerationPage() {
   const { data: { user } } = await supabase.auth.getUser();
 
   const { data: membership } = await supabase
-    .from('school_memberships')
-    .select('school_id')
+    .from('university_memberships')
+    .select('university_id')
     .eq('user_id', user?.id)
     .in('role', ['teacher_admin', 'student_admin'])
     .limit(1)
@@ -17,7 +17,7 @@ export default async function AdminModerationPage() {
   let moderationProfiles: any[] = [];
   let moderationLogs: any[] = [];
   
-  if (membership?.school_id) {
+  if (membership?.university_id) {
     // Fetch profiles that have strikes or restrictions
     const { data: profilesData } = await supabase
       .from('moderation_profiles')

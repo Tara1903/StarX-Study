@@ -14,12 +14,12 @@ export async function createAnnouncement(formData: FormData) {
   const parsed = createAnnouncementSchema.safeParse(data);
   if (!parsed.success) return { success: false, error: 'Invalid data' };
 
-  const { school_id, title, content, target_type } = parsed.data;
+  const { university_id, title, content, target_type } = parsed.data;
 
   // Validate admin/teacher
-  const { data: member } = await supabase.from('school_memberships')
+  const { data: member } = await supabase.from('university_memberships')
     .select('role')
-    .eq('school_id', school_id)
+    .eq('university_id', university_id)
     .eq('user_id', user.id)
     .single();
 
@@ -28,7 +28,7 @@ export async function createAnnouncement(formData: FormData) {
   }
 
   const { data: announcement, error } = await supabase.from('announcements').insert({
-    school_id,
+    university_id,
     author_id: user.id,
     title,
     content,
@@ -60,15 +60,15 @@ export async function deleteAnnouncement(announcementId: string) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { success: false, error: 'Not authenticated' };
 
-  const { data: announcement } = await supabase.from('announcements').select('author_id, school_id').eq('id', announcementId).single();
+  const { data: announcement } = await supabase.from('announcements').select('author_id, university_id').eq('id', announcementId).single();
   if (!announcement) return { success: false, error: 'Not found' };
 
   let isAuthorized = announcement.author_id === user.id;
 
   if (!isAuthorized) {
-    const { data: member } = await supabase.from('school_memberships')
+    const { data: member } = await supabase.from('university_memberships')
       .select('role')
-      .eq('school_id', announcement.school_id)
+      .eq('university_id', announcement.university_id)
       .eq('user_id', user.id)
       .single();
     if (member && member.role === 'student_admin') isAuthorized = true;

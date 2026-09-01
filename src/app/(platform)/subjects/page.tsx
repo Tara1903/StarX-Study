@@ -22,11 +22,11 @@ export default async function SubjectsPage() {
         name,
         color_code,
         description,
-        sections (
+        semesters (
           name,
-          classes (
+          departments (
             name,
-            academic_years (
+            institutes (
               name
             )
           )
@@ -78,7 +78,7 @@ export default async function SubjectsPage() {
                     {subject.name}
                   </h3>
                   <p className="text-sm text-muted-foreground mt-1 line-clamp-1">
-                    {subject.sections?.classes?.name} - {subject.sections?.name}
+                    {subject.semesters?.departments?.name} - {subject.semesters?.name}
                   </p>
                   
                   <div className="mt-auto pt-6 flex items-center justify-between text-sm text-muted-foreground">
