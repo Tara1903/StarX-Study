@@ -18,7 +18,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     .from('school_memberships')
     .select('role, school_id')
     .eq('user_id', user.id)
-    .in(\'role\', [\'teacher_admin\', \'student_admin\'])
+    .in('role', ['teacher_admin', 'student_admin'])
     .limit(1)
     .maybeSingle();
 
