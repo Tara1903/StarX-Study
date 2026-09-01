@@ -48,13 +48,6 @@ export function Sidebar() {
     { name: 'Settings', href: ROUTES.ADMIN_SETTINGS, icon: Settings },
   ];
 
-  const superAdminLinks = [
-    { name: 'Schools', href: ROUTES.teacher_admin_SCHOOLS, icon: Building2 },
-    { name: 'All Users', href: ROUTES.teacher_admin_USERS, icon: UsersRound },
-    { name: 'System Moderation', href: ROUTES.teacher_admin_MODERATION, icon: ShieldAlert },
-    { name: 'Audit Logs', href: ROUTES.teacher_admin_AUDIT, icon: ScrollText },
-  ];
-
   const renderLink = (link: any) => {
     const isActive = pathname === link.href || pathname.startsWith(link.href + '/');
     const Icon = link.icon;
