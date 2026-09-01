@@ -35,8 +35,7 @@ export default async function PlatformLayout({ children }: { children: React.Rea
   const memberships = membershipsData || [];
   
   const activeSchool = memberships.length > 0 ? memberships[0].school : null;
-  const isSuperAdmin = profile.is_super_admin === true;
-  const activeRole = memberships.length > 0 ? memberships[0].role : (isSuperAdmin ? 'super_admin' : 'student');
+  const activeRole = memberships.length > 0 ? memberships[0].role : 'student';
 
   return (
     <UserProvider 
@@ -44,8 +43,7 @@ export default async function PlatformLayout({ children }: { children: React.Rea
         profile,
         memberships,
         activeSchool,
-        activeRole,
-        isSuperAdmin
+        activeRole
       }}
     >
       <div className="flex h-screen bg-background text-foreground">

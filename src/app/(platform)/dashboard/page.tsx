@@ -8,8 +8,8 @@ export default function DashboardPage() {
 
   const getRoleBadgeColor = () => {
     switch (activeRole) {
-      case 'super_admin': return 'bg-purple-500/10 text-purple-500 border-purple-500/20';
-      case 'school_admin': return 'bg-rose-500/10 text-rose-500 border-rose-500/20';
+      case 'teacher_admin': return 'bg-purple-500/10 text-purple-500 border-purple-500/20';
+      case 'student_admin': return 'bg-rose-500/10 text-rose-500 border-rose-500/20';
       case 'teacher': return 'bg-blue-500/10 text-blue-500 border-blue-500/20';
       default: return 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20';
     }
@@ -78,7 +78,7 @@ export default function DashboardPage() {
           </>
         )}
 
-        {activeRole === 'school_admin' && (
+        {activeRole === 'student_admin' && (
           <>
             <div className="bg-card border border-border rounded-xl p-6 shadow-sm">
               <h3 className="text-sm font-medium text-muted-foreground mb-1">Total Students</h3>
@@ -104,7 +104,7 @@ export default function DashboardPage() {
           </>
         )}
 
-        {activeRole === 'super_admin' && (
+        {activeRole === 'teacher_admin' && (
           <>
              <div className="bg-card border border-border rounded-xl p-6 shadow-sm">
               <h3 className="text-sm font-medium text-muted-foreground mb-1">Total Schools</h3>

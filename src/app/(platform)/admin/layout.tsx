@@ -11,25 +11,18 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     redirect('/login');
   }
 
-  // Check if super admin
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('is_super_admin')
-    .eq('id', user.id)
-    .single();
-
-  const isSuperAdmin = profile?.is_super_admin;
+  
 
   // Check if school admin
   const { data: membership } = await supabase
     .from('school_memberships')
     .select('role, school_id')
     .eq('user_id', user.id)
-    .eq('role', 'school_admin')
+    .in(\'role\', [\'teacher_admin\', \'student_admin\'])
     .limit(1)
     .maybeSingle();
 
-  if (!isSuperAdmin && !membership) {
+  if (!membership) {
     notFound();
   }
 

@@ -9,7 +9,7 @@ export default async function AdminSubjectsPage() {
     .from('school_memberships')
     .select('school_id')
     .eq('user_id', user?.id)
-    .eq('role', 'school_admin')
+    .in('role', ['teacher_admin', 'student_admin'])
     .limit(1)
     .maybeSingle();
 

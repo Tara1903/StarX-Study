@@ -23,7 +23,7 @@ export async function createAnnouncement(formData: FormData) {
     .eq('user_id', user.id)
     .single();
 
-  if (!member || (member.role !== 'school_admin' && member.role !== 'teacher')) {
+  if (!member || ((member.role !== 'student_admin' && member.role !== 'teacher_admin') && member.role !== 'teacher')) {
     return { success: false, error: 'Unauthorized' };
   }
 
@@ -71,7 +71,7 @@ export async function deleteAnnouncement(announcementId: string) {
       .eq('school_id', announcement.school_id)
       .eq('user_id', user.id)
       .single();
-    if (member && member.role === 'school_admin') isAuthorized = true;
+    if (member && member.role === 'student_admin') isAuthorized = true;
   }
 
   if (!isAuthorized) return { success: false, error: 'Unauthorized' };

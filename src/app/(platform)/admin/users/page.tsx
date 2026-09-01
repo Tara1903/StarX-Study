@@ -11,7 +11,7 @@ export default async function AdminUsersPage() {
     .from('school_memberships')
     .select('school_id')
     .eq('user_id', user?.id)
-    .eq('role', 'school_admin')
+    .in('role', ['teacher_admin', 'student_admin'])
     .limit(1)
     .maybeSingle();
 
@@ -63,7 +63,7 @@ export default async function AdminUsersPage() {
             <option value="">All Roles</option>
             <option value="student">Student</option>
             <option value="teacher">Teacher</option>
-            <option value="school_admin">Admin</option>
+            <option value="student_admin">Admin</option>
           </select>
         </div>
       </div>

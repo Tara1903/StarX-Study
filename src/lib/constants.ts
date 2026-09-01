@@ -88,9 +88,4 @@ export const ROUTES = {
   ADMIN_MODERATION: "/admin/moderation",
   ADMIN_REPORTS: "/admin/reports",
   ADMIN_SETTINGS: "/admin/settings",
-  SUPER_ADMIN: "/super-admin",
-  SUPER_ADMIN_SCHOOLS: "/super-admin/schools",
-  SUPER_ADMIN_USERS: "/super-admin/users",
-  SUPER_ADMIN_MODERATION: "/super-admin/moderation",
-  SUPER_ADMIN_AUDIT: "/super-admin/audit-logs",
 } as const;

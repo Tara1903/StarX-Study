@@ -10,8 +10,7 @@ export async function createSchool(formData: FormData) {
   if (!user) return { success: false, error: 'Not authenticated' };
 
   // Note: Only global super admins should do this. Check logic depends on implementation.
-  const { data: profile } = await supabase.from('profiles').select('is_super_admin').eq('id', user.id).single();
-  if (!profile?.is_super_admin) return { success: false, error: 'Unauthorized' };
+  
 
   const name = formData.get('name') as string;
   const { data: school, error } = await supabase.from('schools').insert({ name }).select().single();
@@ -37,7 +36,7 @@ export async function inviteUser(formData: FormData) {
     .eq('user_id', user.id)
     .single();
 
-  if (!member || member.role !== 'school_admin') return { success: false, error: 'Unauthorized' };
+  if (!member || (member.role !== 'student_admin' && member.role !== 'teacher_admin')) return { success: false, error: 'Unauthorized' };
 
   const adminClient = await createAdminClient();
   
@@ -69,7 +68,7 @@ export async function createClass(formData: FormData) {
   const schoolId = formData.get('schoolId') as string;
 
   const { data: member } = await supabase.from('school_memberships').select('role').eq('school_id', schoolId).eq('user_id', user.id).single();
-  if (!member || member.role !== 'school_admin') return { success: false, error: 'Unauthorized' };
+  if (!member || (member.role !== 'student_admin' && member.role !== 'teacher_admin')) return { success: false, error: 'Unauthorized' };
 
   const { data: cls, error } = await supabase.from('classes').insert({ name, school_id: schoolId }).select().single();
   if (error) return { success: false, error: error.message };
@@ -88,7 +87,7 @@ export async function createSection(formData: FormData) {
   const schoolId = formData.get('schoolId') as string;
 
   const { data: member } = await supabase.from('school_memberships').select('role').eq('school_id', schoolId).eq('user_id', user.id).single();
-  if (!member || member.role !== 'school_admin') return { success: false, error: 'Unauthorized' };
+  if (!member || (member.role !== 'student_admin' && member.role !== 'teacher_admin')) return { success: false, error: 'Unauthorized' };
 
   const { data: section, error } = await supabase.from('sections').insert({ name, class_id: classId }).select().single();
   if (error) return { success: false, error: error.message };
@@ -107,7 +106,7 @@ export async function createSubject(formData: FormData) {
   const schoolId = formData.get('schoolId') as string;
 
   const { data: member } = await supabase.from('school_memberships').select('role').eq('school_id', schoolId).eq('user_id', user.id).single();
-  if (!member || member.role !== 'school_admin') return { success: false, error: 'Unauthorized' };
+  if (!member || (member.role !== 'student_admin' && member.role !== 'teacher_admin')) return { success: false, error: 'Unauthorized' };
 
   const { data: subject, error } = await supabase.from('subjects').insert({ name, section_id: sectionId, school_id: schoolId }).select().single();
   if (error) return { success: false, error: error.message };
@@ -127,7 +126,7 @@ export async function enrollMember(formData: FormData) {
   const schoolId = formData.get('schoolId') as string;
 
   const { data: member } = await supabase.from('school_memberships').select('role').eq('school_id', schoolId).eq('user_id', user.id).single();
-  if (!member || member.role !== 'school_admin') return { success: false, error: 'Unauthorized' };
+  if (!member || (member.role !== 'student_admin' && member.role !== 'teacher_admin')) return { success: false, error: 'Unauthorized' };
 
   const { data: enrollment, error } = await supabase.from('subject_members').insert({ user_id: userId, subject_id: subjectId, role }).select().single();
   if (error) return { success: false, error: error.message };
@@ -145,7 +144,7 @@ export async function resolveReport(reportId: string, action: string, notes: str
   if (!report) return { success: false, error: 'Not found' };
 
   const { data: member } = await supabase.from('school_memberships').select('role').eq('school_id', report.school_id).eq('user_id', user.id).single();
-  if (!member || member.role !== 'school_admin') return { success: false, error: 'Unauthorized' };
+  if (!member || (member.role !== 'student_admin' && member.role !== 'teacher_admin')) return { success: false, error: 'Unauthorized' };
 
   const { error } = await supabase.from('reports').update({ status: 'resolved', resolution_action: action, resolution_notes: notes, resolved_by: user.id, resolved_at: new Date().toISOString() }).eq('id', reportId);
   

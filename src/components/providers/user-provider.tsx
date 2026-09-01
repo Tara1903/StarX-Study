@@ -8,7 +8,6 @@ interface UserContextValue {
   memberships: (SchoolMembership & { school: School })[];
   activeSchool: School | null;
   activeRole: UserRole;
-  isSuperAdmin: boolean;
 }
 
 const UserContext = createContext<UserContextValue | null>(null);

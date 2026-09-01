@@ -28,7 +28,7 @@ import {
 
 export function Sidebar() {
   const pathname = usePathname();
-  const { profile, activeSchool, activeRole, isSuperAdmin } = useUser();
+  const { profile, activeSchool, activeRole } = useUser();
 
   const mainLinks = [
     { name: 'Dashboard', href: ROUTES.DASHBOARD, icon: LayoutDashboard },
@@ -49,10 +49,10 @@ export function Sidebar() {
   ];
 
   const superAdminLinks = [
-    { name: 'Schools', href: ROUTES.SUPER_ADMIN_SCHOOLS, icon: Building2 },
-    { name: 'All Users', href: ROUTES.SUPER_ADMIN_USERS, icon: UsersRound },
-    { name: 'System Moderation', href: ROUTES.SUPER_ADMIN_MODERATION, icon: ShieldAlert },
-    { name: 'Audit Logs', href: ROUTES.SUPER_ADMIN_AUDIT, icon: ScrollText },
+    { name: 'Schools', href: ROUTES.teacher_admin_SCHOOLS, icon: Building2 },
+    { name: 'All Users', href: ROUTES.teacher_admin_USERS, icon: UsersRound },
+    { name: 'System Moderation', href: ROUTES.teacher_admin_MODERATION, icon: ShieldAlert },
+    { name: 'Audit Logs', href: ROUTES.teacher_admin_AUDIT, icon: ScrollText },
   ];
 
   const renderLink = (link: any) => {
@@ -106,23 +106,14 @@ export function Sidebar() {
           {mainLinks.map(renderLink)}
         </div>
 
-        {activeRole === 'school_admin' && (
-          <div>
-            <h4 className="px-3 text-xs font-semibold text-sidebar-foreground/50 uppercase tracking-wider mb-2">School Admin</h4>
-            <div className="space-y-1">
-              {adminLinks.map(renderLink)}
+          {(activeRole === 'teacher_admin' || activeRole === 'student_admin') && (
+            <div>
+              <h4 className="px-3 text-xs font-semibold text-sidebar-foreground/50 uppercase tracking-wider mb-2">Administration</h4>
+              <div className="space-y-1">
+                {adminLinks.map(renderLink)}
+              </div>
             </div>
-          </div>
-        )}
-
-        {isSuperAdmin && (
-          <div>
-            <h4 className="px-3 text-xs font-semibold text-sidebar-foreground/50 uppercase tracking-wider mb-2">Super Admin</h4>
-            <div className="space-y-1">
-              {superAdminLinks.map(renderLink)}
-            </div>
-          </div>
-        )}
+          )}
       </div>
 
       {/* User Section */}
