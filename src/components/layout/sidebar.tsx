@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import { useUser } from '@/components/providers/user-provider';
 import { ROUTES } from '@/lib/constants';
 import { getInitials } from '@/lib/utils';
-import { ThemeToggle } from '@/components/layout/theme-toggle';
+
 import {
   ChevronDown,
   LayoutDashboard,
@@ -123,7 +123,7 @@ export function Sidebar() {
               </span>
             </div>
           </div>
-          <ThemeToggle />
+
         </div>
       </div>
     </aside>

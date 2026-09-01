@@ -1,5 +1,5 @@
 // ============================================
-// EduConnect Constants
+// studchat Constants
 // ============================================
 
 export const APP_NAME = "studchat";

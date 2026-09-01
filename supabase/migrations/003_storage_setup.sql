@@ -1,5 +1,5 @@
 -- ============================================
--- EduConnect Database Schema
+-- studchat Database Schema
 -- Migration 003: Storage Setup
 -- ============================================
 
