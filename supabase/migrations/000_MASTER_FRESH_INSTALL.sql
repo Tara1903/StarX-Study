@@ -138,8 +138,7 @@ DROP POLICY IF EXISTS "Users can read their own assignments." ON storage.objects
 DROP POLICY IF EXISTS "Users can read their own submissions." ON storage.objects;
 DROP POLICY IF EXISTS "Users can read their own attachments." ON storage.objects;
 
--- Delete storage buckets
-DELETE FROM storage.buckets WHERE id IN ('avatars', 'materials', 'assignments', 'submissions', 'attachments');
+-- Storage buckets will be created/updated in PHASE 8 via INSERT ON CONFLICT
 
 
 -- ============================================
