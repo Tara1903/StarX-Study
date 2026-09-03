@@ -65,6 +65,7 @@ export const ROUTES = {
   FORGOT_PASSWORD: "/forgot-password",
   SETUP: "/setup",
   DASHBOARD: "/dashboard",
+  TIMETABLE: "/timetable",
   SUBJECTS: "/subjects",
   SUBJECT: (id: string) => `/subjects/${id}`,
   SUBJECT_CHAT: (id: string) => `/subjects/${id}/chat`,

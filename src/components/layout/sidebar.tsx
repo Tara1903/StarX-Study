@@ -7,6 +7,7 @@ import { ROUTES } from '@/lib/constants';
 import { getInitials } from '@/lib/utils';
 
 import {
+  CalendarDays,
   ChevronDown,
   LayoutDashboard,
   BookOpen,
@@ -32,6 +33,7 @@ export function Sidebar() {
 
   const mainLinks = [
     { name: 'Dashboard', href: ROUTES.DASHBOARD, icon: LayoutDashboard },
+    { name: 'Time Table', href: ROUTES.TIMETABLE, icon: CalendarDays },
     { name: 'My Subjects', href: ROUTES.SUBJECTS, icon: BookOpen },
     { name: 'Announcements', href: ROUTES.ANNOUNCEMENTS, icon: Megaphone },
     { name: 'Assignments', href: ROUTES.ASSIGNMENTS, icon: ClipboardList },

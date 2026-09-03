@@ -3,17 +3,17 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { ROUTES } from '@/lib/constants';
-import { LayoutDashboard, BookOpen, Megaphone, ClipboardList, User } from 'lucide-react';
+import { LayoutDashboard, CalendarDays, BookOpen, Megaphone, ClipboardList } from 'lucide-react';
 
 export function MobileNav() {
   const pathname = usePathname();
 
   const tabs = [
     { name: 'Home', href: ROUTES.DASHBOARD, icon: LayoutDashboard },
+    { name: 'Timetable', href: ROUTES.TIMETABLE, icon: CalendarDays },
     { name: 'Subjects', href: ROUTES.SUBJECTS, icon: BookOpen },
     { name: 'Alerts', href: ROUTES.ANNOUNCEMENTS, icon: Megaphone },
     { name: 'Tasks', href: ROUTES.ASSIGNMENTS, icon: ClipboardList },
-    { name: 'Profile', href: ROUTES.PROFILE, icon: User },
   ];
 
   return (
