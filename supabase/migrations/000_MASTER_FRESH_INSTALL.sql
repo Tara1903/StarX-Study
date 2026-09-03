@@ -59,6 +59,7 @@ EXCEPTION WHEN undefined_table THEN NULL;
 END $$;
 
 -- Drop all tables (CASCADE handles foreign keys, policies, indexes)
+DROP TABLE IF EXISTS public.invite_codes CASCADE;
 DROP TABLE IF EXISTS public.audit_logs CASCADE;
 DROP TABLE IF EXISTS public.moderation_logs CASCADE;
 DROP TABLE IF EXISTS public.moderation_profiles CASCADE;
@@ -97,7 +98,7 @@ DROP FUNCTION IF EXISTS public.has_school_role(UUID, public.user_role) CASCADE;
 DROP FUNCTION IF EXISTS public.is_school_member(UUID) CASCADE;
 DROP FUNCTION IF EXISTS public.is_subject_member(UUID) CASCADE;
 DROP FUNCTION IF EXISTS public.is_subject_teacher(UUID) CASCADE;
-DROP FUNCTION IF EXISTS public.is_any_admin(UUID) CASCADE;
+DROP FUNCTION IF EXISTS public.is_institute_head(UUID) CASCADE;
 DROP FUNCTION IF EXISTS public.protect_profile_roles() CASCADE;
 DROP FUNCTION IF EXISTS public.protect_submission_grades() CASCADE;
 DROP FUNCTION IF EXISTS public.protect_message_status() CASCADE;
@@ -147,7 +148,7 @@ DROP POLICY IF EXISTS "Users can read their own attachments." ON storage.objects
 
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
-CREATE TYPE public.user_role AS ENUM ('teacher_admin', 'student_admin', 'teacher', 'student');
+CREATE TYPE public.user_role AS ENUM ('institute_head', 'teacher_admin', 'student_admin', 'teacher', 'student');
 CREATE TYPE public.member_status AS ENUM ('active', 'inactive', 'suspended');
 CREATE TYPE public.subject_role AS ENUM ('teacher', 'student');
 CREATE TYPE public.message_status AS ENUM ('published', 'blocked', 'deleted', 'pending_review');
@@ -182,6 +183,7 @@ CREATE TABLE public.profiles (
     avatar_url TEXT,
     phone TEXT,
     is_active BOOLEAN DEFAULT TRUE NOT NULL,
+    onboarding_status TEXT DEFAULT 'pending' NOT NULL,
     created_at TIMESTAMPTZ DEFAULT now() NOT NULL,
     updated_at TIMESTAMPTZ DEFAULT now() NOT NULL
 );
@@ -489,6 +491,20 @@ CREATE INDEX idx_audit_university ON public.audit_logs(university_id, created_at
 CREATE INDEX idx_audit_actor ON public.audit_logs(actor_id);
 
 
+
+-- 23. Invite Codes
+CREATE TABLE public.invite_codes (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    code TEXT UNIQUE NOT NULL,
+    university_id UUID REFERENCES public.universities(id) ON DELETE CASCADE,
+    target_role public.user_role NOT NULL,
+    created_by UUID REFERENCES public.profiles(id) ON DELETE CASCADE,
+    expires_at TIMESTAMPTZ,
+    max_uses INT DEFAULT 1,
+    uses INT DEFAULT 0,
+    created_at TIMESTAMPTZ DEFAULT now() NOT NULL
+);
+
 -- ============================================
 -- PHASE 3: TRIGGERS
 -- ============================================
@@ -549,7 +565,8 @@ AS $$
   SELECT auth.uid();
 $$;
 
-CREATE OR REPLACE FUNCTION public.is_any_admin(p_university_id UUID)
+
+CREATE OR REPLACE FUNCTION public.is_institute_head(p_university_id UUID)
 RETURNS BOOLEAN
 LANGUAGE sql STABLE SECURITY DEFINER
 AS $$
@@ -557,10 +574,11 @@ AS $$
     SELECT 1 FROM public.university_memberships
     WHERE university_id = p_university_id
       AND user_id = auth.uid()
-      AND role IN ('teacher_admin', 'student_admin')
+      AND role = 'institute_head'
       AND status = 'active'
   );
 $$;
+
 
 CREATE OR REPLACE FUNCTION public.has_university_role(p_university_id UUID, p_role user_role)
 RETURNS BOOLEAN
@@ -611,6 +629,54 @@ AS $$
 $$;
 
 
+
+CREATE OR REPLACE FUNCTION public.use_invite_code(p_code TEXT, p_user_id UUID)
+RETURNS JSONB
+LANGUAGE plpgsql SECURITY DEFINER
+AS $$
+DECLARE
+  v_invite_code RECORD;
+  v_existing_member BOOLEAN;
+BEGIN
+  -- Lock the invite code row
+  SELECT * INTO v_invite_code FROM public.invite_codes
+  WHERE code = p_code FOR UPDATE;
+
+  IF NOT FOUND THEN
+    RETURN jsonb_build_object('success', false, 'error', 'Invalid invite code');
+  END IF;
+
+  IF v_invite_code.expires_at IS NOT NULL AND v_invite_code.expires_at < now() THEN
+    RETURN jsonb_build_object('success', false, 'error', 'Invite code has expired');
+  END IF;
+
+  IF v_invite_code.max_uses IS NOT NULL AND v_invite_code.uses >= v_invite_code.max_uses THEN
+    RETURN jsonb_build_object('success', false, 'error', 'Invite code has reached its maximum uses');
+  END IF;
+
+  -- Check existing membership
+  SELECT EXISTS (
+    SELECT 1 FROM public.university_memberships 
+    WHERE university_id = v_invite_code.university_id AND user_id = p_user_id
+  ) INTO v_existing_member;
+
+  IF v_existing_member THEN
+    RETURN jsonb_build_object('success', false, 'error', 'You are already a member of this university');
+  END IF;
+
+  -- Insert membership
+  INSERT INTO public.university_memberships (university_id, user_id, role, status)
+  VALUES (v_invite_code.university_id, p_user_id, v_invite_code.target_role, 'active');
+
+  -- Update uses
+  UPDATE public.invite_codes
+  SET uses = uses + 1
+  WHERE id = v_invite_code.id;
+
+  RETURN jsonb_build_object('success', true, 'university_id', v_invite_code.university_id, 'role', v_invite_code.target_role);
+END;
+$$;
+
 -- ============================================
 -- PHASE 5: ENABLE RLS ON ALL TABLES
 -- ============================================
@@ -637,6 +703,8 @@ ALTER TABLE public.reports ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.moderation_profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.moderation_logs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.audit_logs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.invite_codes ENABLE ROW LEVEL SECURITY;
+
 
 
 -- ============================================
@@ -662,43 +730,43 @@ FOR UPDATE USING (auth.uid() = id);
 CREATE POLICY "University members can view university" ON public.universities
 FOR SELECT USING (is_university_member(id));
 CREATE POLICY "Admins can update university" ON public.universities
-FOR UPDATE USING (is_any_admin(id));
+FOR UPDATE USING (is_institute_head(id));
 
 -- University Memberships
 CREATE POLICY "University members can view memberships" ON public.university_memberships
 FOR SELECT USING (is_university_member(university_id));
 CREATE POLICY "Admins can manage memberships" ON public.university_memberships
-FOR ALL USING (is_any_admin(university_id));
+FOR ALL USING (is_institute_head(university_id));
 
 -- Institutes
 CREATE POLICY "University members can view institutes" ON public.institutes
 FOR SELECT USING (is_university_member(university_id));
 CREATE POLICY "Admins can manage institutes" ON public.institutes
-FOR ALL USING (is_any_admin(university_id));
+FOR ALL USING (is_institute_head(university_id));
 
 -- Departments
 CREATE POLICY "University members can view departments" ON public.departments
 FOR SELECT USING (is_university_member(university_id));
 CREATE POLICY "Admins can manage departments" ON public.departments
-FOR ALL USING (is_any_admin(university_id));
+FOR ALL USING (is_institute_head(university_id));
 
 -- Semesters
 CREATE POLICY "University members can view semesters" ON public.semesters
 FOR SELECT USING (is_university_member(university_id));
 CREATE POLICY "Admins can manage semesters" ON public.semesters
-FOR ALL USING (is_any_admin(university_id));
+FOR ALL USING (is_institute_head(university_id));
 
 -- Subjects
 CREATE POLICY "University members can view subjects" ON public.subjects
 FOR SELECT USING (is_university_member(university_id));
 CREATE POLICY "Admins can manage subjects" ON public.subjects
-FOR ALL USING (is_any_admin(university_id));
+FOR ALL USING (is_institute_head(university_id));
 
 -- Subject Members
 CREATE POLICY "University members can view subject members" ON public.subject_members
 FOR SELECT USING (is_university_member((SELECT university_id FROM public.subjects WHERE id = subject_id)));
 CREATE POLICY "Admins can manage subject members" ON public.subject_members
-FOR ALL USING (is_any_admin((SELECT university_id FROM public.subjects WHERE id = subject_id)));
+FOR ALL USING (is_institute_head((SELECT university_id FROM public.subjects WHERE id = subject_id)));
 
 -- Messages
 CREATE POLICY "Subject members can view published messages" ON public.messages
@@ -707,6 +775,8 @@ CREATE POLICY "Subject members can insert messages" ON public.messages
 FOR INSERT WITH CHECK (is_subject_member(subject_id) AND auth.uid() = sender_id);
 CREATE POLICY "Users can update own messages" ON public.messages
 FOR UPDATE USING (auth.uid() = sender_id);
+CREATE POLICY "Teachers can manage subject messages" ON public.messages
+FOR UPDATE USING (is_subject_teacher(subject_id));
 CREATE POLICY "Users can delete own messages" ON public.messages
 FOR DELETE USING (auth.uid() = sender_id);
 
@@ -734,7 +804,9 @@ FOR ALL USING (auth.uid() = user_id);
 CREATE POLICY "University members can view announcements" ON public.announcements
 FOR SELECT USING (is_university_member(university_id));
 CREATE POLICY "Admins can manage announcements" ON public.announcements
-FOR ALL USING (is_any_admin(university_id));
+FOR ALL USING (is_institute_head(university_id));
+CREATE POLICY "Admins can insert announcements" ON public.announcements
+FOR INSERT WITH CHECK (is_institute_head(university_id));
 CREATE POLICY "Teachers can create announcements for their subjects" ON public.announcements
 FOR INSERT WITH CHECK (target_type = 'subject' AND is_subject_teacher(target_id) AND auth.uid() = author_id);
 CREATE POLICY "Teachers can update own subject announcements" ON public.announcements
@@ -785,29 +857,44 @@ CREATE POLICY "Users can view own notifications" ON public.notifications
 FOR SELECT USING (auth.uid() = user_id);
 CREATE POLICY "Users can update own notifications" ON public.notifications
 FOR UPDATE USING (auth.uid() = user_id);
+CREATE POLICY "Authenticated users can insert notifications" ON public.notifications
+FOR INSERT WITH CHECK (auth.uid() IS NOT NULL);
 
 -- Reports
 CREATE POLICY "University members can insert reports" ON public.reports
 FOR INSERT WITH CHECK (is_university_member(university_id));
 CREATE POLICY "Admins can view reports" ON public.reports
-FOR SELECT USING (is_any_admin(university_id));
+FOR SELECT USING (is_institute_head(university_id));
 CREATE POLICY "Admins can update reports" ON public.reports
-FOR UPDATE USING (is_any_admin(university_id));
+FOR UPDATE USING (is_institute_head(university_id));
 
 -- Moderation Profiles
 CREATE POLICY "Users can view own moderation profile" ON public.moderation_profiles
 FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can update their own moderation profile" ON public.moderation_profiles
+FOR UPDATE USING (auth.uid() = user_id);
+CREATE POLICY "Users can insert their own moderation profile" ON public.moderation_profiles
+FOR INSERT WITH CHECK (auth.uid() = user_id);
 CREATE POLICY "Admins can manage moderation profiles" ON public.moderation_profiles
-FOR ALL USING (is_any_admin(university_id));
+FOR ALL USING (is_institute_head(university_id));
 
 -- Moderation Logs
 CREATE POLICY "Admins can view moderation logs" ON public.moderation_logs
-FOR SELECT USING (is_any_admin(university_id));
+FOR SELECT USING (is_institute_head(university_id));
+CREATE POLICY "Users can insert their own moderation logs" ON public.moderation_logs
+FOR INSERT WITH CHECK (auth.uid() = user_id);
 
 -- Audit Logs
 CREATE POLICY "Admins can view audit logs" ON public.audit_logs
-FOR SELECT USING (is_any_admin(university_id));
+FOR SELECT USING (is_institute_head(university_id));
 
+
+
+-- Invite Codes
+CREATE POLICY "Anyone can view valid invite codes" ON public.invite_codes
+FOR SELECT USING (expires_at > now() OR expires_at IS NULL);
+CREATE POLICY "Institute heads can manage invite codes" ON public.invite_codes
+FOR ALL USING (is_institute_head(university_id));
 
 -- ============================================
 -- PHASE 7: SECURITY TRIGGERS
@@ -844,13 +931,13 @@ CREATE OR REPLACE FUNCTION public.protect_message_status() RETURNS TRIGGER AS $$
 BEGIN
   IF TG_OP = 'INSERT' THEN
     IF NEW.status != 'published' THEN
-       IF NOT (auth.role() = 'service_role' OR public.is_any_admin((SELECT university_id FROM public.subjects WHERE id = NEW.subject_id))) THEN
+       IF NOT (auth.role() = 'service_role' OR public.is_institute_head((SELECT university_id FROM public.subjects WHERE id = NEW.subject_id))) THEN
          RAISE EXCEPTION 'Unauthorized to set message status on insert';
        END IF;
     END IF;
   ELSIF TG_OP = 'UPDATE' THEN
     IF NEW.status IS DISTINCT FROM OLD.status THEN
-      IF NOT (auth.role() = 'service_role' OR public.is_any_admin((SELECT university_id FROM public.subjects WHERE id = NEW.subject_id))) THEN
+      IF NOT (auth.role() = 'service_role' OR public.is_institute_head((SELECT university_id FROM public.subjects WHERE id = NEW.subject_id))) THEN
         RAISE EXCEPTION 'Unauthorized to modify message status';
       END IF;
     END IF;
