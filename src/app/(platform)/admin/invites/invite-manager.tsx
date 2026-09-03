@@ -7,13 +7,14 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { generateInviteCodeSchema, GenerateInviteCodeInput } from '@/lib/validations/schemas';
 import { UserRole } from '@/types/database';
+import { z } from 'zod';
 
 export function InviteManager({ universityId, initialInvites }: { universityId: string, initialInvites: any[] }) {
   const [invites, setInvites] = useState(initialInvites);
   const [loading, setLoading] = useState(false);
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
 
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<GenerateInviteCodeInput>({
+  const { register, handleSubmit, reset, formState: { errors } } = useForm<z.input<typeof generateInviteCodeSchema>>({
     resolver: zodResolver(generateInviteCodeSchema),
     defaultValues: {
       university_id: universityId,
@@ -23,7 +24,7 @@ export function InviteManager({ universityId, initialInvites }: { universityId: 
     }
   });
 
-  const onSubmit = async (data: GenerateInviteCodeInput) => {
+  const onSubmit = async (data: any) => {
     setLoading(true);
     try {
       const res = await generateInviteCode(data);

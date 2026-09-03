@@ -2,7 +2,7 @@
 // Database Types — mirrors Supabase schema
 // ============================================
 
-export type UserRole = "teacher_admin" | "student_admin" | "teacher" | "student";
+export type UserRole = "institute_head" | "teacher" | "student";
 export type MemberStatus = "active" | "inactive" | "suspended";
 export type SubjectRole = "teacher" | "student";
 export type MessageStatus = "published" | "blocked" | "deleted" | "pending_review";

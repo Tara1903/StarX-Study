@@ -10,7 +10,7 @@ export default async function AdminModerationPage() {
     .from('university_memberships')
     .select('university_id')
     .eq('user_id', user?.id)
-    .in('role', ['teacher_admin', 'student_admin'])
+    .eq('role', 'institute_head')
     .limit(1)
     .maybeSingle();
 

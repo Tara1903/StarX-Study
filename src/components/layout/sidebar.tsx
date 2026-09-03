@@ -99,7 +99,7 @@ export function Sidebar() {
           {mainLinks.map(renderLink)}
         </div>
 
-          {(activeRole === 'teacher_admin' || activeRole === 'student_admin') && (
+          {activeRole === 'institute_head' && (
             <div>
               <h4 className="px-3 text-xs font-semibold text-sidebar-foreground/50 uppercase tracking-wider mb-2">Administration</h4>
               <div className="space-y-1">

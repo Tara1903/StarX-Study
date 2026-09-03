@@ -11,7 +11,7 @@ export default async function AdminUsersPage() {
     .from('university_memberships')
     .select('university_id')
     .eq('user_id', user?.id)
-    .in('role', ['teacher_admin', 'student_admin'])
+    .eq('role', 'institute_head')
     .limit(1)
     .maybeSingle();
 
@@ -34,7 +34,6 @@ export default async function AdminUsersPage() {
     members = data || [];
   }
 
-  return (
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -63,7 +62,7 @@ export default async function AdminUsersPage() {
             <option value="">All Roles</option>
             <option value="student">Student</option>
             <option value="teacher">Teacher</option>
-            <option value="student_admin">Admin</option>
+            <option value="institute_head">Institute Head</option>
           </select>
         </div>
       </div>

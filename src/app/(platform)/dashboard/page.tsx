@@ -8,8 +8,7 @@ export default function DashboardPage() {
 
   const getRoleBadgeColor = () => {
     switch (activeRole) {
-      case 'teacher_admin': return 'bg-purple-500/10 text-purple-500 border-purple-500/20';
-      case 'student_admin': return 'bg-rose-500/10 text-rose-500 border-rose-500/20';
+      case 'institute_head': return 'bg-purple-500/10 text-purple-500 border-purple-500/20';
       case 'teacher': return 'bg-blue-500/10 text-blue-500 border-blue-500/20';
       default: return 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20';
     }
@@ -78,7 +77,7 @@ export default function DashboardPage() {
           </>
         )}
 
-        {activeRole === 'student_admin' && (
+        {activeRole === 'institute_head' && (
           <>
             <div className="bg-card border border-border rounded-xl p-6 shadow-sm">
               <h3 className="text-sm font-medium text-muted-foreground mb-1">Total Students</h3>
@@ -99,25 +98,6 @@ export default function DashboardPage() {
               <h2 className="font-semibold text-lg mb-4">Quick Actions</h2>
               <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm border-2 border-dashed border-border rounded-lg">
                 Action panel loading...
-              </div>
-            </div>
-          </>
-        )}
-
-        {activeRole === 'teacher_admin' && (
-          <>
-             <div className="bg-card border border-border rounded-xl p-6 shadow-sm">
-              <h3 className="text-sm font-medium text-muted-foreground mb-1">Total Universitys</h3>
-              <p className="text-3xl font-bold">-</p>
-            </div>
-            <div className="bg-card border border-border rounded-xl p-6 shadow-sm">
-              <h3 className="text-sm font-medium text-muted-foreground mb-1">Platform Users</h3>
-              <p className="text-3xl font-bold">-</p>
-            </div>
-            <div className="bg-card border border-border rounded-xl p-6 shadow-sm lg:col-span-3 min-h-[300px] flex flex-col">
-              <h2 className="font-semibold text-lg mb-4">System Overview</h2>
-              <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm border-2 border-dashed border-border rounded-lg">
-                System analytics loading...
               </div>
             </div>
           </>

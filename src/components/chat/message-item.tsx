@@ -15,7 +15,7 @@ interface MessageItemProps {
 export function MessageItem({ message, onReply }: MessageItemProps) {
   const { profile, activeRole } = useUser();
   const isOwn = profile?.id === message.sender_id;
-  const isTeacher = activeRole === 'teacher' || activeRole === 'teacher_admin';
+  const isTeacher = activeRole === 'teacher' || activeRole === 'institute_head';
 
   const handleReaction = async (emoji: string) => {
     await toggleReaction(message.id, emoji);

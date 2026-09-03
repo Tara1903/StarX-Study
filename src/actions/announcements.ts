@@ -22,7 +22,7 @@ export async function createAnnouncement(formData: FormData) {
     .eq('user_id', user.id)
     .single();
 
-  if (!member || ((member.role !== 'student_admin' && member.role !== 'teacher_admin') && member.role !== 'teacher')) {
+  if (!member || (member.role !== 'institute_head' && member.role !== 'teacher')) {
     return { success: false, error: 'Unauthorized' };
   }
 
@@ -73,7 +73,7 @@ export async function deleteAnnouncement(announcementId: string) {
       .eq('university_id', announcement.university_id)
       .eq('user_id', user.id)
       .single();
-    if (member && (member.role === 'student_admin' || member.role === 'teacher_admin')) isAuthorized = true;
+    if (member && member.role === 'institute_head') isAuthorized = true;
   }
 
   if (!isAuthorized) return { success: false, error: 'Unauthorized' };

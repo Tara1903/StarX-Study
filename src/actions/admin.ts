@@ -67,7 +67,7 @@ export async function createDepartment(formData: FormData) {
   const instituteId = formData.get('instituteId') as string;
 
   const { data: member } = await supabase.from('university_memberships').select('role').eq('university_id', universityId).eq('user_id', user.id).single();
-  if (!member || (member.role !== 'student_admin' && member.role !== 'teacher_admin')) return { success: false, error: 'Unauthorized' };
+  if (!member || member.role !== 'institute_head') return { success: false, error: 'Unauthorized' };
 
   const { data: dept, error } = await supabase.from('departments').insert({ name, university_id: universityId, institute_id: instituteId }).select().single();
   if (error) return { success: false, error: error.message };
@@ -88,7 +88,7 @@ export async function createSemester(formData: FormData) {
   const endDate = formData.get('endDate') as string;
 
   const { data: member } = await supabase.from('university_memberships').select('role').eq('university_id', universityId).eq('user_id', user.id).single();
-  if (!member || (member.role !== 'student_admin' && member.role !== 'teacher_admin')) return { success: false, error: 'Unauthorized' };
+  if (!member || member.role !== 'institute_head') return { success: false, error: 'Unauthorized' };
 
   const { data: semester, error } = await supabase.from('semesters').insert({ name, department_id: departmentId, university_id: universityId, start_date: startDate, end_date: endDate }).select().single();
   if (error) return { success: false, error: error.message };
@@ -107,7 +107,7 @@ export async function createSubject(formData: FormData) {
   const universityId = formData.get('universityId') as string;
 
   const { data: member } = await supabase.from('university_memberships').select('role').eq('university_id', universityId).eq('user_id', user.id).single();
-  if (!member || (member.role !== 'student_admin' && member.role !== 'teacher_admin')) return { success: false, error: 'Unauthorized' };
+  if (!member || member.role !== 'institute_head') return { success: false, error: 'Unauthorized' };
 
   const { data: subject, error } = await supabase.from('subjects').insert({ name, semester_id: semesterId, university_id: universityId }).select().single();
   if (error) return { success: false, error: error.message };
@@ -127,7 +127,7 @@ export async function enrollMember(formData: FormData) {
   const universityId = formData.get('universityId') as string;
 
   const { data: member } = await supabase.from('university_memberships').select('role').eq('university_id', universityId).eq('user_id', user.id).single();
-  if (!member || (member.role !== 'student_admin' && member.role !== 'teacher_admin')) return { success: false, error: 'Unauthorized' };
+  if (!member || member.role !== 'institute_head') return { success: false, error: 'Unauthorized' };
 
   const { data: enrollment, error } = await supabase.from('subject_members').insert({ user_id: userId, subject_id: subjectId, role }).select().single();
   if (error) return { success: false, error: error.message };
@@ -145,7 +145,7 @@ export async function resolveReport(reportId: string, action: string, notes: str
   if (!report) return { success: false, error: 'Not found' };
 
   const { data: member } = await supabase.from('university_memberships').select('role').eq('university_id', report.university_id).eq('user_id', user.id).single();
-  if (!member || (member.role !== 'student_admin' && member.role !== 'teacher_admin')) return { success: false, error: 'Unauthorized' };
+  if (!member || member.role !== 'institute_head') return { success: false, error: 'Unauthorized' };
 
   const { error } = await supabase.from('reports').update({ status: 'resolved', resolution_notes: `[${action}] ${notes}`, resolved_by: user.id, resolved_at: new Date().toISOString() }).eq('id', reportId);
   
