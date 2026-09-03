@@ -2,21 +2,23 @@
 
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { User, Mail, Phone, Moon, Sun, LogOut, Shield } from 'lucide-react';
+import { User, Mail, Phone, LogOut, Shield } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useUser } from '@/components/providers/user-provider';
 
 export default function ProfilePage() {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const supabase = createClient();
+  const { activeRole } = useUser();
+  const [supabase] = useState(() => createClient());
   const router = useRouter();
 
   useEffect(() => {
     async function loadUser() {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const { data: profile } = await supabase.from('users').select('*').eq('id', user.id).single();
-        setUser(profile || user);
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      if (authUser) {
+        const { data: profile } = await supabase.from('profiles').select('*').eq('id', authUser.id).single();
+        setUser({ ...authUser, ...profile });
       }
       setLoading(false);
     }
@@ -55,7 +57,7 @@ export default function ProfilePage() {
               <h2 className="text-2xl font-bold">{user?.full_name || user?.email?.split('@')[0] || 'User'}</h2>
               <p className="text-muted-foreground flex items-center justify-center sm:justify-start gap-1.5 mt-1">
                 <Shield className="h-4 w-4" />
-                <span className="capitalize font-medium">{user?.system_role || 'Member'}</span>
+                <span className="capitalize font-medium">{activeRole.replace('_', ' ') || 'Member'}</span>
               </p>
             </div>
             <button className="bg-secondary text-secondary-foreground px-4 py-2 rounded-md font-medium text-sm hover:bg-secondary/80 transition-colors border shadow-sm w-full sm:w-auto">
@@ -82,7 +84,7 @@ export default function ProfilePage() {
                   </div>
                   <div>
                     <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Phone</p>
-                    <p className="font-medium">{user?.phone_number || 'Not provided'}</p>
+                    <p className="font-medium">{user?.phone || 'Not provided'}</p>
                   </div>
                 </div>
               </div>
@@ -93,12 +95,6 @@ export default function ProfilePage() {
               <div className="flex flex-col gap-2">
                 <button className="flex items-center justify-between p-3 rounded-lg border bg-background hover:bg-muted/50 transition-colors text-left text-sm font-medium">
                   Change Password
-                </button>
-                <button className="flex items-center justify-between p-3 rounded-lg border bg-background hover:bg-muted/50 transition-colors text-left text-sm font-medium">
-                  <span className="flex items-center gap-2">
-                    <Sun className="h-4 w-4" /> Theme
-                  </span>
-                  <span className="text-muted-foreground text-xs bg-muted px-2 py-1 rounded">System</span>
                 </button>
               </div>
             </div>

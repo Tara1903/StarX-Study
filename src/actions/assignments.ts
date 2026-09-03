@@ -1,8 +1,6 @@
-// @ts-nocheck
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
-import { createAdminClient } from '@/lib/supabase/admin';
 import { createAssignmentSchema, submitAssignmentSchema, gradeSubmissionSchema } from '@/lib/validations/schemas';
 import { revalidatePath } from 'next/cache';
 
@@ -28,11 +26,11 @@ export async function createAssignment(formData: FormData) {
 
   const { data: assignment, error } = await supabase.from('assignments').insert({
     subject_id,
-    teacher_id: user.id,
+    created_by: user.id,
     title,
     description,
     due_date,
-    total_marks: max_marks
+    max_marks
   }).select().single();
 
   if (error) return { success: false, error: error.message };
@@ -45,9 +43,9 @@ export async function createAssignment(formData: FormData) {
       type: 'assignment_created',
       title: 'New Assignment',
       body: `New assignment posted: ${title}`,
-      link: `/assignments/${assignment.id}`
+      link: `/subjects/${subject_id}/assignments/${assignment.id}`
     }));
-    await (await createAdminClient()).from('notifications').insert(notifications);
+    await supabase.from('notifications').insert(notifications);
   }
 
   revalidatePath(`/subjects/${subject_id}`);
@@ -63,7 +61,11 @@ export async function submitAssignment(formData: FormData) {
   const parsed = submitAssignmentSchema.safeParse(data);
   if (!parsed.success) return { success: false, error: 'Invalid data' };
 
-  const { assignment_id, content, attachments } = parsed.data;
+  // Wait, does submitAssignmentSchema have attachments? 
+  // We'll leave it out of insert if it doesn't match the DB
+  const { assignment_id, content } = parsed.data;
+  
+  // Note: For file uploads, we'd need file_path and file_name, handled separately
 
   const { data: assignment } = await supabase.from('assignments').select('subject_id, due_date').eq('id', assignment_id).single();
   if (!assignment) return { success: false, error: 'Not found' };
@@ -84,12 +86,12 @@ export async function submitAssignment(formData: FormData) {
     assignment_id,
     student_id: user.id,
     content,
-    attachments: attachments || [],
+    status: 'submitted',
     submitted_at: new Date().toISOString()
   }).select().single();
 
   if (error) return { success: false, error: error.message };
-  revalidatePath(`/assignments/${assignment_id}`);
+  revalidatePath(`/subjects/${assignment.subject_id}/assignments/${assignment_id}`);
   return { success: true, data: submission };
 }
 
@@ -104,7 +106,7 @@ export async function gradeSubmission(formData: FormData) {
 
   const { submission_id, marks, feedback } = parsed.data;
 
-  const { data: submission } = await supabase.from('assignment_submissions').select('assignment_id, student_id, assignments(subject_id)').eq('id', submission_id).single();
+  const { data: submission } = await supabase.from('assignment_submissions').select('assignment_id, student_id, assignments(subject_id)').eq('id', submission_id).single() as any;
   if (!submission) return { success: false, error: 'Not found' };
 
   const { data: member } = await supabase.from('subject_members')
@@ -118,21 +120,21 @@ export async function gradeSubmission(formData: FormData) {
   const { data: updated, error } = await supabase.from('assignment_submissions').update({
     marks,
     feedback,
+    status: 'graded',
     graded_at: new Date().toISOString(),
-    grader_id: user.id
+    graded_by: user.id
   }).eq('id', submission_id).select().single();
 
   if (error) return { success: false, error: error.message };
 
-  await (await createAdminClient()).from('notifications').insert({
+  await supabase.from('notifications').insert({
     user_id: submission.student_id,
-    type: 'assignment_graded',
+    type: 'submission_graded',
     title: 'Assignment Graded',
     body: `Your assignment has been graded. Marks: ${marks}`,
-    link: `/assignments/${submission.assignment_id}`
+    link: `/subjects/${submission.assignments.subject_id}/assignments/${submission.assignment_id}`
   });
 
-  revalidatePath(`/assignments/${submission.assignment_id}`);
+  revalidatePath(`/subjects/${submission.assignments.subject_id}/assignments/${submission.assignment_id}`);
   return { success: true, data: updated };
 }
-

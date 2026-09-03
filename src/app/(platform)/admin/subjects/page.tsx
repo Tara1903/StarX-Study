@@ -40,52 +40,52 @@ export default async function AdminSubjectsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Subjects</h1>
-          <p className="text-slate-500 dark:text-slate-400 mt-1">Manage course offerings and subject assignments.</p>
+          <h1 className="text-2xl font-bold text-foreground">Subjects</h1>
+          <p className="text-muted-foreground mt-1">Manage course offerings and subject assignments.</p>
         </div>
-        <button className="flex items-center space-x-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md font-medium transition-colors">
+        <button className="flex items-center space-x-2 bg-primary hover:bg-[#12CFEA] text-primary-foreground px-4 py-2 rounded-md font-medium transition-colors">
           <Plus className="h-4 w-4" />
           <span>Add Subject</span>
         </button>
       </div>
 
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden">
+      <div className="bg-card border border-border rounded-lg overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800">
-                <th className="px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Subject Name</th>
-                <th className="px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Code</th>
-                <th className="px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Semester / Class</th>
-                <th className="px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Credits</th>
-                <th className="px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider text-right">Actions</th>
+              <tr className="bg-muted/50 border-b border-border">
+                <th className="px-6 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Subject Name</th>
+                <th className="px-6 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Code</th>
+                <th className="px-6 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Semester / Class</th>
+                <th className="px-6 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Credits</th>
+                <th className="px-6 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
+            <tbody className="divide-y divide-border">
               {subjects.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="px-6 py-12 text-center">
-                    <BookOpen className="h-10 w-10 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
-                    <p className="text-slate-500 dark:text-slate-400">No subjects found.</p>
+                    <BookOpen className="h-10 w-10 text-muted-foreground/30 mx-auto mb-3" />
+                    <p className="text-muted-foreground">No subjects found.</p>
                   </td>
                 </tr>
               ) : (
                 subjects.map((subject) => (
-                  <tr key={subject.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                  <tr key={subject.id} className="hover:bg-muted/50 transition-colors">
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="font-medium text-slate-900 dark:text-white">{subject.name}</div>
+                      <div className="font-medium text-foreground">{subject.name}</div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                       {subject.code || '-'}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                       {subject.semesters ? `${subject.semesters.departments?.name} - ${subject.semesters.name}` : 'Unassigned'}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                       {subject.credits || 0}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <button className="text-slate-400 hover:text-slate-500 dark:hover:text-slate-300 p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800">
+                      <button className="text-muted-foreground hover:text-foreground p-1 rounded hover:bg-muted">
                         <MoreHorizontal className="h-5 w-5" />
                       </button>
                     </td>

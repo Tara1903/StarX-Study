@@ -71,9 +71,7 @@ export interface Institute {
   id: string;
   university_id: string;
   name: string;
-  start_date: string;
-  end_date: string;
-  is_current: boolean;
+  code: string | null;
   created_at: string;
 }
 
@@ -82,7 +80,7 @@ export interface Department {
   institute_id: string;
   university_id: string;
   name: string;
-  sort_order: number;
+  code: string | null;
   created_at: string;
 }
 
@@ -91,6 +89,9 @@ export interface Semester {
   department_id: string;
   university_id: string;
   name: string;
+  start_date: string;
+  end_date: string;
+  is_current: boolean;
   created_at: string;
 }
 
@@ -339,5 +340,4 @@ export interface UserContext {
   memberships: (UniversityMembership & { university: University })[];
   activeUniversity: University | null;
   activeRole: UserRole;
-  isSuperAdmin: boolean;
 }

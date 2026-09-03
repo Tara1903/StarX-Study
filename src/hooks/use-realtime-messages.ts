@@ -12,7 +12,7 @@ export function useRealtimeMessages(subjectId: string) {
   const [hasMore, setHasMore] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   
-  const supabase = createClient();
+  const [supabase] = useState(() => createClient());
   const cursorRef = useRef<string | null>(null);
 
   const fetchMessages = useCallback(async (isLoadMore = false) => {
@@ -24,12 +24,12 @@ export function useRealtimeMessages(subjectId: string) {
         .from('messages')
         .select(`
           *,
-          sender:users(id, full_name, avatar_url, role),
+          sender:profiles(id, full_name, avatar_url),
           reactions:message_reactions(*),
           attachments:message_attachments(*),
           reply_to:messages!messages_reply_to_id_fkey(
             *,
-            sender:users(id, full_name, avatar_url)
+            sender:profiles(id, full_name, avatar_url)
           )
         `)
         .eq('subject_id', subjectId)
@@ -86,12 +86,12 @@ export function useRealtimeMessages(subjectId: string) {
               .from('messages')
               .select(`
                 *,
-                sender:users(id, full_name, avatar_url, role),
+                sender:profiles(id, full_name, avatar_url),
                 reactions:message_reactions(*),
                 attachments:message_attachments(*),
                 reply_to:messages!messages_reply_to_id_fkey(
                   *,
-                  sender:users(id, full_name, avatar_url)
+                  sender:profiles(id, full_name, avatar_url)
                 )
               `)
               .eq('id', payload.new.id)

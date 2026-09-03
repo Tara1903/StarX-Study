@@ -82,18 +82,18 @@ export default function DashboardPage() {
           <>
             <div className="bg-card border border-border rounded-xl p-6 shadow-sm">
               <h3 className="text-sm font-medium text-muted-foreground mb-1">Total Students</h3>
-              <p className="text-3xl font-bold">1,245</p>
-              <span className="text-xs text-emerald-500 font-medium mt-2 block">+12 this month</span>
+              <p className="text-3xl font-bold">-</p>
+              <span className="text-xs text-emerald-500 font-medium mt-2 block">Loading...</span>
             </div>
             <div className="bg-card border border-border rounded-xl p-6 shadow-sm">
               <h3 className="text-sm font-medium text-muted-foreground mb-1">Total Teachers</h3>
-              <p className="text-3xl font-bold">84</p>
-              <span className="text-xs text-emerald-500 font-medium mt-2 block">+2 this month</span>
+              <p className="text-3xl font-bold">-</p>
+              <span className="text-xs text-emerald-500 font-medium mt-2 block">Loading...</span>
             </div>
             <div className="bg-card border border-border rounded-xl p-6 shadow-sm">
               <h3 className="text-sm font-medium text-muted-foreground mb-1">Active Departments</h3>
-              <p className="text-3xl font-bold">156</p>
-              <span className="text-xs text-muted-foreground mt-2 block">Across 12 grades</span>
+              <p className="text-3xl font-bold">-</p>
+              <span className="text-xs text-muted-foreground mt-2 block">Loading...</span>
             </div>
             <div className="bg-card border border-border rounded-xl p-6 shadow-sm lg:col-span-3 min-h-[300px] flex flex-col">
               <h2 className="font-semibold text-lg mb-4">Quick Actions</h2>
@@ -108,11 +108,11 @@ export default function DashboardPage() {
           <>
              <div className="bg-card border border-border rounded-xl p-6 shadow-sm">
               <h3 className="text-sm font-medium text-muted-foreground mb-1">Total Universitys</h3>
-              <p className="text-3xl font-bold">14</p>
+              <p className="text-3xl font-bold">-</p>
             </div>
             <div className="bg-card border border-border rounded-xl p-6 shadow-sm">
               <h3 className="text-sm font-medium text-muted-foreground mb-1">Platform Users</h3>
-              <p className="text-3xl font-bold">15,420</p>
+              <p className="text-3xl font-bold">-</p>
             </div>
             <div className="bg-card border border-border rounded-xl p-6 shadow-sm lg:col-span-3 min-h-[300px] flex flex-col">
               <h2 className="font-semibold text-lg mb-4">System Overview</h2>

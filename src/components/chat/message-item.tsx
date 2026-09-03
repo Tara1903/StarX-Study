@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useUser } from '@/components/providers/user-provider';
 import type { MessageWithSender } from '@/types';
 import { getInitials, formatRelativeTime } from '@/lib/utils';
@@ -14,22 +13,22 @@ interface MessageItemProps {
 }
 
 export function MessageItem({ message, onReply }: MessageItemProps) {
-  const { profile } = useUser();
+  const { profile, activeRole } = useUser();
   const isOwn = profile?.id === message.sender_id;
-  const isTeacher = profile?.role === 'TEACHER';
+  const isTeacher = activeRole === 'teacher' || activeRole === 'teacher_admin';
 
   const handleReaction = async (emoji: string) => {
-    await toggleReaction({message_id: message.id, emoji});
+    await toggleReaction(message.id, emoji);
   };
 
   const handleDelete = async () => {
     if (confirm('Are you sure you want to delete this message?')) {
-      await deleteMessage({message_id: message.id});
+      await deleteMessage(message.id);
     }
   };
 
   const handlePin = async () => {
-    await pinMessage(message.id, !message.is_pinned);
+    await pinMessage(message.id);
   };
 
   return (
@@ -93,4 +92,3 @@ export function MessageItem({ message, onReply }: MessageItemProps) {
     </div>
   );
 }
-

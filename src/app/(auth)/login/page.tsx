@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use client';
 
 import { useState } from 'react';
@@ -30,7 +29,6 @@ function LoginContent() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
-    // Clear error when user types
     if (errors[e.target.name as keyof typeof errors] || errors.root) {
       setErrors(prev => ({ ...prev, [e.target.name]: undefined, root: undefined }));
     }
@@ -58,7 +56,7 @@ function LoginContent() {
     } catch (error) {
       if (error instanceof z.ZodError) {
         const newErrors: Record<string, string> = {};
-        error.errors.forEach(err => {
+        (error as any).errors.forEach((err: any) => {
           if (err.path[0]) {
             newErrors[err.path[0].toString()] = err.message;
           }
@@ -75,27 +73,27 @@ function LoginContent() {
   return (
     <div className="flex flex-col space-y-8">
       <div className="text-center sm:text-left">
-        <h1 className="text-3xl font-bold tracking-tight text-gray-900">Welcome back</h1>
-        <p className="mt-2 text-sm text-gray-500">
+        <h1 className="text-3xl font-bold tracking-tight text-white">Welcome back</h1>
+        <p className="mt-2 text-sm text-[#A8B2C2]">
           Please sign in to your account to continue
         </p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {errors.root && (
-          <div className="rounded-lg bg-red-50 p-4 text-sm text-red-600 border border-red-100">
+          <div className="rounded-lg bg-red-500/10 p-4 text-sm text-red-400 border border-red-500/20">
             {errors.root}
           </div>
         )}
 
         <div className="space-y-4">
           <div className="space-y-1">
-            <label className="text-sm font-medium text-gray-700" htmlFor="email">
+            <label className="text-sm font-medium text-[#F5F7FB]" htmlFor="email">
               Email address
             </label>
             <div className="relative">
               <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                <Mail className="h-5 w-5 text-gray-400" />
+                <Mail className="h-5 w-5 text-[#6F7B8E]" />
               </div>
               <input
                 id="email"
@@ -105,30 +103,30 @@ function LoginContent() {
                 value={formData.email}
                 onChange={handleChange}
                 disabled={isLoading}
-                className={`block w-full h-11 rounded-lg border ${
-                  errors.email ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-indigo-500 focus:ring-indigo-500'
-                } pl-10 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-50`}
+                className={`block w-full h-11 rounded-lg border bg-[#111D31] text-white ${
+                  errors.email ? 'border-red-500/50 focus:border-red-500 focus:ring-red-500/20' : 'border-white/10 focus:border-[#168BFF] focus:ring-[#168BFF]/20'
+                } pl-10 px-3 py-2 text-sm placeholder-[#6F7B8E] focus:outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-50 transition-colors`}
                 placeholder="you@example.com"
               />
             </div>
-            {errors.email && <p className="text-sm text-red-500">{errors.email}</p>}
+            {errors.email && <p className="text-sm text-red-400">{errors.email}</p>}
           </div>
 
           <div className="space-y-1">
             <div className="flex items-center justify-between">
-              <label className="text-sm font-medium text-gray-700" htmlFor="password">
+              <label className="text-sm font-medium text-[#F5F7FB]" htmlFor="password">
                 Password
               </label>
               <Link
                 href="/forgot-password"
-                className="text-sm font-medium text-indigo-600 hover:text-indigo-500"
+                className="text-sm font-medium text-[#168BFF] hover:text-[#12CFEA] transition-colors"
               >
                 Forgot password?
               </Link>
             </div>
             <div className="relative">
               <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                <Lock className="h-5 w-5 text-gray-400" />
+                <Lock className="h-5 w-5 text-[#6F7B8E]" />
               </div>
               <input
                 id="password"
@@ -138,14 +136,14 @@ function LoginContent() {
                 value={formData.password}
                 onChange={handleChange}
                 disabled={isLoading}
-                className={`block w-full h-11 rounded-lg border ${
-                  errors.password ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-indigo-500 focus:ring-indigo-500'
-                } pl-10 pr-10 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-50`}
+                className={`block w-full h-11 rounded-lg border bg-[#111D31] text-white ${
+                  errors.password ? 'border-red-500/50 focus:border-red-500 focus:ring-red-500/20' : 'border-white/10 focus:border-[#168BFF] focus:ring-[#168BFF]/20'
+                } pl-10 pr-10 px-3 py-2 text-sm placeholder-[#6F7B8E] focus:outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-50 transition-colors`}
                 placeholder="••••••••"
               />
               <button
                 type="button"
-                className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-500"
+                className="absolute inset-y-0 right-0 flex items-center pr-3 text-[#6F7B8E] hover:text-[#A8B2C2] transition-colors"
                 onClick={() => setShowPassword(!showPassword)}
                 tabIndex={-1}
               >
@@ -156,14 +154,14 @@ function LoginContent() {
                 )}
               </button>
             </div>
-            {errors.password && <p className="text-sm text-red-500">{errors.password}</p>}
+            {errors.password && <p className="text-sm text-red-400">{errors.password}</p>}
           </div>
         </div>
 
         <button
           type="submit"
           disabled={isLoading}
-          className="flex w-full items-center justify-center h-11 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 transition-colors shadow-sm"
+          className="flex w-full items-center justify-center h-11 rounded-lg bg-[#168BFF] px-4 py-2 text-sm font-medium text-white hover:bg-[#12CFEA] focus:outline-none focus:ring-2 focus:ring-[#168BFF]/50 focus:ring-offset-2 focus:ring-offset-[#050B16] disabled:cursor-not-allowed disabled:opacity-50 transition-colors shadow-sm"
         >
           {isLoading ? (
             <Loader2 className="mr-2 h-5 w-5 animate-spin" />
@@ -173,13 +171,12 @@ function LoginContent() {
         </button>
       </form>
 
-      <div className="text-center text-sm text-gray-500">
-        Don&apos;t have an account?{' '}
-        <Link href="/register" className="font-semibold text-indigo-600 hover:text-indigo-500">
+      <div className="text-center text-sm text-[#A8B2C2]">
+        Don't have an account?{' '}
+        <Link href="/register" className="font-semibold text-[#168BFF] hover:text-[#12CFEA] transition-colors">
           Sign up
         </Link>
       </div>
     </div>
   );
 }
-

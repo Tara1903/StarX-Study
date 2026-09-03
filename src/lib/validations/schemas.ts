@@ -182,3 +182,21 @@ export type CreateAssignmentInput = z.infer<typeof createAssignmentSchema>;
 export type SubmitAssignmentInput = z.infer<typeof submitAssignmentSchema>;
 export type GradeSubmissionInput = z.infer<typeof gradeSubmissionSchema>;
 export type CreateReportInput = z.infer<typeof createReportSchema>;
+
+// ============================================
+// Invite Code Schemas
+// ============================================
+
+export const generateInviteCodeSchema = z.object({
+  university_id: z.string().uuid(),
+  target_role: z.enum(['institute_head', 'teacher', 'student']),
+  max_uses: z.number().int().min(1).default(1),
+  expires_in_days: z.number().int().min(1).optional().nullable(),
+});
+
+export const useInviteCodeSchema = z.object({
+  code: z.string().min(1, "Invite code is required"),
+});
+
+export type GenerateInviteCodeInput = z.infer<typeof generateInviteCodeSchema>;
+export type UseInviteCodeInput = z.infer<typeof useInviteCodeSchema>;

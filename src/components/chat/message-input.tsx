@@ -1,4 +1,3 @@
-// @ts-nocheck
 "use client";
 import { useState, useRef, useEffect } from 'react';
 import { SendHorizontal, Paperclip, X } from 'lucide-react';
@@ -24,7 +23,7 @@ export function MessageInput({ subjectId, replyTo, onCancelReply }: MessageInput
   const { profile } = useUser();
   const { typingUsers, sendTypingEvent } = useTypingIndicator(subjectId);
 
-  const isRestricted = profile?.status === 'suspended' || profile?.status === 'restricted';
+  const isRestricted = (profile as any)?.status === 'suspended' || (profile as any)?.status === 'restricted';
 
   useEffect(() => {
     if (textareaRef.current) {
@@ -39,7 +38,11 @@ export function MessageInput({ subjectId, replyTo, onCancelReply }: MessageInput
 
     try {
       setIsSubmitting(true);
-      const result = await sendMessage(subjectId, content.trim(), replyTo?.id);
+      const result = await sendMessage({
+        subject_id: subjectId,
+        content: content.trim(),
+        reply_to_id: replyTo?.id
+      });
       
       if (result.error) {
         toast.error(result.error);
@@ -113,4 +116,3 @@ export function MessageInput({ subjectId, replyTo, onCancelReply }: MessageInput
     </div>
   );
 }
-

@@ -6,8 +6,9 @@ import { useUser } from '@/components/providers/user-provider';
 export function useTypingIndicator(subjectId: string) {
   const [typingUsers, setTypingUsers] = useState<Set<string>>(new Set());
   const { profile } = useUser();
-  const supabase = createClient();
+  const [supabase] = useState(() => createClient());
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
   useEffect(() => {
     const channel = supabase.channel(`subject:${subjectId}:typing`)
@@ -35,9 +36,12 @@ export function useTypingIndicator(subjectId: string) {
         }
       )
       .subscribe();
+      
+    channelRef.current = channel;
 
     return () => {
       supabase.removeChannel(channel);
+      channelRef.current = null;
       if (typingTimeoutRef.current) {
         clearTimeout(typingTimeoutRef.current);
       }
@@ -45,22 +49,20 @@ export function useTypingIndicator(subjectId: string) {
   }, [subjectId, supabase, profile?.id]);
 
   const sendTypingEvent = useCallback(() => {
-    if (!profile) return;
-    
-    const channel = supabase.channel(`subject:${subjectId}:typing`);
+    if (!profile || !channelRef.current) return;
     
     if (typingTimeoutRef.current) {
       clearTimeout(typingTimeoutRef.current);
     }
     
-    channel.send({
+    channelRef.current.send({
       type: 'broadcast',
       event: 'typing',
       payload: { user_id: profile.id, user_name: profile.full_name || 'Someone' }
     });
     
     typingTimeoutRef.current = setTimeout(() => {}, 2000); // Debounce visual
-  }, [subjectId, supabase, profile]);
+  }, [profile]);
 
   return {
     typingUsers: Array.from(typingUsers),

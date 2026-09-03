@@ -39,9 +39,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   return (
     <div className="flex flex-col md:flex-row h-full min-h-[calc(100vh-4rem)]">
       {/* Sidebar */}
-      <aside className="w-full md:w-64 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex-shrink-0">
+      <aside className="w-full md:w-64 border-r border-border bg-card flex-shrink-0">
         <div className="p-4">
-          <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-4">
+          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4">
             University Administration
           </h2>
           <nav className="space-y-1">
@@ -51,7 +51,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
                 <Link
                   key={item.name}
                   href={item.href}
-                  className="flex items-center space-x-3 px-3 py-2 rounded-md text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white transition-colors"
+                  className="flex items-center space-x-3 px-3 py-2 rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
                 >
                   <Icon className="h-5 w-5 flex-shrink-0" />
                   <span className="font-medium">{item.name}</span>
@@ -63,7 +63,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 p-6 bg-slate-50 dark:bg-slate-950 overflow-y-auto">
+      <main className="flex-1 p-6 bg-background overflow-y-auto">
         <div className="max-w-6xl mx-auto">
           {children}
         </div>

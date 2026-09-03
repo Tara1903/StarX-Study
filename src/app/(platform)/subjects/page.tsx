@@ -20,7 +20,7 @@ export default async function SubjectsPage() {
       subjects:subject_id (
         id,
         name,
-        color_code,
+        color,
         description,
         semesters (
           name,
@@ -71,7 +71,7 @@ export default async function SubjectsPage() {
               <div className="group relative flex flex-col overflow-hidden rounded-xl border bg-card transition-all hover:shadow-md h-full">
                 <div
                   className="h-24 w-full"
-                  style={{ backgroundColor: subject.color_code || '#3b82f6' }}
+                  style={{ backgroundColor: subject.color || '#3b82f6' }}
                 />
                 <div className="flex flex-col flex-grow p-5">
                   <h3 className="font-semibold text-lg line-clamp-1 group-hover:text-primary transition-colors">

@@ -1,7 +1,6 @@
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
-import { createAdminClient } from '@/lib/supabase/admin';
 import { createAnnouncementSchema } from '@/lib/validations/schemas';
 import { revalidatePath } from 'next/cache';
 
@@ -14,7 +13,7 @@ export async function createAnnouncement(formData: FormData) {
   const parsed = createAnnouncementSchema.safeParse(data);
   if (!parsed.success) return { success: false, error: 'Invalid data' };
 
-  const { university_id, title, content, target_type } = parsed.data;
+  const { university_id, title, content, target_type, target_id, priority, scheduled_at } = parsed.data;
 
   // Validate admin/teacher
   const { data: member } = await supabase.from('university_memberships')
@@ -32,7 +31,10 @@ export async function createAnnouncement(formData: FormData) {
     author_id: user.id,
     title,
     content,
-    target_role: target_type || null
+    target_type,
+    target_id,
+    priority,
+    scheduled_at: scheduled_at || null
   }).select().single();
 
   if (error) return { success: false, error: error.message };
@@ -71,7 +73,7 @@ export async function deleteAnnouncement(announcementId: string) {
       .eq('university_id', announcement.university_id)
       .eq('user_id', user.id)
       .single();
-    if (member && member.role === 'student_admin') isAuthorized = true;
+    if (member && (member.role === 'student_admin' || member.role === 'teacher_admin')) isAuthorized = true;
   }
 
   if (!isAuthorized) return { success: false, error: 'Unauthorized' };

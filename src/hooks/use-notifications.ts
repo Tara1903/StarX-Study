@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useState, useEffect, useCallback } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useUser } from '@/components/providers/user-provider';
@@ -10,7 +9,7 @@ export function useNotifications() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const { profile } = useUser();
-  const supabase = createClient();
+  const [supabase] = useState(() => createClient());
 
   const fetchNotifications = useCallback(async () => {
     if (!profile) return;
@@ -24,7 +23,7 @@ export function useNotifications() {
         
       if (error) throw error;
       setNotifications(data as Notification[]);
-      setUnreadCount(data.filter((n) => !n.read_at).length);
+      setUnreadCount(data.filter((n) => !n.is_read).length);
     } catch (error) {
       console.error('Error fetching notifications:', error);
     }
@@ -49,7 +48,7 @@ export function useNotifications() {
           setNotifications(prev => [payload.new as Notification, ...prev]);
           setUnreadCount(prev => prev + 1);
           toast('New notification', {
-            description: (payload.new as Notification).content
+            description: (payload.new as Notification).body || (payload.new as Notification).title
           });
         }
       )
@@ -67,8 +66,7 @@ export function useNotifications() {
   };
 
   const markAllRead = async () => {
-    const now = new Date().toISOString();
-    setNotifications(prev => prev.map(n => ({ ...n, is_read: n.read_at || now })));
+    setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
     setUnreadCount(0);
     await markAllNotificationsRead();
   };
@@ -80,4 +78,3 @@ export function useNotifications() {
     markAllRead
   };
 }
-

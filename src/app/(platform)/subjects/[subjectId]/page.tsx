@@ -76,7 +76,7 @@ export default async function SubjectOverviewPage({ params }: PageProps) {
       {/* Subject Header */}
       <div 
         className="h-48 relative overflow-hidden flex flex-col justify-end px-6 lg:px-12 py-8 text-white"
-        style={{ backgroundColor: subject.color_code || '#3b82f6' }}
+        style={{ backgroundColor: subject.color || '#3b82f6' }}
       >
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
         <div className="relative z-10 flex flex-col gap-2">
