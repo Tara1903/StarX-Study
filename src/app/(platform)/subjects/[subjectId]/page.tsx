@@ -19,6 +19,7 @@ import {
   ArrowLeft
 } from 'lucide-react';
 import { ECE_SUBJECTS, ECE_WEEKLY_SCHEDULE } from '@/lib/ece-data';
+import { resolveSubject } from '@/lib/subject-resolver';
 
 interface PageProps {
   params: Promise<{ subjectId: string }>;
@@ -33,40 +34,24 @@ export default async function SubjectOverviewPage({ params }: PageProps) {
     redirect('/login');
   }
 
-  // 1. Check if this is an ECE core subject
-  const eceSubject = ECE_SUBJECTS.find(s => s.id === subjectId);
-
-  // 2. Query Supabase for custom/enrolled subject
-  const { data: dbSubject } = await supabase
-    .from('subjects')
-    .select(`
-      *,
-      semesters (
-        name,
-        departments (
-          name,
-          institutes (name)
-        )
-      )
-    `)
-    .eq('id', subjectId)
-    .maybeSingle();
-
-  if (!eceSubject && !dbSubject) {
+  const subject = await resolveSubject(subjectId, supabase);
+  if (!subject) {
     notFound();
   }
 
+  const eceSubject = ECE_SUBJECTS.find(s => s.id === subject.id);
+
   // Unified Subject details
-  const subjectName = eceSubject?.name || dbSubject?.name || 'Subject';
-  const subjectCode = eceSubject?.code || 'IET-ECE-2026';
-  const subjectColor = eceSubject?.color || dbSubject?.color || '#3B82F6';
-  const facultyName = eceSubject?.facultyName || 'Department Faculty';
-  const facultyAbb = eceSubject?.facultyAbb || 'ECE';
-  const roomName = eceSubject?.room || 'Room No. 03';
-  const description = eceSubject?.description || dbSubject?.description || 'Course curriculum and learning resources.';
-  const departmentName = 'Electronics & Communication Engineering';
-  const semesterName = 'I Sem (B.Tech)';
-  const instituteName = 'IET, SAGE University';
+  const subjectName = subject.name;
+  const subjectCode = subject.code;
+  const subjectColor = subject.color;
+  const facultyName = subject.facultyName;
+  const facultyAbb = subject.facultyAbb;
+  const roomName = subject.room;
+  const description = subject.description;
+  const departmentName = subject.departmentName;
+  const semesterName = subject.semesterInfo;
+  const instituteName = subject.universityName;
 
   // Find classes scheduled for this subject in the timetable
   const scheduledClasses: { day: string; slot: number; time: string; type: string }[] = [];

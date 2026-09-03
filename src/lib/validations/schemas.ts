@@ -89,7 +89,7 @@ export const enrollMemberSchema = z.object({
 // ============================================
 
 export const sendMessageSchema = z.object({
-  subject_id: z.string().uuid(),
+  subject_id: z.string().min(1, "Subject ID is required"),
   content: z.string().min(1, "Message cannot be empty").max(4000, "Message is too long"),
   reply_to_id: z.string().uuid().optional().nullable(),
 });

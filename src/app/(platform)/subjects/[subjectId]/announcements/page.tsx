@@ -1,7 +1,19 @@
 import { createClient } from '@/lib/supabase/server';
 import { notFound, redirect } from 'next/navigation';
-import { Bell, AlertTriangle, Info, Plus } from 'lucide-react';
+import { 
+  Bell, 
+  AlertTriangle, 
+  Info, 
+  Pin,
+  ArrowLeft,
+  ChevronRight,
+  BarChart3,
+  FileText,
+  BookOpen,
+  MessageSquare
+} from 'lucide-react';
 import Link from 'next/link';
+import { resolveSubject, getSubjectAnnouncements, isUuid } from '@/lib/subject-resolver';
 
 interface PageProps {
   params: Promise<{ subjectId: string }>;
@@ -16,106 +28,147 @@ export default async function SubjectAnnouncementsPage({ params }: PageProps) {
     redirect('/login');
   }
 
-  // Verify membership
-  const { data: membership } = await supabase
-    .from('subject_members')
-    .select('role')
-    .eq('subject_id', subjectId)
-    .eq('user_id', user.id)
-    .single();
-
-  if (!membership) {
+  const subject = await resolveSubject(subjectId, supabase);
+  if (!subject) {
     notFound();
   }
 
-  const isTeacher = membership.role === 'teacher';
+  // Fetch announcements from DB or pre-seeded subject announcements
+  let announcements: any[] = [];
+  if (isUuid(subject.uuid)) {
+    try {
+      const { data } = await supabase
+        .from('announcements')
+        .select(`
+          *,
+          author:author_id(id, full_name, avatar_url)
+        `)
+        .eq('target_type', 'subject')
+        .eq('target_id', subject.uuid)
+        .order('created_at', { ascending: false });
 
-  // Fetch announcements
-  const { data: announcements } = await supabase
-    .from('announcements')
-    .select(`
-      *,
-      author:author_id(id, full_name, avatar_url)
-    `)
-    .eq('target_type', 'subject')
-    .eq('target_id', subjectId)
-    .order('created_at', { ascending: false });
+      if (data && data.length > 0) {
+        announcements = data;
+      }
+    } catch {
+      // ignore query error
+    }
+  }
 
-  const priorityConfig = {
-    normal: { color: 'bg-blue-100 text-blue-800 border-blue-200', icon: Info },
-    important: { color: 'bg-amber-100 text-amber-800 border-amber-200', icon: Bell },
-    urgent: { color: 'bg-red-100 text-red-800 border-red-200', icon: AlertTriangle },
-  };
+  if (announcements.length === 0) {
+    announcements = getSubjectAnnouncements(subject.id);
+  }
+
+  const tabs = [
+    { name: 'Overview', href: `/subjects/${subjectId}`, active: false, icon: BarChart3 },
+    { name: 'Announcements', href: `/subjects/${subjectId}/announcements`, active: true, icon: Bell },
+    { name: 'Materials', href: `/subjects/${subjectId}/materials`, active: false, icon: FileText },
+    { name: 'Assignments', href: `/subjects/${subjectId}/assignments`, active: false, icon: BookOpen },
+    { name: 'Chat', href: `/subjects/${subjectId}/chat`, active: false, icon: MessageSquare },
+  ];
 
   return (
-    <div className="p-6 max-w-4xl mx-auto w-full flex flex-col gap-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Announcements</h1>
-          <p className="text-muted-foreground mt-1 text-sm">Stay updated with the latest news for this subject.</p>
+    <div className="flex flex-col min-h-[calc(100vh-4rem)] pb-12">
+      {/* Subject Header Banner */}
+      <div 
+        className="h-44 relative overflow-hidden flex flex-col justify-end px-6 lg:px-12 py-6 text-white shadow-md"
+        style={{ 
+          background: `linear-gradient(135deg, ${subject.color}, #0F172A)` 
+        }}
+      >
+        <div className="absolute inset-0 bg-black/40 backdrop-blur-[1px]" />
+        <div className="relative z-10 flex flex-col gap-2 max-w-4xl">
+          <Link 
+            href={`/subjects/${subjectId}`}
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-white/80 hover:text-white transition-colors w-fit bg-black/25 px-2.5 py-1 rounded-md mb-1"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" /> Back to {subject.name}
+          </Link>
+
+          <div className="flex flex-wrap items-center gap-2 text-xs font-semibold text-white/90">
+            <span>{subject.name}</span>
+            <ChevronRight className="h-3.5 w-3.5 opacity-70" />
+            <span className="bg-white/20 px-2 py-0.5 rounded font-mono">{subject.code}</span>
+            <span className="bg-white/20 px-2 py-0.5 rounded">{subject.facultyName}</span>
+          </div>
+
+          <h1 className="text-2xl lg:text-3xl font-extrabold tracking-tight">Subject Announcements</h1>
         </div>
-        {isTeacher && (
-          <button className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-md font-medium text-sm hover:bg-primary/90 transition-colors">
-            <Plus className="h-4 w-4" />
-            Create
-          </button>
-        )}
       </div>
 
-      {!announcements || announcements.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-20 text-center border rounded-xl bg-card/50 border-dashed">
-          <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center mb-4">
-            <Bell className="h-6 w-6 text-muted-foreground" />
-          </div>
-          <h3 className="text-lg font-medium">No announcements</h3>
-          <p className="text-muted-foreground mt-1 max-w-sm text-sm">
-            There are no announcements for this subject yet.
-          </p>
+      {/* Tabs */}
+      <div className="border-b bg-background sticky top-0 z-20 px-6 lg:px-12">
+        <div className="flex overflow-x-auto scrollbar-none">
+          {tabs.map((tab) => (
+            <Link
+              key={tab.name}
+              href={tab.href}
+              className={`flex items-center gap-2 py-3 px-4 border-b-2 font-medium text-sm whitespace-nowrap transition-colors ${
+                tab.active 
+                  ? 'border-primary text-primary' 
+                  : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
+              }`}
+            >
+              <tab.icon className="w-4 h-4" />
+              {tab.name}
+            </Link>
+          ))}
         </div>
-      ) : (
-        <div className="space-y-4">
-          {announcements.map((announcement) => {
-            const priority = announcement.priority || 'normal';
-            // @ts-ignore
-            const config = priorityConfig[priority] || priorityConfig.normal;
-            const Icon = config.icon;
+      </div>
 
-            return (
-              <div key={announcement.id} className="bg-card border rounded-xl p-5 shadow-sm hover:shadow-md transition-shadow">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1 space-y-3">
-                    <div className="flex items-center gap-2">
-                      <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold border ${config.color}`}>
-                        <Icon className="h-3 w-3" />
-                        <span className="capitalize">{priority}</span>
-                      </span>
-                      <span className="text-xs text-muted-foreground">
-                        {new Date(announcement.created_at).toLocaleDateString(undefined, {
-                          year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
-                        })}
-                      </span>
-                    </div>
-                    <h3 className="font-semibold text-lg">{announcement.title}</h3>
-                    <p className="text-sm text-muted-foreground whitespace-pre-wrap">{announcement.content}</p>
-                    <div className="flex items-center gap-2 pt-2">
-                      <div className="h-6 w-6 rounded-full bg-muted overflow-hidden flex items-center justify-center">
-                        {announcement.author?.avatar_url ? (
-                          <img src={announcement.author.avatar_url} alt="" className="h-full w-full object-cover" />
-                        ) : (
-                          <span className="text-[10px] font-medium text-muted-foreground">
-                            {announcement.author?.full_name?.charAt(0) || '?'}
-                          </span>
-                        )}
-                      </div>
-                      <span className="text-xs font-medium text-foreground">{announcement.author?.full_name || 'Unknown'}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
+      {/* Content */}
+      <div className="p-6 max-w-5xl mx-auto w-full flex flex-col gap-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-xl font-bold tracking-tight">Updates & Class Notices</h2>
+            <p className="text-muted-foreground mt-0.5 text-xs">
+              Announcements specifically published for {subject.name} by {subject.facultyName}.
+            </p>
+          </div>
+          <Link
+            href={`/subjects/${subjectId}/chat`}
+            className="flex items-center gap-2 px-3 py-1.5 bg-primary text-primary-foreground text-xs font-semibold rounded-lg hover:bg-primary/90 transition-all shadow-sm"
+          >
+            <MessageSquare className="w-3.5 h-3.5" />
+            Open {subject.shortName} Chat
+          </Link>
         </div>
-      )}
+
+        <div className="space-y-4">
+          {announcements.map((item) => (
+            <div
+              key={item.id}
+              className={`p-5 rounded-2xl border transition-all ${
+                item.isPinned
+                  ? 'bg-amber-500/5 border-amber-500/30'
+                  : 'bg-card border-border hover:border-primary/40'
+              }`}
+            >
+              <div className="flex items-start justify-between gap-4 mb-2">
+                <div className="flex items-center gap-2">
+                  {item.isPinned && (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold bg-amber-500/20 text-amber-400 border border-amber-500/30">
+                      <Pin className="w-3 h-3" /> Pinned
+                    </span>
+                  )}
+                  <h3 className="font-bold text-base text-foreground">{item.title}</h3>
+                </div>
+                <span className="text-xs text-muted-foreground shrink-0">
+                  {new Date(item.date || item.created_at).toLocaleDateString()}
+                </span>
+              </div>
+
+              <p className="text-xs text-muted-foreground mb-3">
+                Posted by: <span className="text-foreground font-medium">{item.author?.full_name || item.author}</span>
+              </p>
+
+              <p className="text-sm text-foreground/90 whitespace-pre-line leading-relaxed">
+                {item.content}
+              </p>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }

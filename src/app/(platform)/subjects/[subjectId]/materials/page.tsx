@@ -1,6 +1,20 @@
 import { createClient } from '@/lib/supabase/server';
 import { notFound, redirect } from 'next/navigation';
-import { FileText, Download, Upload, FileIcon, ImageIcon, FileAudioIcon } from 'lucide-react';
+import { 
+  FileText, 
+  Download, 
+  FileIcon, 
+  ImageIcon, 
+  FileAudioIcon,
+  ArrowLeft,
+  ChevronRight,
+  BarChart3,
+  Bell,
+  BookOpen,
+  MessageSquare
+} from 'lucide-react';
+import Link from 'next/link';
+import { resolveSubject, getSubjectMaterials, isUuid } from '@/lib/subject-resolver';
 
 interface PageProps {
   params: Promise<{ subjectId: string }>;
@@ -15,30 +29,38 @@ export default async function SubjectMaterialsPage({ params }: PageProps) {
     redirect('/login');
   }
 
-  const { data: membership } = await supabase
-    .from('subject_members')
-    .select('role')
-    .eq('subject_id', subjectId)
-    .eq('user_id', user.id)
-    .single();
-
-  if (!membership) {
+  const subject = await resolveSubject(subjectId, supabase);
+  if (!subject) {
     notFound();
   }
 
-  const isTeacher = membership.role === 'teacher';
+  // Fetch materials from DB or pre-seeded subject materials
+  let materials: any[] = [];
+  if (isUuid(subject.uuid)) {
+    try {
+      const { data } = await supabase
+        .from('materials')
+        .select('*')
+        .eq('subject_id', subject.uuid)
+        .order('created_at', { ascending: false });
 
-  const { data: materials } = await supabase
-    .from('materials')
-    .select('*')
-    .eq('subject_id', subjectId)
-    .order('created_at', { ascending: false });
+      if (data && data.length > 0) {
+        materials = data;
+      }
+    } catch {
+      // ignore
+    }
+  }
+
+  if (materials.length === 0) {
+    materials = getSubjectMaterials(subject.id);
+  }
 
   const getFileIcon = (type: string) => {
-    if (type.includes('image')) return <ImageIcon className="h-10 w-10 text-blue-500" />;
-    if (type.includes('audio') || type.includes('video')) return <FileAudioIcon className="h-10 w-10 text-purple-500" />;
-    if (type.includes('pdf')) return <FileText className="h-10 w-10 text-red-500" />;
-    return <FileIcon className="h-10 w-10 text-gray-500" />;
+    if (type.includes('image')) return <ImageIcon className="h-9 w-9 text-blue-400" />;
+    if (type.includes('audio') || type.includes('video')) return <FileAudioIcon className="h-9 w-9 text-purple-400" />;
+    if (type.includes('pdf')) return <FileText className="h-9 w-9 text-red-400" />;
+    return <FileIcon className="h-9 w-9 text-muted-foreground" />;
   };
 
   const formatSize = (bytes: number) => {
@@ -49,66 +71,115 @@ export default async function SubjectMaterialsPage({ params }: PageProps) {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
   };
 
+  const tabs = [
+    { name: 'Overview', href: `/subjects/${subjectId}`, active: false, icon: BarChart3 },
+    { name: 'Announcements', href: `/subjects/${subjectId}/announcements`, active: false, icon: Bell },
+    { name: 'Materials', href: `/subjects/${subjectId}/materials`, active: true, icon: FileText },
+    { name: 'Assignments', href: `/subjects/${subjectId}/assignments`, active: false, icon: BookOpen },
+    { name: 'Chat', href: `/subjects/${subjectId}/chat`, active: false, icon: MessageSquare },
+  ];
+
   return (
-    <div className="p-6 max-w-6xl mx-auto w-full flex flex-col gap-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Materials</h1>
-          <p className="text-muted-foreground mt-1 text-sm">Access course documents, slides, and other resources.</p>
+    <div className="flex flex-col min-h-[calc(100vh-4rem)] pb-12">
+      {/* Subject Header Banner */}
+      <div 
+        className="h-44 relative overflow-hidden flex flex-col justify-end px-6 lg:px-12 py-6 text-white shadow-md"
+        style={{ 
+          background: `linear-gradient(135deg, ${subject.color}, #0F172A)` 
+        }}
+      >
+        <div className="absolute inset-0 bg-black/40 backdrop-blur-[1px]" />
+        <div className="relative z-10 flex flex-col gap-2 max-w-4xl">
+          <Link 
+            href={`/subjects/${subjectId}`}
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-white/80 hover:text-white transition-colors w-fit bg-black/25 px-2.5 py-1 rounded-md mb-1"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" /> Back to {subject.name}
+          </Link>
+
+          <div className="flex flex-wrap items-center gap-2 text-xs font-semibold text-white/90">
+            <span>{subject.name}</span>
+            <ChevronRight className="h-3.5 w-3.5 opacity-70" />
+            <span className="bg-white/20 px-2 py-0.5 rounded font-mono">{subject.code}</span>
+            <span className="bg-white/20 px-2 py-0.5 rounded">{subject.facultyName}</span>
+          </div>
+
+          <h1 className="text-2xl lg:text-3xl font-extrabold tracking-tight">Study Materials & Notes</h1>
         </div>
-        {isTeacher && (
-          <button className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-md font-medium text-sm hover:bg-primary/90 transition-colors">
-            <Upload className="h-4 w-4" />
-            Upload Material
-          </button>
-        )}
       </div>
 
-      {!materials || materials.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-20 text-center border rounded-xl bg-card/50 border-dashed">
-          <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center mb-4">
-            <FileText className="h-8 w-8 text-muted-foreground" />
-          </div>
-          <h3 className="text-lg font-medium">No materials available</h3>
-          <p className="text-muted-foreground mt-1 max-w-sm text-sm">
-            {isTeacher 
-              ? "You haven't uploaded any materials yet. Click 'Upload Material' to get started." 
-              : "Your teacher hasn't uploaded any materials for this subject yet."}
-          </p>
+      {/* Tabs */}
+      <div className="border-b bg-background sticky top-0 z-20 px-6 lg:px-12">
+        <div className="flex overflow-x-auto scrollbar-none">
+          {tabs.map((tab) => (
+            <Link
+              key={tab.name}
+              href={tab.href}
+              className={`flex items-center gap-2 py-3 px-4 border-b-2 font-medium text-sm whitespace-nowrap transition-colors ${
+                tab.active 
+                  ? 'border-primary text-primary' 
+                  : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
+              }`}
+            >
+              <tab.icon className="w-4 h-4" />
+              {tab.name}
+            </Link>
+          ))}
         </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {materials.map((material) => (
-            <div key={material.id} className="bg-card border rounded-xl p-4 flex flex-col gap-4 shadow-sm hover:shadow-md transition-all group">
-              <div className="flex items-start gap-4">
-                <div className="p-2 bg-muted/50 rounded-lg">
-                  {getFileIcon(material.file_type || '')}
+      </div>
+
+      {/* Content */}
+      <div className="p-6 max-w-5xl mx-auto w-full flex flex-col gap-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-xl font-bold tracking-tight">Handouts & Learning Resources</h2>
+            <p className="text-muted-foreground mt-0.5 text-xs">
+              Lecture slides, question banks, and reference materials for {subject.name}.
+            </p>
+          </div>
+          <Link
+            href={`/subjects/${subjectId}/chat`}
+            className="flex items-center gap-2 px-3 py-1.5 bg-primary text-primary-foreground text-xs font-semibold rounded-lg hover:bg-primary/90 transition-all shadow-sm"
+          >
+            <MessageSquare className="w-3.5 h-3.5" />
+            Discuss in Chat
+          </Link>
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {materials.map((file) => (
+            <div
+              key={file.id}
+              className="bg-card border border-border rounded-2xl p-5 flex flex-col justify-between gap-4 hover:border-primary/50 transition-all shadow-sm group"
+            >
+              <div className="flex items-start gap-3">
+                <div className="p-2.5 rounded-xl bg-muted/60 shrink-0">
+                  {getFileIcon(file.type || file.mime_type || '')}
                 </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-sm truncate" title={material.title}>{material.title}</h3>
-                  <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
-                    {material.description || 'No description provided'}
+                <div className="min-w-0 flex-1">
+                  <h3 className="font-semibold text-sm text-foreground group-hover:text-primary transition-colors line-clamp-2">
+                    {file.title || file.name}
+                  </h3>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {formatSize(file.size || file.file_size)} • {file.date || new Date(file.created_at || Date.now()).toLocaleDateString()}
+                  </p>
+                  <p className="text-[11px] text-muted-foreground/80 mt-0.5">
+                    By {file.author || subject.facultyName}
                   </p>
                 </div>
               </div>
-              
-              <div className="mt-auto flex items-center justify-between pt-2 border-t">
-                <div className="text-xs text-muted-foreground flex items-center gap-2">
-                  <span>{formatSize(material.file_size)}</span>
-                  <span>•</span>
-                  <span>{new Date(material.created_at).toLocaleDateString()}</span>
-                </div>
-                <button 
-                  className="p-1.5 bg-primary/10 text-primary rounded-md hover:bg-primary hover:text-primary-foreground transition-colors"
-                  title="Download"
-                >
-                  <Download className="h-4 w-4" />
-                </button>
-              </div>
+
+              <button
+                type="button"
+                className="w-full flex items-center justify-center gap-2 py-2 px-3 bg-muted hover:bg-primary hover:text-primary-foreground text-foreground text-xs font-semibold rounded-xl transition-colors cursor-pointer"
+              >
+                <Download className="w-3.5 h-3.5" />
+                <span>Download Document</span>
+              </button>
             </div>
           ))}
         </div>
-      )}
+      </div>
     </div>
   );
 }

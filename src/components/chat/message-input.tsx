@@ -14,9 +14,10 @@ interface MessageInputProps {
   subjectId: string;
   replyTo: MessageWithSender | null;
   onCancelReply: () => void;
+  onMessageSent?: (message: MessageWithSender) => void;
 }
 
-export function MessageInput({ subjectId, replyTo, onCancelReply }: MessageInputProps) {
+export function MessageInput({ subjectId, replyTo, onCancelReply, onMessageSent }: MessageInputProps) {
   const [content, setContent] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -38,15 +39,20 @@ export function MessageInput({ subjectId, replyTo, onCancelReply }: MessageInput
 
     try {
       setIsSubmitting(true);
+      const textToSend = content.trim();
       const result = await sendMessage({
         subject_id: subjectId,
-        content: content.trim(),
+        content: textToSend,
         reply_to_id: replyTo?.id
       });
       
       if (result.error) {
         toast.error(result.error);
         return;
+      }
+
+      if (result.data && onMessageSent) {
+        onMessageSent(result.data as MessageWithSender);
       }
       
       setContent('');
