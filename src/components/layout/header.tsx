@@ -27,12 +27,9 @@ export function Header() {
   };
 
   return (
-    <header className="h-16 flex items-center justify-between px-4 lg:px-8 bg-background/80 backdrop-blur border-b border-border z-10 sticky top-0">
+    <header className="hidden lg:flex h-16 items-center justify-between px-8 bg-background/80 backdrop-blur border-b border-border z-10 sticky top-0">
       <div className="flex items-center gap-4">
-        <button className="lg:hidden p-2 -ml-2 text-muted-foreground hover:text-foreground rounded-lg hover:bg-accent transition-colors">
-          <Menu className="w-6 h-6" />
-        </button>
-        <div className="hidden sm:block">
+        <div>
           <h1 className="text-lg font-semibold tracking-tight">Dashboard</h1>
         </div>
       </div>

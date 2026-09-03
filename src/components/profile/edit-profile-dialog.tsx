@@ -54,19 +54,22 @@ export function EditProfileDialog({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in">
+    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in">
       <div 
-        className="bg-card border border-border/80 w-full max-w-lg rounded-3xl shadow-2xl flex flex-col overflow-hidden"
+        className="bg-card border-t sm:border border-border/80 w-full max-w-lg rounded-t-3xl sm:rounded-3xl shadow-2xl flex flex-col overflow-hidden max-h-[92vh] sm:max-h-[90vh]"
         onClick={(e) => e.stopPropagation()}
       >
+        {/* Mobile Sheet Drag Handle */}
+        <div className="w-12 h-1.5 bg-muted-foreground/30 rounded-full mx-auto mt-2.5 mb-0.5 sm:hidden shrink-0" />
+
         {/* Header */}
-        <div className="p-5 border-b border-border flex items-center justify-between bg-muted/20">
+        <div className="p-4 sm:p-5 border-b border-border flex items-center justify-between bg-muted/20">
           <div>
-            <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
+            <h2 className="text-base sm:text-lg font-bold text-foreground flex items-center gap-2">
               <User className="w-4 h-4 text-primary" />
               <span>Edit Personal Information</span>
             </h2>
-            <p className="text-xs text-muted-foreground mt-0.5">
+            <p className="text-[11px] sm:text-xs text-muted-foreground mt-0.5">
               Update your display identity and bio on StudChat
             </p>
           </div>
@@ -79,7 +82,7 @@ export function EditProfileDialog({
         </div>
 
         {/* Form Body */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="p-5 sm:p-6 space-y-4 overflow-y-auto pb-[calc(1.25rem+env(safe-area-inset-bottom,0px))] sm:pb-6">
           {/* Full Name (Read-only / verified) */}
           <div>
             <label className="text-xs font-semibold text-muted-foreground flex items-center justify-between mb-1.5">
@@ -152,7 +155,7 @@ export function EditProfileDialog({
               variant="outline"
               onClick={onClose}
               disabled={isSaving}
-              className="text-xs rounded-xl"
+              className="flex-1 sm:flex-none text-xs rounded-xl h-10 sm:h-9"
             >
               Cancel
             </Button>
@@ -160,7 +163,7 @@ export function EditProfileDialog({
             <Button
               type="submit"
               disabled={isSaving}
-              className="text-xs rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 gap-1.5"
+              className="flex-1 sm:flex-none text-xs rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 gap-1.5 h-10 sm:h-9 shadow-md"
             >
               {isSaving ? (
                 <>

@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { useUser } from '@/components/providers/user-provider';
 import { getInitials } from '@/lib/utils';
 import Link from 'next/link';
@@ -20,6 +21,12 @@ import { ECE_SUBJECTS, ECE_WEEKLY_SCHEDULE, TIME_SLOTS } from '@/lib/ece-data';
 
 export default function DashboardPage() {
   const { profile, activeRole } = useUser();
+  const [todayName, setTodayName] = useState('Monday');
+
+  useEffect(() => {
+    const dayMap = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    setTodayName(dayMap[new Date().getDay()] || 'Monday');
+  }, []);
 
   const getRoleBadgeColor = () => {
     switch (activeRole) {
@@ -29,11 +36,6 @@ export default function DashboardPage() {
     }
   };
 
-  // Determine current day for timetable schedule preview
-  const dayIndex = typeof window !== 'undefined' ? new Date().getDay() : 1;
-  const dayMap = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-  const todayName = dayMap[dayIndex] || 'Monday';
-  
   // Find today's schedule or fallback to Monday
   const todaySchedule = ECE_WEEKLY_SCHEDULE.find(s => s.day === todayName) || ECE_WEEKLY_SCHEDULE[0];
 

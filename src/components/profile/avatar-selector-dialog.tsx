@@ -160,19 +160,22 @@ export function AvatarSelectorDialog({
     : STUDCHAT_PRESETS.filter((p) => p.category === presetCategory);
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in">
+    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in">
       <div 
-        className="bg-card border border-border/80 w-full max-w-xl rounded-3xl shadow-2xl flex flex-col overflow-hidden max-h-[90vh]"
+        className="bg-card border-t sm:border border-border/80 w-full max-w-xl rounded-t-3xl sm:rounded-3xl shadow-2xl flex flex-col overflow-hidden max-h-[92vh] sm:max-h-[90vh]"
         onClick={(e) => e.stopPropagation()}
       >
+        {/* Mobile Sheet Drag Handle */}
+        <div className="w-12 h-1.5 bg-muted-foreground/30 rounded-full mx-auto mt-2.5 mb-0.5 sm:hidden shrink-0" />
+
         {/* Header */}
-        <div className="p-5 border-b border-border flex items-center justify-between bg-muted/20">
+        <div className="p-4 sm:p-5 border-b border-border flex items-center justify-between bg-muted/20">
           <div>
-            <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
+            <h2 className="text-base sm:text-lg font-bold text-foreground flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-primary" />
               <span>Personalize Your Avatar</span>
             </h2>
-            <p className="text-xs text-muted-foreground mt-0.5">
+            <p className="text-[11px] sm:text-xs text-muted-foreground mt-0.5">
               Choose an identity representation across StudChat
             </p>
           </div>
@@ -431,13 +434,13 @@ export function AvatarSelectorDialog({
         </div>
 
         {/* Footer Actions */}
-        <div className="p-4 border-t border-border flex items-center justify-end gap-3 bg-muted/20">
+        <div className="p-4 border-t border-border flex items-center justify-end gap-3 bg-muted/20 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] sm:pb-4">
           <Button
             type="button"
             variant="outline"
             onClick={onClose}
             disabled={isSaving}
-            className="text-xs rounded-xl"
+            className="flex-1 sm:flex-none text-xs rounded-xl h-10 sm:h-9"
           >
             Cancel
           </Button>
@@ -446,7 +449,7 @@ export function AvatarSelectorDialog({
             type="button"
             onClick={handleSave}
             disabled={isSaving}
-            className="text-xs rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 gap-1.5"
+            className="flex-1 sm:flex-none text-xs rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 gap-1.5 h-10 sm:h-9 shadow-md"
           >
             {isSaving ? (
               <>

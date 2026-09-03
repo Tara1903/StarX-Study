@@ -234,20 +234,20 @@ export default function ProfilePage() {
       {/* ============================================ */}
       {/* 1. PROFILE HEADER */}
       {/* ============================================ */}
-      <div className="bg-card border border-border rounded-3xl overflow-hidden shadow-xl relative">
+      <div className="bg-card border border-border rounded-2xl sm:rounded-3xl overflow-hidden shadow-xl relative">
         {/* Banner with Brand Glow */}
-        <div className="h-36 sm:h-44 bg-gradient-to-r from-blue-950 via-indigo-950 to-primary/80 relative overflow-hidden">
+        <div className="h-32 sm:h-44 bg-gradient-to-r from-blue-950 via-indigo-950 to-primary/80 relative overflow-hidden">
           <div className="absolute inset-0 bg-black/30" />
           <div className="absolute right-0 top-0 w-96 h-96 bg-primary/20 rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute left-6 top-6 flex items-center gap-2 px-3 py-1 rounded-full bg-black/40 backdrop-blur-md border border-white/10 text-[11px] font-semibold text-white/90">
+          <div className="absolute left-4 sm:left-6 top-4 sm:top-6 flex items-center gap-2 px-3 py-1 rounded-full bg-black/40 backdrop-blur-md border border-white/10 text-[11px] font-semibold text-white/90">
             <ShieldCheck className="w-3.5 h-3.5 text-primary" />
             <span>Verified Institutional Profile</span>
           </div>
         </div>
 
         {/* Profile Info Bar */}
-        <div className="px-6 pb-6 relative">
-          <div className="flex flex-col sm:flex-row items-center sm:items-end justify-between gap-5 -mt-16 sm:-mt-20 mb-4">
+        <div className="px-4 sm:px-6 pb-5 sm:pb-6 relative">
+          <div className="flex flex-col sm:flex-row items-center sm:items-end justify-between gap-4 sm:gap-5 -mt-14 sm:-mt-20 mb-4">
             {/* Avatar with Edit Badge */}
             <div className="relative group cursor-pointer" onClick={() => setIsAvatarSelectorOpen(true)}>
               <UserAvatar
@@ -342,7 +342,7 @@ export default function ProfilePage() {
       {/* ============================================ */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Personal Information */}
-        <div className="bg-card border border-border p-6 rounded-3xl space-y-4 shadow-sm">
+        <div className="bg-card border border-border p-4 sm:p-6 rounded-2xl sm:rounded-3xl space-y-4 shadow-sm">
           <div className="flex items-center justify-between border-b border-border pb-3">
             <h2 className="font-bold text-base text-foreground flex items-center gap-2">
               <User className="w-4 h-4 text-primary" />
@@ -385,7 +385,7 @@ export default function ProfilePage() {
         </div>
 
         {/* Academic / Professional Context */}
-        <div className="bg-card border border-border p-6 rounded-3xl space-y-4 shadow-sm">
+        <div className="bg-card border border-border p-4 sm:p-6 rounded-2xl sm:rounded-3xl space-y-4 shadow-sm">
           <div className="flex items-center justify-between border-b border-border pb-3">
             <h2 className="font-bold text-base text-foreground flex items-center gap-2">
               <GraduationCap className="w-4 h-4 text-primary" />
@@ -431,7 +431,7 @@ export default function ProfilePage() {
       {/* ============================================ */}
       {/* 3. MY SUBJECTS SUMMARY */}
       {/* ============================================ */}
-      <div className="bg-card border border-border p-6 rounded-3xl space-y-4 shadow-sm">
+      <div className="bg-card border border-border p-4 sm:p-6 rounded-2xl sm:rounded-3xl space-y-4 shadow-sm">
         <div className="flex items-center justify-between border-b border-border pb-3">
           <div>
             <h2 className="font-bold text-base text-foreground flex items-center gap-2">
@@ -481,7 +481,7 @@ export default function ProfilePage() {
       {/* ============================================ */}
       {/* 4. STORED MEDIA & FILES GALLERY */}
       {/* ============================================ */}
-      <div className="bg-card border border-border p-6 rounded-3xl space-y-5 shadow-sm">
+      <div className="bg-card border border-border p-4 sm:p-6 rounded-2xl sm:rounded-3xl space-y-5 shadow-sm">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border pb-4">
           <div>
             <div className="flex items-center gap-2">
@@ -630,7 +630,7 @@ export default function ProfilePage() {
       {/* ============================================ */}
       {/* 5. NOTIFICATION PREFERENCES */}
       {/* ============================================ */}
-      <div className="bg-card border border-border p-6 rounded-3xl space-y-4 shadow-sm">
+      <div className="bg-card border border-border p-4 sm:p-6 rounded-2xl sm:rounded-3xl space-y-4 shadow-sm">
         <div className="border-b border-border pb-3">
           <h2 className="font-bold text-base text-foreground flex items-center gap-2">
             <BellRing className="w-4 h-4 text-primary" />
@@ -683,7 +683,7 @@ export default function ProfilePage() {
       {/* ============================================ */}
       {/* 6. SECURITY & ACCOUNT MANAGEMENT */}
       {/* ============================================ */}
-      <div className="bg-card border border-border p-6 rounded-3xl space-y-4 shadow-sm">
+      <div className="bg-card border border-border p-4 sm:p-6 rounded-2xl sm:rounded-3xl space-y-4 shadow-sm">
         <div className="border-b border-border pb-3">
           <h2 className="font-bold text-base text-foreground flex items-center gap-2">
             <KeyRound className="w-4 h-4 text-primary" />

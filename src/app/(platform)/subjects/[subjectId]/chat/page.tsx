@@ -27,7 +27,7 @@ export default async function ChatPage({ params }: ChatPageProps) {
   }
 
   return (
-    <div className="h-[calc(100vh-4.25rem)] p-2 sm:p-4 max-w-6xl mx-auto flex flex-col">
+    <div className="h-full sm:h-[calc(100vh-4.25rem)] p-0 sm:p-4 max-w-6xl mx-auto flex flex-col w-full">
       <Suspense
         fallback={
           <div className="h-full flex items-center justify-center">

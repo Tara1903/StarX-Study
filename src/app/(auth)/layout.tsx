@@ -32,7 +32,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
       </div>
 
       {/* Right side - Auth Form */}
-      <div className="flex w-full lg:w-1/2 flex-col items-center justify-center p-8 sm:p-12 relative">
+      <div className="flex w-full lg:w-1/2 flex-col items-center justify-center p-4 sm:p-8 sm:p-12 relative">
         <div className="w-full max-w-md">
           {/* Mobile Header */}
           <div className="mb-10 flex flex-col items-center justify-center gap-4 lg:hidden">

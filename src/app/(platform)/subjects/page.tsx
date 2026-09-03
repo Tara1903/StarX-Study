@@ -53,7 +53,7 @@ export default async function SubjectsPage() {
   return (
     <div className="flex flex-col gap-8 p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
       {/* Page Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-card border border-border p-6 rounded-2xl shadow-sm">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-card border border-border p-4 sm:p-6 rounded-2xl shadow-sm">
         <div className="space-y-1">
           <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20 text-xs font-semibold">
             <GraduationCap className="w-3.5 h-3.5" />
@@ -133,74 +133,74 @@ export default async function SubjectsPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {ECE_SUBJECTS.map((sub) => (
-            <Link key={sub.id} href={`/subjects/${sub.id}`}>
-              <div className="group relative flex flex-col overflow-hidden rounded-2xl border border-border bg-card transition-all hover:shadow-xl hover:border-primary/40 hover:-translate-y-1 h-full">
-                {/* Banner */}
-                <div
-                  className="h-28 w-full relative p-4 flex flex-col justify-between"
-                  style={{ 
-                    background: `linear-gradient(135deg, ${sub.color}, ${sub.color}CC)` 
-                  }}
-                >
-                  <div className="flex items-center justify-between text-white">
-                    <span className="text-xs font-mono font-bold bg-black/30 backdrop-blur px-2.5 py-1 rounded-md">
-                      {sub.code}
-                    </span>
-                    <span className="text-xs font-bold bg-white/20 backdrop-blur px-2 py-0.5 rounded">
-                      {sub.credits} Credits
-                    </span>
-                  </div>
-
-                  <span className="text-xs font-bold text-white/90">
-                    {sub.shortName} • {sub.type.toUpperCase()}
+            <div key={sub.id} className="group relative flex flex-col overflow-hidden rounded-2xl border border-border bg-card transition-all hover:shadow-xl hover:border-primary/40 hover:-translate-y-1 h-full">
+              {/* Banner */}
+              <Link
+                href={`/subjects/${sub.id}`}
+                className="h-28 w-full relative p-4 flex flex-col justify-between cursor-pointer"
+                style={{ 
+                  background: `linear-gradient(135deg, ${sub.color}, ${sub.color}CC)` 
+                }}
+              >
+                <div className="flex items-center justify-between text-white">
+                  <span className="font-mono text-xs font-bold tracking-wider uppercase px-2 py-0.5 rounded bg-black/30 backdrop-blur-md">
+                    {sub.code}
+                  </span>
+                  <span className="text-[10px] font-semibold bg-white/20 px-2 py-0.5 rounded-full">
+                    {sub.credits} Credits
                   </span>
                 </div>
 
-                {/* Content */}
-                <div className="flex flex-col flex-grow p-5 space-y-3">
+                <span className="text-xs font-bold text-white/90">
+                  {sub.shortName} • {sub.type.toUpperCase()}
+                </span>
+              </Link>
+
+              {/* Content */}
+              <div className="flex flex-col flex-grow p-5 space-y-3">
+                <Link href={`/subjects/${sub.id}`}>
                   <h3 className="font-bold text-lg text-foreground group-hover:text-primary transition-colors leading-snug">
                     {sub.name}
                   </h3>
+                </Link>
 
-                  <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
-                    {sub.description}
-                  </p>
+                <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
+                  {sub.description}
+                </p>
 
-                  <div className="space-y-1.5 pt-2 text-xs text-muted-foreground">
-                    <div className="flex items-center gap-2 text-foreground font-medium">
-                      <User className="w-3.5 h-3.5 text-primary shrink-0" />
-                      <span className="truncate">{sub.facultyName}</span>
-                      <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-muted text-muted-foreground">
-                        {sub.facultyAbb}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <MapPin className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-                      <span className="truncate">{sub.room}</span>
-                    </div>
+                <div className="space-y-1.5 pt-2 text-xs text-muted-foreground">
+                  <div className="flex items-center gap-2 text-foreground font-medium">
+                    <User className="w-3.5 h-3.5 text-primary shrink-0" />
+                    <span className="truncate">{sub.facultyName}</span>
+                    <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-muted text-muted-foreground">
+                      {sub.facultyAbb}
+                    </span>
                   </div>
-
-                  <div className="mt-auto pt-4 border-t border-border/60 flex items-center justify-between gap-2">
-                    <span className="text-xs font-semibold text-primary flex items-center gap-1 group-hover:underline">
-                      <span>Overview</span>
-                      <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-1 transition-transform" />
-                    </span>
-
-                    <span
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 hover:bg-primary text-primary hover:text-primary-foreground text-xs font-semibold rounded-lg border border-primary/20 transition-colors"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                      }}
-                    >
-                      <Link href={`/subjects/${sub.id}/chat`} className="inline-flex items-center gap-1.5">
-                        <MessageSquare className="w-3.5 h-3.5" />
-                        <span>Chat</span>
-                      </Link>
-                    </span>
+                  <div className="flex items-center gap-2">
+                    <MapPin className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                    <span className="truncate">{sub.room}</span>
                   </div>
                 </div>
+
+                <div className="mt-auto pt-4 border-t border-border/60 flex items-center justify-between gap-2">
+                  <Link
+                    href={`/subjects/${sub.id}`}
+                    className="text-xs font-semibold text-primary flex items-center gap-1 hover:underline"
+                  >
+                    <span>Overview</span>
+                    <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-1 transition-transform" />
+                  </Link>
+
+                  <Link
+                    href={`/subjects/${sub.id}/chat`}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 hover:bg-primary text-primary hover:text-primary-foreground text-xs font-semibold rounded-lg border border-primary/20 transition-colors"
+                  >
+                    <MessageSquare className="w-3.5 h-3.5" />
+                    <span>Chat</span>
+                  </Link>
+                </div>
               </div>
-            </Link>
+            </div>
           ))}
         </div>
       </div>

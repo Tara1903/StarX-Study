@@ -21,7 +21,7 @@ export default async function GlobalAssignmentsPage() {
     .limit(20);
 
   return (
-    <div className="p-6 max-w-6xl mx-auto w-full flex flex-col gap-8">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-6xl mx-auto w-full flex flex-col gap-6 sm:gap-8">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">All Assignments</h1>
         <p className="text-muted-foreground mt-1">Manage coursework across all your subjects.</p>

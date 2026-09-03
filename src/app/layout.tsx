@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { Toaster } from "sonner";
@@ -13,6 +13,14 @@ const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
   variable: "--font-jetbrains-mono",
 });
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+  viewportFit: "cover",
+  themeColor: "#050B16",
+};
 
 export const metadata: Metadata = {
   title: {
@@ -42,12 +50,12 @@ export default function RootLayout({
         >
           {children}
           <Toaster
-            position="top-right"
+            position="top-center"
             toastOptions={{
               classNames: {
-                toast: "bg-card text-card-foreground border-border",
-                title: "text-foreground",
-                description: "text-muted-foreground",
+                toast: "bg-card text-card-foreground border-border shadow-2xl rounded-2xl",
+                title: "text-foreground font-semibold text-sm",
+                description: "text-muted-foreground text-xs",
               },
             }}
           />

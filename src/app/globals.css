@@ -92,6 +92,11 @@
   --sidebar-accent: #111D31;
   --sidebar-accent-foreground: #F5F7FB;
   --sidebar-border: rgba(255, 255, 255, 0.07);
+
+  /* Mobile Design Tokens */
+  --mobile-header-height: 56px;
+  --mobile-bottom-nav-height: 64px;
+  --mobile-page-padding: 1rem;
 }
 
 /* ============================================
@@ -99,12 +104,14 @@
    ============================================ */
 * {
   border-color: var(--border);
+  -webkit-tap-highlight-color: transparent;
 }
 
 body {
   background-color: var(--background);
   color: var(--foreground);
   font-feature-settings: "rlig" 1, "calt" 1;
+  touch-action: manipulation;
 }
 
 /* ============================================
@@ -169,3 +176,60 @@ body {
     scroll-behavior: auto !important;
   }
 }
+
+/* ============================================
+   Mobile Safe Area & Responsive Utilities
+   ============================================ */
+.pt-safe {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.pl-safe {
+  padding-left: env(safe-area-inset-left, 0px);
+}
+
+.pr-safe {
+  padding-right: env(safe-area-inset-right, 0px);
+}
+
+.top-safe {
+  top: env(safe-area-inset-top, 0px);
+}
+
+.bottom-safe {
+  bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.pb-mobile-nav {
+  padding-bottom: calc(var(--mobile-bottom-nav-height) + env(safe-area-inset-bottom, 0px));
+}
+
+.pt-mobile-header {
+  padding-top: calc(var(--mobile-header-height) + env(safe-area-inset-top, 0px));
+}
+
+.h-mobile-header {
+  height: var(--mobile-header-height);
+}
+
+.h-mobile-nav {
+  height: var(--mobile-bottom-nav-height);
+}
+
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.touch-manipulation {
+  touch-action: manipulation;
+}
+

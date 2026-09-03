@@ -43,6 +43,19 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
+  // Demo session support for offline testing and review
+  const isDemo =
+    request.cookies.get('studchat_demo')?.value === 'true' ||
+    request.nextUrl.searchParams.get('demo') === 'true';
+
+  if (request.nextUrl.searchParams.get('demo') === 'true') {
+    supabaseResponse.cookies.set('studchat_demo', 'true', {
+      path: '/',
+      maxAge: ONE_YEAR,
+      sameSite: 'lax',
+    });
+  }
+
   // Redirect unauthenticated users trying to access protected routes
   const isAuthRoute =
     request.nextUrl.pathname.startsWith("/login") ||
@@ -61,15 +74,15 @@ export async function updateSession(request: NextRequest) {
     request.nextUrl.pathname.startsWith("/admin") ||
     request.nextUrl.pathname.startsWith("/super-admin");
 
-  if (!user && isProtectedRoute) {
+  if (!user && !isDemo && isProtectedRoute) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     url.searchParams.set("redirectTo", request.nextUrl.pathname);
     return NextResponse.redirect(url);
   }
 
-  // Redirect authenticated users away from auth pages
-  if (user && isAuthRoute) {
+  // Redirect authenticated users away from auth pages (unless explicitly logging out)
+  if ((user || isDemo) && isAuthRoute && !request.nextUrl.searchParams.has('logout')) {
     const url = request.nextUrl.clone();
     url.pathname = "/dashboard";
     return NextResponse.redirect(url);

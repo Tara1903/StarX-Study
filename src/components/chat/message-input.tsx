@@ -122,7 +122,7 @@ export function MessageInput({ subjectId, replyTo, onCancelReply, onMessageSent 
   };
 
   return (
-    <div className="p-3 sm:p-4 border-t bg-background">
+    <div className="p-3 sm:p-4 border-t border-border/80 bg-background/95 backdrop-blur-md pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] sticky bottom-0 z-20">
       {/* Reply Banner */}
       {replyTo && (
         <div className="flex items-center justify-between bg-muted/80 px-3 py-2 rounded-xl border-l-4 border-primary text-xs mb-2 shadow-sm">

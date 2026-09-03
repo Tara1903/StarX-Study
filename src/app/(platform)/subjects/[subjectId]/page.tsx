@@ -93,21 +93,21 @@ export default async function SubjectOverviewPage({ params }: PageProps) {
     <div className="flex flex-col min-h-screen pb-12">
       {/* Subject Header Banner */}
       <div 
-        className="h-56 relative overflow-hidden flex flex-col justify-end px-6 lg:px-12 py-8 text-white shadow-md"
+        className="h-auto min-h-[12rem] relative overflow-hidden flex flex-col justify-end px-4 sm:px-6 lg:px-12 py-6 sm:py-8 text-white shadow-md"
         style={{ 
           background: `linear-gradient(135deg, ${subjectColor}, #0F172A)` 
         }}
       >
         <div className="absolute inset-0 bg-black/40 backdrop-blur-[1px]" />
-        <div className="relative z-10 flex flex-col gap-3 max-w-4xl">
+        <div className="relative z-10 flex flex-col gap-2.5 max-w-4xl">
           <Link 
             href="/subjects" 
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-white/80 hover:text-white transition-colors w-fit bg-black/25 px-2.5 py-1 rounded-md mb-1"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-white/80 hover:text-white transition-colors w-fit bg-black/25 px-2.5 py-1 rounded-md mb-1 active:scale-95"
           >
             <ArrowLeft className="w-3.5 h-3.5" /> Back to My Subjects
           </Link>
 
-          <div className="flex flex-wrap items-center gap-2 text-xs font-semibold text-white/90">
+          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 text-[11px] sm:text-xs font-semibold text-white/90">
             <span>{instituteName}</span>
             <ChevronRight className="h-3.5 w-3.5 opacity-70" />
             <span>{departmentName}</span>
@@ -116,21 +116,21 @@ export default async function SubjectOverviewPage({ params }: PageProps) {
             <span className="bg-white/20 font-mono px-2 py-0.5 rounded">{subjectCode}</span>
           </div>
 
-          <h1 className="text-3xl lg:text-4xl font-extrabold tracking-tight">{subjectName}</h1>
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight">{subjectName}</h1>
           <p className="text-xs lg:text-sm text-white/80 line-clamp-2">{description}</p>
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="border-b bg-background sticky top-0 z-20 px-6 lg:px-12">
-        <div className="flex overflow-x-auto scrollbar-none">
+      <div className="border-b bg-background sticky top-0 z-20 px-2 sm:px-6 lg:px-12">
+        <div className="flex overflow-x-auto scrollbar-none gap-1 sm:gap-0">
           {tabs.map((tab) => (
             <Link
               key={tab.name}
               href={tab.href}
-              className={`flex items-center gap-2 py-4 px-4 border-b-2 font-medium text-sm whitespace-nowrap transition-colors ${
+              className={`flex items-center gap-1.5 sm:gap-2 py-3.5 sm:py-4 px-3 sm:px-4 border-b-2 font-medium text-xs sm:text-sm whitespace-nowrap transition-colors active:scale-95 ${
                 tab.active 
-                  ? 'border-primary text-primary' 
+                  ? 'border-primary text-primary font-bold' 
                   : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
               }`}
             >
@@ -142,7 +142,7 @@ export default async function SubjectOverviewPage({ params }: PageProps) {
       </div>
 
       {/* Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 p-6 lg:px-12 mt-6 max-w-7xl">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8 p-4 sm:p-6 lg:px-12 mt-4 sm:mt-6 max-w-7xl">
         {/* Left 2 Cols: Announcements & Learning Overview */}
         <div className="lg:col-span-2 space-y-6">
           {/* Quick Course Info Card */}

@@ -18,7 +18,8 @@ import {
   Info,
   MessageSquareText,
   FileImage,
-  ChevronDown
+  ChevronDown,
+  MoreVertical
 } from 'lucide-react';
 import type { MessageWithSender } from '@/types';
 import { Button } from '@/components/ui/button';
@@ -66,7 +67,9 @@ export function ChatContainer({
   const [showPinnedOnly, setShowPinnedOnly] = useState(false);
   const [showSubjectInfo, setShowSubjectInfo] = useState(false);
   const [isDeleteMenuOpen, setIsDeleteMenuOpen] = useState(false);
+  const [isMobileActionsOpen, setIsMobileActionsOpen] = useState(false);
   const deleteMenuRef = useRef<HTMLDivElement>(null);
+  const mobileMenuRef = useRef<HTMLDivElement>(null);
 
   // Close dropdown on click outside
   useEffect(() => {
@@ -74,14 +77,17 @@ export function ChatContainer({
       if (deleteMenuRef.current && !deleteMenuRef.current.contains(event.target as Node)) {
         setIsDeleteMenuOpen(false);
       }
+      if (mobileMenuRef.current && !mobileMenuRef.current.contains(event.target as Node)) {
+        setIsMobileActionsOpen(false);
+      }
     }
-    if (isDeleteMenuOpen) {
+    if (isDeleteMenuOpen || isMobileActionsOpen) {
       document.addEventListener('mousedown', handleClickOutside);
     }
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [isDeleteMenuOpen]);
+  }, [isDeleteMenuOpen, isMobileActionsOpen]);
 
   // Filter messages by search or pinned
   const displayedMessages = useMemo(() => {
@@ -120,49 +126,46 @@ export function ChatContainer({
   };
 
   return (
-    <div className="flex flex-col h-full bg-background border border-border/80 rounded-2xl overflow-hidden shadow-xl">
+    <div className="flex flex-col h-full bg-background border-0 sm:border sm:border-border/80 rounded-none sm:rounded-2xl overflow-hidden shadow-none sm:shadow-xl">
       {/* Subject Header */}
-      <div className="px-4 py-3 border-b border-border/80 bg-card/90 backdrop-blur-md flex flex-col gap-2">
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3 min-w-0">
+      <div className="px-3 sm:px-4 py-2.5 sm:py-3 border-b border-border/80 bg-card/95 backdrop-blur-md flex flex-col gap-2 pt-[calc(0.6rem+env(safe-area-inset-top,0px))] sm:pt-3 shrink-0 z-20">
+        <div className="flex items-center justify-between gap-2 sm:gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             <Link
               href={`/subjects/${subjectId}`}
               title="Back to Subject Overview"
-              className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors shrink-0"
+              className="p-2 -ml-1 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted active:scale-95 transition-all shrink-0"
             >
               <ArrowLeft className="w-5 h-5" />
             </Link>
 
             <div
-              className="w-3.5 h-10 rounded-full shrink-0"
+              className="w-3 sm:w-3.5 h-9 sm:h-10 rounded-full shrink-0"
               style={{ backgroundColor: color }}
             />
 
             <div className="min-w-0 flex flex-col">
-              <div className="flex items-center gap-2">
-                <h1 className="font-bold text-base sm:text-lg tracking-tight text-foreground truncate">
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <h1 className="font-bold text-sm sm:text-base lg:text-lg tracking-tight text-foreground truncate">
                   {subjectName}
                 </h1>
                 {subjectCode && (
-                  <span className="hidden sm:inline-block px-2 py-0.5 text-[10px] font-semibold bg-muted text-muted-foreground rounded-md border border-border">
+                  <span className="hidden md:inline-block px-2 py-0.5 text-[10px] font-semibold bg-muted text-muted-foreground rounded-md border border-border">
                     {subjectCode}
                   </span>
                 )}
-                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shrink-0">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  Live Chat
+                  Live
                 </span>
               </div>
 
-              <div className="flex items-center gap-2 text-xs text-muted-foreground truncate">
-                <span className="truncate">{academicContext}</span>
-                {facultyName && (
-                  <>
-                    <span className="text-border">•</span>
-                    <span className="truncate hidden md:inline text-foreground/80 font-medium">
-                      {facultyName} {facultyAbb ? `[${facultyAbb}]` : ''}
-                    </span>
-                  </>
+              <div className="flex items-center gap-1.5 text-[11px] sm:text-xs text-muted-foreground truncate">
+                <span className="truncate">{facultyName || academicContext}</span>
+                {facultyAbb && (
+                  <span className="font-mono text-primary font-medium hidden sm:inline">
+                    [{facultyAbb}]
+                  </span>
                 )}
               </div>
             </div>
@@ -170,74 +173,163 @@ export function ChatContainer({
 
           {/* Action Icons */}
           <div className="flex items-center gap-1 shrink-0">
-            {/* Search Toggle */}
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => {
-                setIsSearchOpen(!isSearchOpen);
-                if (isSearchOpen) setSearchQuery('');
-              }}
-              title="Search messages in this subject"
-              className={`h-9 w-9 rounded-lg transition-colors ${
-                isSearchOpen ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              <Search className="w-4 h-4" />
-            </Button>
-
-            {/* Pinned Filter */}
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setShowPinnedOnly(!showPinnedOnly)}
-              title={showPinnedOnly ? 'Show all messages' : 'Show pinned messages'}
-              className={`h-9 w-9 rounded-lg transition-colors ${
-                showPinnedOnly ? 'bg-amber-500/15 text-amber-400' : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              <Pin className="w-4 h-4" />
-            </Button>
-
-            {/* Mute Notifications */}
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleToggleMute}
-              title={isMuted ? 'Unmute Subject' : 'Mute Subject'}
-              className="h-9 w-9 rounded-lg text-muted-foreground hover:text-foreground"
-            >
-              {isMuted ? <BellOff className="w-4 h-4 text-amber-400" /> : <Bell className="w-4 h-4" />}
-            </Button>
-
-            {/* Subject Info Drawer */}
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setShowSubjectInfo(!showSubjectInfo)}
-              title="Subject Details"
-              className="h-9 w-9 rounded-lg text-muted-foreground hover:text-foreground"
-            >
-              <Info className="w-4 h-4" />
-            </Button>
-
-            {/* Delete Chat Dropdown Menu */}
-            <div className="relative" ref={deleteMenuRef}>
+            {/* MOBILE ONLY: Context Menu Button (⋮) */}
+            <div className="relative sm:hidden" ref={mobileMenuRef}>
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => setIsDeleteMenuOpen((prev) => !prev)}
-                title="Delete Chat options"
-                className={`h-9 w-9 rounded-lg transition-colors ${
-                  isDeleteMenuOpen
-                    ? 'bg-destructive/15 text-destructive'
-                    : 'text-muted-foreground hover:text-destructive hover:bg-destructive/10'
+                onClick={() => setIsMobileActionsOpen((prev) => !prev)}
+                title="Chat actions"
+                className={`h-9 w-9 rounded-xl transition-all cursor-pointer ${
+                  isMobileActionsOpen ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
-                <Trash2 className="w-4 h-4" />
+                <MoreVertical className="w-5 h-5" />
               </Button>
 
-              {/* Dropdown with 3 options */}
+              {/* Mobile Context Dropdown */}
+              {isMobileActionsOpen && (
+                <div className="absolute right-0 top-full mt-2 w-64 rounded-2xl bg-card/95 backdrop-blur-xl border border-border shadow-2xl p-2 z-50 animate-in fade-in zoom-in-95">
+                  <div className="px-3 py-2 border-b border-border/60 mb-1">
+                    <p className="text-xs font-bold text-foreground">{subjectName}</p>
+                    <p className="text-[10px] text-muted-foreground">Subject Chat Controls</p>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsSearchOpen((prev) => !prev);
+                      setIsMobileActionsOpen(false);
+                    }}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium text-foreground hover:bg-muted/80 transition-colors"
+                  >
+                    <Search className="w-4 h-4 text-primary" />
+                    <span>Search Messages</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowPinnedOnly((prev) => !prev);
+                      setIsMobileActionsOpen(false);
+                    }}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium text-foreground hover:bg-muted/80 transition-colors"
+                  >
+                    <Pin className="w-4 h-4 text-amber-400" />
+                    <span>{showPinnedOnly ? 'Show All Messages' : 'Show Pinned Only'}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handleToggleMute();
+                      setIsMobileActionsOpen(false);
+                    }}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium text-foreground hover:bg-muted/80 transition-colors"
+                  >
+                    {isMuted ? <BellOff className="w-4 h-4 text-amber-400" /> : <Bell className="w-4 h-4 text-primary" />}
+                    <span>{isMuted ? 'Unmute Notifications' : 'Mute Notifications'}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowSubjectInfo((prev) => !prev);
+                      setIsMobileActionsOpen(false);
+                    }}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium text-foreground hover:bg-muted/80 transition-colors"
+                  >
+                    <Info className="w-4 h-4 text-primary" />
+                    <span>Subject Information</span>
+                  </button>
+
+                  <div className="border-t border-border/60 my-1" />
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsDeleteMenuOpen((prev) => !prev);
+                      setIsMobileActionsOpen(false);
+                    }}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium text-destructive hover:bg-destructive/10 transition-colors"
+                  >
+                    <Trash2 className="w-4 h-4 text-destructive" />
+                    <span>Clear Chat Options...</span>
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* DESKTOP ONLY: 5 Dedicated Quick Action Buttons */}
+            <div className="hidden sm:flex items-center gap-1">
+              {/* Search Toggle */}
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => {
+                  setIsSearchOpen(!isSearchOpen);
+                  if (isSearchOpen) setSearchQuery('');
+                }}
+                title="Search messages in this subject"
+                className={`h-9 w-9 rounded-lg transition-colors ${
+                  isSearchOpen ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                <Search className="w-4 h-4" />
+              </Button>
+
+              {/* Pinned Filter */}
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setShowPinnedOnly(!showPinnedOnly)}
+                title={showPinnedOnly ? 'Show all messages' : 'Show pinned messages'}
+                className={`h-9 w-9 rounded-lg transition-colors ${
+                  showPinnedOnly ? 'bg-amber-500/15 text-amber-400' : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                <Pin className="w-4 h-4" />
+              </Button>
+
+              {/* Mute Notifications */}
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleToggleMute}
+                title={isMuted ? 'Unmute Subject' : 'Mute Subject'}
+                className="h-9 w-9 rounded-lg text-muted-foreground hover:text-foreground"
+              >
+                {isMuted ? <BellOff className="w-4 h-4 text-amber-400" /> : <Bell className="w-4 h-4" />}
+              </Button>
+
+              {/* Subject Info Drawer */}
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setShowSubjectInfo(!showSubjectInfo)}
+                title="Subject Details"
+                className="h-9 w-9 rounded-lg text-muted-foreground hover:text-foreground"
+              >
+                <Info className="w-4 h-4" />
+              </Button>
+
+              {/* Delete Chat Dropdown Menu */}
+              <div className="relative" ref={deleteMenuRef}>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setIsDeleteMenuOpen((prev) => !prev)}
+                  title="Delete Chat options"
+                  className={`h-9 w-9 rounded-lg transition-colors ${
+                    isDeleteMenuOpen
+                      ? 'bg-destructive/15 text-destructive'
+                      : 'text-muted-foreground hover:text-destructive hover:bg-destructive/10'
+                  }`}
+                >
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+
+                {/* Dropdown with 3 options */}
               {isDeleteMenuOpen && (
                 <div className="absolute right-0 top-full mt-2 w-72 rounded-2xl bg-card/95 backdrop-blur-xl border border-border shadow-2xl p-2 z-50 animate-in fade-in zoom-in-95">
                   <div className="px-3 py-2 border-b border-border/60 mb-1">
@@ -306,6 +398,7 @@ export function ChatContainer({
             </div>
           </div>
         </div>
+      </div>
 
         {/* In-chat search bar if active */}
         {isSearchOpen && (
