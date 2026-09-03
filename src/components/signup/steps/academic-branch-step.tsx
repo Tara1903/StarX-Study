@@ -86,7 +86,7 @@ export function AcademicBranchStep({ data, onNext, onPrev }: AcademicBranchStepP
               >
                 <option value="" disabled>Select Department</option>
                 <option value="cs">Computer Science</option>
-                <option value="ee">Electrical Engineering</option>
+                <option value="ece">Electronics and Communication Engineering (ECE)</option>
               </select>
             </div>
           </div>
