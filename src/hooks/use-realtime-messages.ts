@@ -262,13 +262,38 @@ export function useRealtimeMessages(subjectId: string, subjectUuid?: string) {
     [saveToLocalCache]
   );
 
-  const clearChatForMe = useCallback(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(clearKey, new Date().toISOString());
-      localStorage.removeItem(storageKey);
+  const clearChatOption = useCallback((option: 'chat_only' | 'media_only' | 'everything') => {
+    if (option === 'everything') {
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(clearKey, new Date().toISOString());
+        localStorage.removeItem(storageKey);
+      }
+      setMessages([]);
+    } else if (option === 'chat_only') {
+      setMessages((prev) => {
+        // Keep messages that have attachments, clear text-only messages
+        const updated = prev
+          .filter((m) => m.attachments && m.attachments.length > 0)
+          .map((m) => ({ ...m, content: '📎 [Media File]' }));
+        saveToLocalCache(updated);
+        return updated;
+      });
+    } else if (option === 'media_only') {
+      setMessages((prev) => {
+        // Strip media/attachments from messages while keeping conversation text
+        const updated = prev.map((m) => ({
+          ...m,
+          attachments: [],
+        }));
+        saveToLocalCache(updated);
+        return updated;
+      });
     }
-    setMessages([]);
-  }, [clearKey, storageKey]);
+  }, [clearKey, storageKey, saveToLocalCache]);
+
+  const clearChatForMe = useCallback(() => {
+    clearChatOption('everything');
+  }, [clearChatOption]);
 
   const toggleMute = useCallback(() => {
     setIsMuted((prev) => {
@@ -289,6 +314,7 @@ export function useRealtimeMessages(subjectId: string, subjectUuid?: string) {
     error,
     appendMessage,
     clearChatForMe,
+    clearChatOption,
     isMuted,
     toggleMute,
   };
