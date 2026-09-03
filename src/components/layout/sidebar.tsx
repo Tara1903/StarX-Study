@@ -1,10 +1,12 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useUser } from '@/components/providers/user-provider';
 import { ROUTES } from '@/lib/constants';
 import { getInitials } from '@/lib/utils';
+import { createClient } from '@/lib/supabase/client';
 
 import {
   CalendarDays,
@@ -24,12 +26,29 @@ import {
   Building2,
   UsersRound,
   ShieldAlert,
-  ScrollText
+  ScrollText,
+  LogOut,
+  Loader2
 } from 'lucide-react';
 
 export function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
   const { profile, activeUniversity, activeRole } = useUser();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  const handleLogout = async () => {
+    try {
+      setIsLoggingOut(true);
+      const supabase = createClient();
+      await supabase.auth.signOut();
+      router.push('/login');
+      router.refresh();
+    } catch (err) {
+      console.error('Error logging out:', err);
+      setIsLoggingOut(false);
+    }
+  };
 
   const mainLinks = [
     { name: 'Dashboard', href: ROUTES.DASHBOARD, icon: LayoutDashboard },
@@ -111,9 +130,9 @@ export function Sidebar() {
           )}
       </div>
 
-      {/* User Semester */}
-      <div className="p-4 border-t border-sidebar-border">
-        <div className="flex items-center justify-between mb-4">
+      {/* User Info & Logout */}
+      <div className="p-4 border-t border-sidebar-border space-y-3">
+        <div className="flex items-center justify-between">
           <div className="flex items-center gap-3 overflow-hidden">
             <div className="w-9 h-9 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-sm shrink-0">
               {getInitials(profile.full_name)}
@@ -125,8 +144,26 @@ export function Sidebar() {
               </span>
             </div>
           </div>
-
         </div>
+
+        <button
+          type="button"
+          onClick={handleLogout}
+          disabled={isLoggingOut}
+          className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold text-muted-foreground hover:text-red-400 hover:bg-red-500/10 border border-transparent hover:border-red-500/20 transition-all cursor-pointer disabled:opacity-50"
+        >
+          {isLoggingOut ? (
+            <>
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              <span>Logging out...</span>
+            </>
+          ) : (
+            <>
+              <LogOut className="w-3.5 h-3.5" />
+              <span>Log Out</span>
+            </>
+          )}
+        </button>
       </div>
     </aside>
   );
