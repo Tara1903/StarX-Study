@@ -66,5 +66,8 @@
     "jsdom": "^30.0.1",
     "tailwindcss-animate": "^1.0.7",
     "vitest": "^4.1.11"
+  },
+  "allowScripts": {
+    "unrs-resolver@1.12.2": true
   }
 }
