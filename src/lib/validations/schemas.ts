@@ -30,9 +30,23 @@ export const forgotPasswordSchema = z.object({
 });
 
 export const updateProfileSchema = z.object({
-  full_name: z.string().min(2, "Name must be at least 2 characters"),
-  phone: z.string().optional().nullable(),
-  avatar_url: z.string().url().optional().nullable(),
+  full_name: z.string().min(2, "Name must be at least 2 characters").max(100).optional(),
+  display_name: z.string().max(50, "Display name cannot exceed 50 characters").optional().nullable(),
+  bio: z.string().max(300, "Bio cannot exceed 300 characters").optional().nullable(),
+  phone: z.string().max(25).optional().nullable(),
+  avatar_type: z.enum(["uploaded", "preset", "emoji", "initials"]).optional(),
+  avatar_url: z.string().optional().nullable(),
+  avatar_preset_id: z.string().optional().nullable(),
+  avatar_emoji: z.string().optional().nullable(),
+  avatar_style: z.string().optional().nullable(),
+});
+
+export const updateAvatarSchema = z.object({
+  avatar_type: z.enum(["uploaded", "preset", "emoji", "initials"]),
+  avatar_url: z.string().optional().nullable(),
+  avatar_preset_id: z.string().optional().nullable(),
+  avatar_emoji: z.string().optional().nullable(),
+  avatar_style: z.string().optional().nullable(),
 });
 
 // ============================================

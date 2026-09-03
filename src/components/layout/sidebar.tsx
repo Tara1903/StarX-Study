@@ -7,6 +7,7 @@ import { useUser } from '@/components/providers/user-provider';
 import { ROUTES } from '@/lib/constants';
 import { getInitials } from '@/lib/utils';
 import { createClient } from '@/lib/supabase/client';
+import { UserAvatar } from '@/components/ui/user-avatar';
 
 import {
   CalendarDays,
@@ -143,12 +144,14 @@ export function Sidebar() {
           title="View Profile & Stored Media"
         >
           <div className="flex items-center gap-3 overflow-hidden">
-            <div className="w-9 h-9 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-sm shrink-0 group-hover:ring-2 group-hover:ring-primary/40 transition-all">
-              {getInitials(profile.full_name)}
-            </div>
+            <UserAvatar
+              profile={profile}
+              size="sm"
+              className="group-hover:ring-2 group-hover:ring-primary/40 transition-all"
+            />
             <div className="flex flex-col truncate">
               <span className="text-sm font-medium text-sidebar-foreground truncate group-hover:text-primary transition-colors">
-                {profile.full_name}
+                {profile.display_name || profile.full_name}
               </span>
               <span className="text-xs text-sidebar-foreground/60 capitalize truncate">
                 {activeRole.replace('_', ' ')}

@@ -6,6 +6,7 @@ import { useUser } from '@/components/providers/user-provider';
 import type { MessageWithSender } from '@/types';
 import { getInitials, formatRelativeTime } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { UserAvatar } from '@/components/ui/user-avatar';
 import { cn } from '@/lib/utils';
 import { 
   Reply, 
@@ -113,10 +114,11 @@ export function MessageItem({ message, onReply, subjectName = 'Subject' }: Messa
 
   return (
     <div className={cn("group flex gap-3 max-w-[85%] sm:max-w-[75%]", isOwn ? "ml-auto flex-row-reverse" : "")}>
-      <Avatar className="w-8 h-8 shrink-0">
-        <AvatarImage src={message.sender?.avatar_url || ''} />
-        <AvatarFallback>{getInitials(message.sender?.full_name || 'Unknown')}</AvatarFallback>
-      </Avatar>
+      <UserAvatar
+        name={message.sender?.full_name || 'User'}
+        avatarUrl={message.sender?.avatar_url}
+        size="sm"
+      />
 
       <div className={cn("flex flex-col gap-1.5", isOwn ? "items-end" : "items-start")}>
         <div className="flex items-center gap-2 text-xs text-muted-foreground mx-1">

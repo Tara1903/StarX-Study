@@ -36,11 +36,19 @@ export type ModerationUserStatus = "active" | "slow_mode" | "restricted" | "susp
 // Table Row Types
 // ============================================
 
+export type AvatarType = "uploaded" | "preset" | "emoji" | "initials";
+
 export interface Profile {
   id: string;
   email: string;
   full_name: string;
+  display_name?: string | null;
+  bio?: string | null;
+  avatar_type?: AvatarType;
   avatar_url: string | null;
+  avatar_preset_id?: string | null;
+  avatar_emoji?: string | null;
+  avatar_style?: string | null;
   phone: string | null;
   is_active: boolean;
   created_at: string;

@@ -1,11 +1,12 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Menu, Search, Bell, LogOut, Loader2 } from 'lucide-react';
 import { useUser } from '@/components/providers/user-provider';
-import { getInitials } from '@/lib/utils';
 import { createClient } from '@/lib/supabase/client';
+import { UserAvatar } from '@/components/ui/user-avatar';
 
 export function Header() {
   const { profile } = useUser();
@@ -51,9 +52,9 @@ export function Header() {
           <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-destructive rounded-full ring-2 ring-background" />
         </button>
 
-        <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-semibold text-sm ring-1 ring-primary/20">
-          {getInitials(profile.full_name)}
-        </div>
+        <Link href="/profile" title="View Profile">
+          <UserAvatar profile={profile} size="sm" className="ring-1 ring-primary/20 hover:ring-2 hover:ring-primary transition-all" />
+        </Link>
 
         <button
           type="button"
