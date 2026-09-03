@@ -357,6 +357,7 @@ export function ChatContainer({
           hasMore={hasMore}
           loadMore={loadMore}
           onReply={setReplyTo}
+          subjectName={subjectName}
         />
       </div>
 

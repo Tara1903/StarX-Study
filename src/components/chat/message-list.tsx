@@ -13,6 +13,7 @@ interface MessageListProps {
   hasMore: boolean;
   loadMore: () => void;
   onReply: (message: MessageWithSender) => void;
+  subjectName?: string;
 }
 
 export function MessageList({
@@ -21,7 +22,8 @@ export function MessageList({
   isLoadingMore,
   hasMore,
   loadMore,
-  onReply
+  onReply,
+  subjectName
 }: MessageListProps) {
   const parentRef = useRef<HTMLDivElement>(null);
   
@@ -81,7 +83,7 @@ export function MessageList({
                 transform: `translateY(${virtualItem.start}px)`,
               }}
             >
-              <MessageItem message={message} onReply={() => onReply(message)} />
+              <MessageItem message={message} onReply={() => onReply(message)} subjectName={subjectName} />
             </div>
           );
         })}

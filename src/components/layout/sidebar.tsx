@@ -28,7 +28,8 @@ import {
   ShieldAlert,
   ScrollText,
   LogOut,
-  Loader2
+  Loader2,
+  FolderArchive
 } from 'lucide-react';
 
 export function Sidebar() {
@@ -38,15 +39,18 @@ export function Sidebar() {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const handleLogout = async () => {
-    try {
-      setIsLoggingOut(true);
-      const supabase = createClient();
-      await supabase.auth.signOut();
-      router.push('/login');
-      router.refresh();
-    } catch (err) {
-      console.error('Error logging out:', err);
-      setIsLoggingOut(false);
+    if (confirm('Are you sure you want to log out of your session?')) {
+      try {
+        setIsLoggingOut(true);
+        const supabase = createClient();
+        await supabase.auth.signOut();
+        router.push('/login');
+        router.refresh();
+      } catch (err) {
+        console.error('Logout failed:', err);
+      } finally {
+        setIsLoggingOut(false);
+      }
     }
   };
 
@@ -56,6 +60,7 @@ export function Sidebar() {
     { name: 'My Subjects', href: ROUTES.SUBJECTS, icon: BookOpen },
     { name: 'Announcements', href: ROUTES.ANNOUNCEMENTS, icon: Megaphone },
     { name: 'Assignments', href: ROUTES.ASSIGNMENTS, icon: ClipboardList },
+    { name: 'Stored Media', href: ROUTES.PROFILE, icon: FolderArchive },
     { name: 'Notifications', href: ROUTES.NOTIFICATIONS, icon: Bell, badge: 3 },
   ];
 
@@ -132,19 +137,25 @@ export function Sidebar() {
 
       {/* User Info & Logout */}
       <div className="p-4 border-t border-sidebar-border space-y-3">
-        <div className="flex items-center justify-between">
+        <Link
+          href={ROUTES.PROFILE}
+          className="flex items-center justify-between p-1.5 -m-1.5 rounded-xl hover:bg-sidebar-accent/60 transition-colors group cursor-pointer"
+          title="View Profile & Stored Media"
+        >
           <div className="flex items-center gap-3 overflow-hidden">
-            <div className="w-9 h-9 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-sm shrink-0">
+            <div className="w-9 h-9 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-sm shrink-0 group-hover:ring-2 group-hover:ring-primary/40 transition-all">
               {getInitials(profile.full_name)}
             </div>
             <div className="flex flex-col truncate">
-              <span className="text-sm font-medium text-sidebar-foreground truncate">{profile.full_name}</span>
+              <span className="text-sm font-medium text-sidebar-foreground truncate group-hover:text-primary transition-colors">
+                {profile.full_name}
+              </span>
               <span className="text-xs text-sidebar-foreground/60 capitalize truncate">
                 {activeRole.replace('_', ' ')}
               </span>
             </div>
           </div>
-        </div>
+        </Link>
 
         <button
           type="button"
