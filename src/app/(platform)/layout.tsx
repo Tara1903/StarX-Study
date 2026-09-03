@@ -20,8 +20,8 @@ export default async function PlatformLayout({ children }: { children: React.Rea
     .eq('id', user.id)
     .single();
 
-  if (!profile) {
-    redirect('/setup');
+  if (!profile || profile.onboarding_status === 'pending') {
+    redirect('/onboarding');
   }
 
   const { data: membershipsData } = await supabase
