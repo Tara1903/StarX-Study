@@ -4,8 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@/components/providers/user-provider';
 import type { MessageWithSender } from '@/types';
-import { getInitials, formatRelativeTime } from '@/lib/utils';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { formatRelativeTime } from '@/lib/utils';
 import { UserAvatar } from '@/components/ui/user-avatar';
 import { cn } from '@/lib/utils';
 import { 
@@ -16,8 +15,6 @@ import {
   Bookmark, 
   BookmarkCheck, 
   FileText, 
-  Download, 
-  FileIcon, 
   Image as ImageIcon 
 } from 'lucide-react';
 import { toggleReaction, pinMessage, deleteMessage } from '@/actions/messages';
@@ -28,9 +25,15 @@ interface MessageItemProps {
   message: MessageWithSender;
   onReply: () => void;
   subjectName?: string;
+  showSenderInfo?: boolean;
 }
 
-export function MessageItem({ message, onReply, subjectName = 'Subject' }: MessageItemProps) {
+export function MessageItem({ 
+  message, 
+  onReply, 
+  subjectName = 'Subject',
+  showSenderInfo = true 
+}: MessageItemProps) {
   const { profile, activeRole } = useUser();
   const router = useRouter();
   const isOwn = profile?.id === message.sender_id;
@@ -113,34 +116,56 @@ export function MessageItem({ message, onReply, subjectName = 'Subject' }: Messa
   };
 
   return (
-    <div className={cn("group flex gap-3 max-w-[85%] sm:max-w-[75%]", isOwn ? "ml-auto flex-row-reverse" : "")}>
-      <UserAvatar
-        name={message.sender?.full_name || 'User'}
-        avatarUrl={message.sender?.avatar_url}
-        size="sm"
-      />
+    <div 
+      className={cn(
+        "group flex gap-2.5 max-w-[85%] sm:max-w-[75%]",
+        showSenderInfo ? "mt-3.5" : "mt-1",
+        isOwn ? "ml-auto flex-row-reverse" : ""
+      )}
+    >
+      {/* Avatar (shown only on group start) */}
+      {showSenderInfo ? (
+        <UserAvatar
+          name={message.sender?.full_name || 'User'}
+          avatarUrl={message.sender?.avatar_url}
+          size="sm"
+          className="shrink-0 mt-0.5"
+        />
+      ) : (
+        <div className="w-8 h-8 shrink-0 invisible pointer-events-none" />
+      )}
 
-      <div className={cn("flex flex-col gap-1.5", isOwn ? "items-end" : "items-start")}>
-        <div className="flex items-center gap-2 text-xs text-muted-foreground mx-1">
-          <span className="font-semibold text-foreground">{message.sender?.full_name || 'User'}</span>
-          <span>{formatRelativeTime(new Date(message.created_at))}</span>
-          {message.is_pinned && <Pin className="w-3 h-3 text-primary" />}
-        </div>
+      <div className={cn("flex flex-col gap-1 min-w-0", isOwn ? "items-end" : "items-start")}>
+        {/* Sender Name & Time (Shown only on first message of group) */}
+        {showSenderInfo && (
+          <div className="flex items-center gap-2 text-xs text-muted-foreground mx-1">
+            <span className="font-semibold text-foreground text-xs">
+              {message.sender?.full_name || 'User'}
+            </span>
+            <span className="text-[11px] text-muted-foreground/70">
+              {formatRelativeTime(new Date(message.created_at))}
+            </span>
+            {message.is_pinned && <Pin className="w-3 h-3 text-primary" />}
+          </div>
+        )}
 
+        {/* Compact Reply Reference */}
         {message.reply_to && (
-          <div className="text-xs bg-muted/80 p-2 rounded-lg border-l-2 border-primary mb-1 opacity-80 max-w-full truncate">
-            <span className="font-semibold">{message.reply_to.sender?.full_name}: </span>
-            {message.reply_to.content}
+          <div className="text-xs bg-muted/60 px-2.5 py-1.5 rounded-lg border-l-2 border-primary mb-0.5 opacity-85 max-w-full truncate">
+            <span className="font-semibold text-foreground">{message.reply_to.sender?.full_name}: </span>
+            <span className="text-muted-foreground">{message.reply_to.content}</span>
           </div>
         )}
 
         {/* Message Bubble */}
         <div className={cn(
-          "relative px-4 py-2.5 rounded-2xl whitespace-pre-wrap break-words text-sm shadow-sm",
-          isOwn ? "bg-primary text-primary-foreground rounded-tr-sm" : "bg-card border border-border rounded-tl-sm text-foreground"
+          "relative px-3.5 py-2 rounded-2xl whitespace-pre-wrap break-words text-sm shadow-sm transition-all",
+          isOwn 
+            ? "bg-primary text-primary-foreground rounded-tr-sm" 
+            : "bg-card border border-border/80 rounded-tl-sm text-foreground"
         )}>
           {/* Main Text Content */}
-          <div>{message.content}</div>
+          <div className="leading-relaxed">{message.content}</div>
 
           {/* Media Attachments */}
           {message.attachments && message.attachments.length > 0 && (
@@ -164,7 +189,7 @@ export function MessageItem({ message, onReply, subjectName = 'Subject' }: Messa
                       </div>
                     ) : (
                       <div className="flex items-center gap-2.5">
-                        <FileText className="w-5 h-5 text-primary shrink-0" />
+                        <FileText className="w-4 h-4 text-primary shrink-0" />
                         <span className="text-xs font-medium truncate flex-1">{att.file_name}</span>
                       </div>
                     )}
@@ -183,13 +208,13 @@ export function MessageItem({ message, onReply, subjectName = 'Subject' }: Messa
                       >
                         {isSaved ? (
                           <>
-                            <BookmarkCheck className="w-3.5 h-3.5" />
-                            <span>Stored in Profile</span>
+                            <BookmarkCheck className="w-3 h-3" />
+                            <span>Saved</span>
                           </>
                         ) : (
                           <>
-                            <Bookmark className="w-3.5 h-3.5" />
-                            <span>Store Media</span>
+                            <Bookmark className="w-3 h-3" />
+                            <span>Save</span>
                           </>
                         )}
                       </button>
@@ -212,7 +237,7 @@ export function MessageItem({ message, onReply, subjectName = 'Subject' }: Messa
                   className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-primary/15 hover:bg-primary text-primary hover:text-primary-foreground transition-all cursor-pointer"
                 >
                   <Bookmark className="w-3 h-3" />
-                  <span>Store in App</span>
+                  <span>Save</span>
                 </button>
               </div>
             </div>
@@ -220,12 +245,12 @@ export function MessageItem({ message, onReply, subjectName = 'Subject' }: Messa
           
           {/* Hover Actions Toolbar */}
           <div className={cn(
-            "absolute top-0 -translate-y-1/2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity bg-card border border-border shadow-lg rounded-xl p-1 z-10",
+            "absolute top-0 -translate-y-1/2 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity bg-card border border-border shadow-lg rounded-xl p-1 z-10",
             isOwn ? "right-full mr-2" : "left-full ml-2"
           )}>
             <button
               onClick={handleStoreDirectContent}
-              title="Store this media/file in Profile"
+              title="Store this media in Profile"
               className="p-1.5 hover:bg-muted rounded-lg text-muted-foreground hover:text-primary transition-colors cursor-pointer"
             >
               <Bookmark className="w-3.5 h-3.5" />
@@ -266,9 +291,9 @@ export function MessageItem({ message, onReply, subjectName = 'Subject' }: Messa
           </div>
         </div>
 
-        {/* Message Reactions */}
+        {/* Message Reactions (Compact chips) */}
         {message.reactions && message.reactions.length > 0 && (
-          <div className="flex gap-1 mt-1 flex-wrap">
+          <div className="flex gap-1 mt-0.5 flex-wrap">
             {Object.entries(
               message.reactions.reduce((acc, curr) => {
                 acc[curr.emoji] = (acc[curr.emoji] || 0) + 1;
@@ -278,10 +303,10 @@ export function MessageItem({ message, onReply, subjectName = 'Subject' }: Messa
               <button
                 key={emoji}
                 onClick={() => handleReaction(emoji)}
-                className="text-xs bg-muted hover:bg-muted/80 px-2 py-1 rounded-full border border-border flex items-center gap-1 cursor-pointer transition-colors"
+                className="text-xs bg-muted/70 hover:bg-muted px-2 py-0.5 rounded-full border border-border/60 flex items-center gap-1 cursor-pointer transition-colors"
               >
                 <span>{emoji}</span>
-                <span className="text-muted-foreground text-[10px]">{count}</span>
+                <span className="text-muted-foreground text-[10px] font-semibold">{count}</span>
               </button>
             ))}
           </div>

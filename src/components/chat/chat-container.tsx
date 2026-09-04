@@ -126,7 +126,7 @@ export function ChatContainer({
   };
 
   return (
-    <div className="flex flex-col h-full bg-background border-0 sm:border sm:border-border/80 rounded-none sm:rounded-2xl overflow-hidden shadow-none sm:shadow-xl">
+    <div className="flex flex-col h-full bg-background overflow-hidden">
       {/* Subject Header */}
       <div className="px-3 sm:px-4 py-2.5 sm:py-3 border-b border-border/80 bg-card/95 backdrop-blur-md flex flex-col gap-2 pt-[calc(0.6rem+env(safe-area-inset-top,0px))] sm:pt-3 shrink-0 z-20">
         <div className="flex items-center justify-between gap-2 sm:gap-3">

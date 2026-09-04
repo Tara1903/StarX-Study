@@ -80,6 +80,7 @@ export default function ProfilePage() {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [activeTab, setActiveTab] = useState<'overview' | 'media' | 'notifications' | 'security'>('overview');
 
   useEffect(() => {
     async function loadData() {
@@ -338,11 +339,36 @@ export default function ProfilePage() {
       </div>
 
       {/* ============================================ */}
-      {/* 2. PERSONAL INFORMATION & ACADEMIC CONTEXT */}
+      {/* 2. PROFILE SECTION TABS */}
       {/* ============================================ */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Personal Information */}
-        <div className="bg-card border border-border p-4 sm:p-6 rounded-2xl sm:rounded-3xl space-y-4 shadow-sm">
+      <div className="flex items-center gap-1 border-b border-border pb-px overflow-x-auto scrollbar-none">
+        {[
+          { id: 'overview', label: 'Overview', icon: User },
+          { id: 'media', label: `Stored Media (${storedMedia.length})`, icon: FolderArchive },
+          { id: 'notifications', label: 'Notifications', icon: BellRing },
+          { id: 'security', label: 'Security', icon: KeyRound },
+        ].map((tab) => (
+          <button
+            key={tab.id}
+            type="button"
+            onClick={() => setActiveTab(tab.id as any)}
+            className={`inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-all cursor-pointer ${
+              activeTab === tab.id
+                ? 'border-primary text-primary font-semibold'
+                : 'border-transparent text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <tab.icon className="w-4 h-4" />
+            <span>{tab.label}</span>
+          </button>
+        ))}
+      </div>
+
+      {activeTab === 'overview' && (
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Personal Information */}
+            <div className="bg-card border border-border p-4 sm:p-6 rounded-2xl sm:rounded-3xl space-y-4 shadow-sm">
           <div className="flex items-center justify-between border-b border-border pb-3">
             <h2 className="font-bold text-base text-foreground flex items-center gap-2">
               <User className="w-4 h-4 text-primary" />
@@ -477,10 +503,13 @@ export default function ProfilePage() {
           ))}
         </div>
       </div>
+      </>
+      )}
 
       {/* ============================================ */}
       {/* 4. STORED MEDIA & FILES GALLERY */}
       {/* ============================================ */}
+      {activeTab === 'media' && (
       <div className="bg-card border border-border p-4 sm:p-6 rounded-2xl sm:rounded-3xl space-y-5 shadow-sm">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border pb-4">
           <div>
@@ -626,10 +655,12 @@ export default function ProfilePage() {
           </div>
         )}
       </div>
+      )}
 
       {/* ============================================ */}
       {/* 5. NOTIFICATION PREFERENCES */}
       {/* ============================================ */}
+      {activeTab === 'notifications' && (
       <div className="bg-card border border-border p-4 sm:p-6 rounded-2xl sm:rounded-3xl space-y-4 shadow-sm">
         <div className="border-b border-border pb-3">
           <h2 className="font-bold text-base text-foreground flex items-center gap-2">
@@ -679,10 +710,13 @@ export default function ProfilePage() {
           })}
         </div>
       </div>
+      )}
 
       {/* ============================================ */}
       {/* 6. SECURITY & ACCOUNT MANAGEMENT */}
       {/* ============================================ */}
+      {activeTab === 'security' && (
+      <>
       <div className="bg-card border border-border p-4 sm:p-6 rounded-2xl sm:rounded-3xl space-y-4 shadow-sm">
         <div className="border-b border-border pb-3">
           <h2 className="font-bold text-base text-foreground flex items-center gap-2">
@@ -763,6 +797,8 @@ export default function ProfilePage() {
           </button>
         </div>
       </div>
+      </>
+      )}
 
       {/* Avatar Selector Dialog */}
       <AvatarSelectorDialog

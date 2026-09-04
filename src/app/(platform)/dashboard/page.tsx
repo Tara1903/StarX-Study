@@ -1,264 +1,252 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useUser } from '@/components/providers/user-provider';
-import { getInitials } from '@/lib/utils';
+import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
+import { useUser } from '@/components/providers/user-provider';
 import { 
   BookOpen, 
-  CalendarDays, 
-  Clock, 
+  MessageSquare, 
+  ClipboardList, 
+  Megaphone, 
   ArrowRight, 
-  MapPin, 
-  Sparkles, 
-  User, 
-  Bell, 
-  ClipboardList,
+  Clock, 
   ChevronRight,
-  GraduationCap
+  Sparkles
 } from 'lucide-react';
-import { ECE_SUBJECTS, ECE_WEEKLY_SCHEDULE, TIME_SLOTS } from '@/lib/ece-data';
+import { ECE_SUBJECTS } from '@/lib/ece-data';
 
 export default function DashboardPage() {
   const { profile, activeRole } = useUser();
-  const [todayName, setTodayName] = useState('Monday');
+  const [greeting, setGreeting] = useState('Welcome');
 
   useEffect(() => {
-    const dayMap = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    setTodayName(dayMap[new Date().getDay()] || 'Monday');
+    const hour = new Date().getHours();
+    if (hour < 12) setGreeting('Good morning');
+    else if (hour < 17) setGreeting('Good afternoon');
+    else setGreeting('Good evening');
   }, []);
 
-  const getRoleBadgeColor = () => {
-    switch (activeRole) {
-      case 'institute_head': return 'bg-purple-500/10 text-purple-500 border-purple-500/20';
-      case 'teacher': return 'bg-blue-500/10 text-blue-500 border-blue-500/20';
-      default: return 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20';
-    }
-  };
+  const firstName = useMemo(() => {
+    const name = profile?.full_name || profile?.display_name || 'there';
+    return name.split(' ')[0];
+  }, [profile]);
 
-  // Find today's schedule or fallback to Monday
-  const todaySchedule = ECE_WEEKLY_SCHEDULE.find(s => s.day === todayName) || ECE_WEEKLY_SCHEDULE[0];
+  // Clean, focused upcoming tasks
+  const upcomingTasks = [
+    {
+      id: 'task-1',
+      subject: 'Engineering Graphics',
+      title: 'Orthographic Projections Sheet 2',
+      due: 'Tomorrow, 5:00 PM',
+      status: 'Pending',
+      urgent: true,
+      url: '/subjects/graphics/assignments',
+    },
+    {
+      id: 'task-2',
+      subject: 'Mathematics-I',
+      title: 'Problem Set 4 — Matrices & Rank',
+      due: 'Friday',
+      status: 'Pending',
+      urgent: false,
+      url: '/subjects/math-1/assignments',
+    },
+    {
+      id: 'task-3',
+      subject: 'Chemistry',
+      title: 'Water Technology Practical Log',
+      due: 'Next Monday',
+      status: 'Submitted',
+      urgent: false,
+      url: '/subjects/chemistry/assignments',
+    }
+  ];
+
+  // Clean, focused recent updates
+  const recentUpdates = [
+    {
+      id: 'up-1',
+      source: 'Chemistry',
+      title: 'New lecture notes on Spectroscopy uploaded',
+      time: '2h ago',
+      url: '/subjects/chemistry/materials',
+    },
+    {
+      id: 'up-2',
+      source: 'Institute Notice',
+      title: 'Mid-Term 1 Date Sheet published',
+      time: 'Yesterday',
+      url: '/announcements',
+    },
+    {
+      id: 'up-3',
+      source: 'Basic Electrical',
+      title: 'DC Circuits lab batch list announced',
+      time: '2 days ago',
+      url: '/subjects/basic-electrical/announcements',
+    }
+  ];
 
   return (
-    <div className="p-4 md:p-6 lg:p-8 max-w-7xl mx-auto space-y-8">
-      {/* Welcome Banner */}
-      <section className="relative overflow-hidden flex flex-col md:flex-row items-start md:items-center justify-between gap-6 bg-gradient-to-r from-card via-card to-primary/5 border border-border rounded-2xl p-6 lg:p-8 shadow-sm">
-        <div className="flex items-center gap-5">
-          <div className="w-16 h-16 rounded-2xl bg-primary/10 text-primary border border-primary/20 flex items-center justify-center font-bold text-2xl shrink-0 shadow-inner">
-            {getInitials(profile.full_name)}
-          </div>
-          <div className="space-y-1">
-            <div className="flex flex-wrap items-center gap-2">
-              <h1 className="text-2xl lg:text-3xl font-bold tracking-tight text-foreground">
-                Welcome back, {profile.full_name}!
-              </h1>
-              <span className={`text-xs px-2.5 py-0.5 rounded-full border font-semibold capitalize ${getRoleBadgeColor()}`}>
-                {activeRole.replace('_', ' ')}
-              </span>
-            </div>
-            <p className="text-muted-foreground text-sm flex items-center gap-2">
-              <span>B.Tech Semester I • Electronics & Communication Engineering (ECE)</span>
-              <span className="inline-block w-1 h-1 rounded-full bg-muted-foreground/50" />
-              <span className="text-[#12CFEA]">Room No. 03</span>
-            </p>
-          </div>
+    <div className="p-6 lg:p-10 max-w-6xl mx-auto space-y-10">
+      {/* Clean Greeting */}
+      <header className="space-y-1.5">
+        <h1 className="text-2xl lg:text-3xl font-bold tracking-tight text-foreground">
+          {greeting}, {firstName}.
+        </h1>
+        <p className="text-sm text-muted-foreground">
+          Here&rsquo;s what needs your attention.
+        </p>
+      </header>
+
+      {/* Subjects Section */}
+      <section className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-base font-semibold text-foreground tracking-tight">
+            Subjects
+          </h2>
+          <Link
+            href="/subjects"
+            className="text-xs text-muted-foreground hover:text-primary transition-colors flex items-center gap-1 font-medium"
+          >
+            <span>All subjects</span>
+            <ChevronRight className="w-3.5 h-3.5" />
+          </Link>
         </div>
 
-        <div className="flex items-center gap-3">
-          <Link
-            href="/timetable"
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-white hover:bg-[#12CFEA] text-sm font-semibold transition-all shadow-sm"
-          >
-            <CalendarDays className="w-4 h-4" />
-            <span>Open Time Table</span>
-          </Link>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {ECE_SUBJECTS.map((sub) => (
+            <div
+              key={sub.id}
+              className="group p-4 rounded-2xl bg-card border border-border/90 hover:border-border hover:bg-card/80 transition-all flex flex-col justify-between space-y-4 shadow-sm"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-center gap-3 min-w-0">
+                  <span
+                    className="w-2.5 h-2.5 rounded-full shrink-0 mt-0.5"
+                    style={{ backgroundColor: sub.color }}
+                  />
+                  <div className="min-w-0">
+                    <Link
+                      href={`/subjects/${sub.id}`}
+                      className="font-semibold text-sm text-foreground hover:text-primary transition-colors block truncate"
+                    >
+                      {sub.name}
+                    </Link>
+                    <p className="text-xs text-muted-foreground truncate mt-0.5">
+                      {sub.facultyName}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between pt-3 border-t border-border/50 text-xs">
+                <span className="text-muted-foreground/80 text-[11px]">
+                  I Sem • ECE
+                </span>
+                <Link
+                  href={`/subjects/${sub.id}/chat`}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium text-primary hover:bg-primary/10 transition-colors"
+                >
+                  <MessageSquare className="w-3.5 h-3.5" />
+                  <span>Chat</span>
+                </Link>
+              </div>
+            </div>
+          ))}
         </div>
       </section>
 
-      {/* Role-Specific Content */}
-      {activeRole === 'student' && (
-        <div className="space-y-8">
-          {/* Main Grid: My Subjects & Timetable Snapshot */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* My Subjects (Col span 2) */}
-            <div className="lg:col-span-2 bg-card border border-border rounded-2xl p-6 shadow-sm flex flex-col space-y-4">
-              <div className="flex items-center justify-between border-b border-border pb-4">
-                <div>
-                  <h2 className="font-bold text-lg text-foreground flex items-center gap-2">
-                    <BookOpen className="w-5 h-5 text-primary" />
-                    My Subjects (ECE Branch)
-                  </h2>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    6 Enrolled subjects for Semester I • SAGE University, Indore
-                  </p>
-                </div>
-                <Link 
-                  href="/subjects"
-                  className="text-xs text-primary font-semibold hover:underline flex items-center gap-1"
-                >
-                  View All <ChevronRight className="w-3.5 h-3.5" />
-                </Link>
-              </div>
+      {/* Two-Column Section: Upcoming & Recent */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 pt-2">
+        {/* Upcoming */}
+        <section className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-base font-semibold text-foreground tracking-tight">
+              Upcoming
+            </h2>
+            <Link
+              href="/assignments"
+              className="text-xs text-muted-foreground hover:text-primary transition-colors flex items-center gap-1 font-medium"
+            >
+              <span>Assignments</span>
+              <ChevronRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-1">
-                {ECE_SUBJECTS.map((sub) => (
-                  <Link 
-                    key={sub.id} 
-                    href={`/subjects/${sub.id}`}
-                    className="group p-4 rounded-xl border border-border hover:border-primary/40 bg-muted/20 hover:bg-muted/40 transition-all flex flex-col justify-between space-y-2.5"
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="space-y-1">
-                        <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-background border border-border text-primary">
-                          {sub.code}
-                        </span>
-                        <h3 className="font-bold text-sm text-foreground group-hover:text-primary transition-colors line-clamp-1">
-                          {sub.name}
-                        </h3>
-                      </div>
-                      <span 
-                        className="w-3 h-3 rounded-full shrink-0 mt-1" 
-                        style={{ backgroundColor: sub.color }}
-                      />
-                    </div>
-
-                    <div className="text-xs text-muted-foreground flex items-center justify-between pt-1 border-t border-border/50">
-                      <span className="truncate flex items-center gap-1">
-                        <User className="w-3 h-3 text-muted-foreground" />
-                        {sub.facultyAbb} • {sub.facultyName.split(' ')[1] || sub.facultyName}
-                      </span>
-                      <span className="text-[11px] font-medium text-foreground/80">
-                        {sub.credits} Cr
-                      </span>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            </div>
-
-            {/* Today's Schedule Snapshot (Col span 1) */}
-            <div className="bg-card border border-border rounded-2xl p-6 shadow-sm flex flex-col space-y-4">
-              <div className="flex items-center justify-between border-b border-border pb-4">
-                <div>
-                  <h2 className="font-bold text-lg text-foreground flex items-center gap-2">
-                    <Clock className="w-5 h-5 text-primary" />
-                    Today's Schedule
-                  </h2>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    {todaySchedule.day} • First Shift
-                  </p>
-                </div>
-                <Link
-                  href="/timetable"
-                  className="text-xs text-primary font-semibold hover:underline"
-                >
-                  Full Table
-                </Link>
-              </div>
-
-              <div className="space-y-2 flex-grow overflow-y-auto max-h-[320px] pr-1">
-                {todaySchedule.periods.map((p, idx) => (
-                  <div 
-                    key={idx}
-                    className="p-3 rounded-xl border border-border/60 bg-muted/20 flex items-center justify-between gap-2"
-                  >
-                    <div className="space-y-0.5 min-w-0">
-                      <span className="font-bold text-xs text-foreground truncate block">
-                        {p.subjectName}
-                      </span>
-                      <span className="text-[11px] text-muted-foreground truncate block">
-                        {p.facultyName || p.room || 'Scheduled Period'}
-                      </span>
-                    </div>
-
-                    <div className="text-right shrink-0">
-                      <span 
-                        className="text-[10px] font-bold px-2 py-0.5 rounded uppercase"
-                        style={{ 
-                          backgroundColor: `${p.color || '#3B82F6'}20`,
-                          color: p.color || '#3B82F6',
-                        }}
-                      >
-                        {p.shortName}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
+          <div className="space-y-2.5">
+            {upcomingTasks.map((task) => (
               <Link
-                href="/timetable"
-                className="w-full py-2.5 rounded-xl bg-primary/10 hover:bg-primary text-primary hover:text-white text-xs font-bold transition-all flex items-center justify-center gap-1.5"
+                key={task.id}
+                href={task.url}
+                className="p-3.5 rounded-xl bg-card border border-border/80 hover:border-border hover:bg-card/80 transition-all flex items-center justify-between gap-4 group"
               >
-                View Full Weekly Time Table
-                <ArrowRight className="w-3.5 h-3.5" />
+                <div className="min-w-0 space-y-0.5">
+                  <span className="text-[11px] font-medium text-muted-foreground block truncate">
+                    {task.subject}
+                  </span>
+                  <p className="text-sm font-medium text-foreground group-hover:text-primary transition-colors truncate">
+                    {task.title}
+                  </p>
+                </div>
+
+                <div className="text-right shrink-0">
+                  <span
+                    className={`text-xs font-semibold px-2 py-0.5 rounded-md ${
+                      task.urgent
+                        ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                        : task.status === 'Submitted'
+                        ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                        : 'text-muted-foreground'
+                    }`}
+                  >
+                    {task.due}
+                  </span>
+                </div>
               </Link>
-            </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Recent */}
+        <section className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-base font-semibold text-foreground tracking-tight">
+              Recent
+            </h2>
+            <Link
+              href="/announcements"
+              className="text-xs text-muted-foreground hover:text-primary transition-colors flex items-center gap-1 font-medium"
+            >
+              <span>Announcements</span>
+              <ChevronRight className="w-3.5 h-3.5" />
+            </Link>
           </div>
 
-          {/* Secondary Row: Upcoming Assignments & Announcements */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-card border border-border rounded-2xl p-6 shadow-sm flex flex-col h-56">
-              <h2 className="font-bold text-base text-foreground mb-3 flex items-center gap-2">
-                <ClipboardList className="w-4 h-4 text-primary" />
-                Upcoming Assignments
-              </h2>
-              <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground text-sm border-2 border-dashed border-border rounded-xl p-4 text-center">
-                <p>No pending assignments right now.</p>
-                <span className="text-xs text-muted-foreground/70 mt-1">Course submissions will appear here once assigned by faculty.</span>
-              </div>
-            </div>
+          <div className="space-y-2.5">
+            {recentUpdates.map((item) => (
+              <Link
+                key={item.id}
+                href={item.url}
+                className="p-3.5 rounded-xl bg-card border border-border/80 hover:border-border hover:bg-card/80 transition-all flex items-center justify-between gap-4 group"
+              >
+                <div className="min-w-0 space-y-0.5">
+                  <span className="text-[11px] font-medium text-primary block truncate">
+                    {item.source}
+                  </span>
+                  <p className="text-sm font-medium text-foreground group-hover:text-primary transition-colors truncate">
+                    {item.title}
+                  </p>
+                </div>
 
-            <div className="bg-card border border-border rounded-2xl p-6 shadow-sm flex flex-col h-56">
-              <h2 className="font-bold text-base text-foreground mb-3 flex items-center gap-2">
-                <Bell className="w-4 h-4 text-primary" />
-                Recent Announcements
-              </h2>
-              <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground text-sm border-2 border-dashed border-border rounded-xl p-4 text-center">
-                <p>Classes commenced w.e.f 19/08/2026.</p>
-                <span className="text-xs text-primary font-medium mt-1">ECE Department Orientation & Welcome Session</span>
-              </div>
-            </div>
+                <span className="text-xs text-muted-foreground shrink-0">
+                  {item.time}
+                </span>
+              </Link>
+            ))}
           </div>
-        </div>
-      )}
-
-      {activeRole === 'teacher' && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <div className="bg-card border border-border rounded-xl p-6 shadow-sm flex flex-col h-64">
-            <h2 className="font-semibold text-lg mb-4">My Departments</h2>
-            <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm border-2 border-dashed border-border rounded-lg">
-              Loading departments...
-            </div>
-          </div>
-          <div className="bg-card border border-border rounded-xl p-6 shadow-sm flex flex-col h-64 lg:col-span-2">
-            <h2 className="font-semibold text-lg mb-4">Recent Submissions</h2>
-            <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm border-2 border-dashed border-border rounded-lg">
-              No recent submissions to grade
-            </div>
-          </div>
-        </div>
-      )}
-
-      {activeRole === 'institute_head' && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-card border border-border rounded-xl p-6 shadow-sm">
-            <h3 className="text-sm font-medium text-muted-foreground mb-1">Total Students</h3>
-            <p className="text-3xl font-bold">120</p>
-            <span className="text-xs text-emerald-500 font-medium mt-2 block">ECE & Engineering</span>
-          </div>
-          <div className="bg-card border border-border rounded-xl p-6 shadow-sm">
-            <h3 className="text-sm font-medium text-muted-foreground mb-1">Total Faculty</h3>
-            <p className="text-3xl font-bold">6</p>
-            <span className="text-xs text-emerald-500 font-medium mt-2 block">ECE Department</span>
-          </div>
-          <div className="bg-card border border-border rounded-xl p-6 shadow-sm">
-            <h3 className="text-sm font-medium text-muted-foreground mb-1">Active Classes</h3>
-            <p className="text-3xl font-bold">8 Periods/Day</p>
-            <span className="text-xs text-muted-foreground mt-2 block">Shift 1 (08:30 - 16:30)</span>
-          </div>
-        </div>
-      )}
+        </section>
+      </div>
     </div>
   );
 }

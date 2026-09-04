@@ -5,17 +5,14 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useUser } from '@/components/providers/user-provider';
 import { ROUTES } from '@/lib/constants';
-import { getInitials } from '@/lib/utils';
 import { createClient } from '@/lib/supabase/client';
 import { UserAvatar } from '@/components/ui/user-avatar';
 
 import {
-  CalendarDays,
-  ChevronDown,
   LayoutDashboard,
   BookOpen,
-  Megaphone,
   ClipboardList,
+  Megaphone,
   Bell,
   Users,
   Layers,
@@ -24,23 +21,18 @@ import {
   Shield,
   Flag,
   Settings,
-  Building2,
-  UsersRound,
-  ShieldAlert,
-  ScrollText,
   LogOut,
-  Loader2,
-  FolderArchive
+  Loader2
 } from 'lucide-react';
 
 export function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
-  const { profile, activeUniversity, activeRole } = useUser();
+  const { profile, activeRole } = useUser();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const handleLogout = async () => {
-    if (confirm('Are you sure you want to log out of your session?')) {
+    if (confirm('Are you sure you want to log out?')) {
       try {
         setIsLoggingOut(true);
         const supabase = createClient();
@@ -55,17 +47,15 @@ export function Sidebar() {
     }
   };
 
-  const mainLinks = [
-    { name: 'Dashboard', href: ROUTES.DASHBOARD, icon: LayoutDashboard },
-    { name: 'Time Table', href: ROUTES.TIMETABLE, icon: CalendarDays },
-    { name: 'My Subjects', href: ROUTES.SUBJECTS, icon: BookOpen },
-    { name: 'Announcements', href: ROUTES.ANNOUNCEMENTS, icon: Megaphone },
+  const primaryNav = [
+    { name: 'Home', href: ROUTES.DASHBOARD, icon: LayoutDashboard },
+    { name: 'Subjects', href: ROUTES.SUBJECTS, icon: BookOpen },
     { name: 'Assignments', href: ROUTES.ASSIGNMENTS, icon: ClipboardList },
-    { name: 'Stored Media', href: ROUTES.PROFILE, icon: FolderArchive },
-    { name: 'Notifications', href: ROUTES.NOTIFICATIONS, icon: Bell, badge: 3 },
+    { name: 'Announcements', href: ROUTES.ANNOUNCEMENTS, icon: Megaphone },
+    { name: 'Notifications', href: ROUTES.NOTIFICATIONS, icon: Bell },
   ];
 
-  const adminLinks = [
+  const adminNav = [
     { name: 'Users', href: ROUTES.ADMIN_USERS, icon: Users },
     { name: 'Departments', href: ROUTES.ADMIN_DEPARTMENTS, icon: Layers },
     { name: 'Subjects', href: ROUTES.ADMIN_SUBJECTS, icon: BookMarked },
@@ -75,25 +65,28 @@ export function Sidebar() {
     { name: 'Settings', href: ROUTES.ADMIN_SETTINGS, icon: Settings },
   ];
 
-  const renderLink = (link: any) => {
-    const isActive = pathname === link.href || pathname.startsWith(link.href + '/');
-    const Icon = link.icon;
+  const renderNavItem = (item: { name: string; href: string; icon: any; badge?: number }) => {
+    const isActive = 
+      item.href === ROUTES.DASHBOARD
+        ? pathname === ROUTES.DASHBOARD
+        : pathname === item.href || pathname.startsWith(item.href + '/');
+    const Icon = item.icon;
 
     return (
       <Link
-        key={link.name}
-        href={link.href}
-        className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+        key={item.name}
+        href={item.href}
+        className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all group ${
           isActive
-            ? 'bg-sidebar-accent text-sidebar-accent-foreground'
-            : 'text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground'
+            ? 'bg-primary text-primary-foreground font-semibold shadow-sm'
+            : 'text-muted-foreground hover:bg-muted/40 hover:text-foreground'
         }`}
       >
-        <Icon className="w-5 h-5" />
-        <span className="flex-1">{link.name}</span>
-        {link.badge && (
-          <span className="bg-primary text-primary-foreground text-xs px-2 py-0.5 rounded-full">
-            {link.badge}
+        <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-primary-foreground' : 'text-muted-foreground group-hover:text-foreground'}`} />
+        <span className="flex-1 truncate">{item.name}</span>
+        {item.badge && (
+          <span className="bg-primary/20 text-primary text-xs px-2 py-0.5 rounded-full font-semibold">
+            {item.badge}
           </span>
         )}
       </Link>
@@ -101,83 +94,71 @@ export function Sidebar() {
   };
 
   return (
-    <aside className="hidden lg:flex lg:flex-col w-64 bg-sidebar border-r border-sidebar-border h-full overflow-hidden">
-      {/* Brand */}
-      <div className="h-16 flex items-center px-6 border-b border-sidebar-border">
-        <Link href={ROUTES.DASHBOARD} className="flex items-center gap-2 text-sidebar-foreground hover:opacity-80 transition-opacity">
+    <aside className="hidden lg:flex lg:flex-col w-64 bg-sidebar border-r border-border h-full overflow-hidden shrink-0 select-none">
+      {/* Brand Header */}
+      <div className="h-16 flex items-center px-5 border-b border-border">
+        <Link href={ROUTES.DASHBOARD} className="flex items-center gap-2.5 hover:opacity-90 transition-opacity">
           <img src="/logo.jpg" alt="studchat logo" className="w-8 h-8 rounded-lg object-cover" />
-          <span className="font-bold text-lg tracking-tight">studchat</span>
+          <span className="font-bold text-lg tracking-tight text-foreground">studchat</span>
         </Link>
       </div>
 
-      {/* University Selector Placeholder */}
-      {activeUniversity && (
-        <div className="px-4 py-4">
-          <button className="w-full flex items-center justify-between bg-sidebar-accent/30 hover:bg-sidebar-accent/50 text-sidebar-foreground border border-sidebar-border rounded-xl px-3 py-2 transition-colors">
-            <span className="text-sm font-semibold truncate">{activeUniversity.name}</span>
-            <ChevronDown className="w-4 h-4 opacity-50" />
-          </button>
-        </div>
-      )}
-
-      {/* Navigation */}
-      <div className="flex-1 overflow-y-auto py-2 px-3 space-y-6 custom-scrollbar">
+      {/* Primary Navigation */}
+      <div className="flex-1 overflow-y-auto p-3 space-y-6">
         <div className="space-y-1">
-          {mainLinks.map(renderLink)}
+          {primaryNav.map(renderNavItem)}
         </div>
 
-          {activeRole === 'institute_head' && (
-            <div>
-              <h4 className="px-3 text-xs font-semibold text-sidebar-foreground/50 uppercase tracking-wider mb-2">Administration</h4>
-              <div className="space-y-1">
-                {adminLinks.map(renderLink)}
-              </div>
+        {/* Admin Navigation (Authorized Only) */}
+        {activeRole === 'institute_head' && (
+          <div className="pt-2 border-t border-border/60">
+            <h4 className="px-3.5 text-[11px] font-semibold text-muted-foreground/70 uppercase tracking-wider mb-2">
+              Administration
+            </h4>
+            <div className="space-y-1">
+              {adminNav.map(renderNavItem)}
             </div>
-          )}
+          </div>
+        )}
       </div>
 
-      {/* User Info & Logout */}
-      <div className="p-4 border-t border-sidebar-border space-y-3">
-        <Link
-          href={ROUTES.PROFILE}
-          className="flex items-center justify-between p-1.5 -m-1.5 rounded-xl hover:bg-sidebar-accent/60 transition-colors group cursor-pointer"
-          title="View Profile & Stored Media"
-        >
-          <div className="flex items-center gap-3 overflow-hidden">
+      {/* Sidebar Profile Area */}
+      <div className="p-3 border-t border-border bg-card/40">
+        <div className="flex items-center justify-between gap-2 p-2 rounded-xl hover:bg-muted/40 transition-colors">
+          <Link
+            href={ROUTES.PROFILE}
+            className="flex items-center gap-2.5 min-w-0 flex-1 group"
+            title="View Profile"
+          >
             <UserAvatar
               profile={profile}
               size="sm"
-              className="group-hover:ring-2 group-hover:ring-primary/40 transition-all"
+              className="ring-1 ring-border group-hover:ring-primary/40 transition-all shrink-0"
             />
-            <div className="flex flex-col truncate">
-              <span className="text-sm font-medium text-sidebar-foreground truncate group-hover:text-primary transition-colors">
-                {profile.display_name || profile.full_name}
+            <div className="min-w-0 flex flex-col">
+              <span className="text-xs font-semibold text-foreground truncate group-hover:text-primary transition-colors">
+                {profile?.display_name || profile?.full_name || 'User'}
               </span>
-              <span className="text-xs text-sidebar-foreground/60 capitalize truncate">
-                {activeRole.replace('_', ' ')}
+              <span className="text-[11px] text-muted-foreground capitalize truncate">
+                {activeRole ? activeRole.replace('_', ' ') : 'Student'}
               </span>
             </div>
-          </div>
-        </Link>
+          </Link>
 
-        <button
-          type="button"
-          onClick={handleLogout}
-          disabled={isLoggingOut}
-          className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold text-muted-foreground hover:text-red-400 hover:bg-red-500/10 border border-transparent hover:border-red-500/20 transition-all cursor-pointer disabled:opacity-50"
-        >
-          {isLoggingOut ? (
-            <>
-              <Loader2 className="w-3.5 h-3.5 animate-spin" />
-              <span>Logging out...</span>
-            </>
-          ) : (
-            <>
-              <LogOut className="w-3.5 h-3.5" />
-              <span>Log Out</span>
-            </>
-          )}
-        </button>
+          <button
+            type="button"
+            onClick={handleLogout}
+            disabled={isLoggingOut}
+            title="Log out"
+            className="p-1.5 rounded-lg text-muted-foreground hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer shrink-0 disabled:opacity-50"
+          >
+            {isLoggingOut ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <LogOut className="w-4 h-4" />
+            )}
+          </button>
+        </div>
       </div>
     </aside>
   );

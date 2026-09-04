@@ -2,8 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { Bell, Check, Info, AlertTriangle, MessageSquare } from 'lucide-react';
+import { Bell, Check, MessageSquare, Megaphone, ClipboardList, ChevronRight } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { formatRelativeTime } from '@/lib/utils';
+import { toast } from 'sonner';
 
 export default function NotificationsPage() {
   const [notifications, setNotifications] = useState<any[]>([]);
@@ -11,104 +13,164 @@ export default function NotificationsPage() {
   const supabase = createClient();
   const router = useRouter();
 
+  const SAMPLE_NOTIFICATIONS = [
+    {
+      id: 'notif-1',
+      title: 'Chemistry',
+      content: 'New message from Prof. Garima Pawar in chat',
+      created_at: new Date(Date.now() - 5 * 60 * 1000).toISOString(),
+      read_status: false,
+      link_url: '/subjects/chemistry/chat',
+      type: 'message'
+    },
+    {
+      id: 'notif-2',
+      title: 'Institute Notice',
+      content: 'Mid-Term 1 Date Sheet published by Examination Cell',
+      created_at: new Date(Date.now() - 3 * 3600 * 1000).toISOString(),
+      read_status: false,
+      link_url: '/announcements',
+      type: 'announcement'
+    },
+    {
+      id: 'notif-3',
+      title: 'Mathematics-I',
+      content: 'Problem Set 4 due Friday 5:00 PM',
+      created_at: new Date(Date.now() - 24 * 3600 * 1000).toISOString(),
+      read_status: true,
+      link_url: '/subjects/math-1',
+      type: 'assignment'
+    }
+  ];
+
   useEffect(() => {
     async function loadNotifications() {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-      
-      const { data } = await supabase
-        .from('notifications')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(50);
-        
-      if (data) setNotifications(data);
-      setLoading(false);
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { data } = await supabase
+            .from('notifications')
+            .select('*')
+            .eq('user_id', user.id)
+            .order('created_at', { ascending: false })
+            .limit(50);
+            
+          if (data && data.length > 0) {
+            setNotifications(data);
+          } else {
+            setNotifications(SAMPLE_NOTIFICATIONS);
+          }
+        } else {
+          setNotifications(SAMPLE_NOTIFICATIONS);
+        }
+      } catch {
+        setNotifications(SAMPLE_NOTIFICATIONS);
+      } finally {
+        setLoading(false);
+      }
     }
     loadNotifications();
   }, [supabase]);
 
   const markAsRead = async (id: string, url?: string) => {
-    await supabase.from('notifications').update({ read_status: true }).eq('id', id);
-    setNotifications(prev => prev.map(n => n.id === id ? { ...n, read_status: true } : n));
+    try {
+      await supabase.from('notifications').update({ read_status: true }).eq('id', id);
+    } catch {}
+    setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read_status: true } : n)));
     if (url) router.push(url);
   };
 
   const markAllRead = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-    await supabase.from('notifications').update({ read_status: true }).eq('user_id', user.id);
-    setNotifications(prev => prev.map(n => ({ ...n, read_status: true })));
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        await supabase.from('notifications').update({ read_status: true }).eq('user_id', user.id);
+      }
+    } catch {}
+    setNotifications((prev) => prev.map((n) => ({ ...n, read_status: true })));
+    toast.success('All marked as read');
   };
 
   const getIcon = (type: string) => {
     switch (type) {
-      case 'alert': return <AlertTriangle className="h-5 w-5 text-red-500" />;
-      case 'message': return <MessageSquare className="h-5 w-5 text-blue-500" />;
-      default: return <Info className="h-5 w-5 text-primary" />;
+      case 'message':
+        return <MessageSquare className="h-4 w-4 text-primary" />;
+      case 'announcement':
+        return <Megaphone className="h-4 w-4 text-amber-400" />;
+      case 'assignment':
+        return <ClipboardList className="h-4 w-4 text-emerald-400" />;
+      default:
+        return <Bell className="h-4 w-4 text-primary" />;
     }
   };
 
   return (
-    <div className="p-4 sm:p-6 max-w-4xl mx-auto w-full flex flex-col gap-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Notifications</h1>
-          <p className="text-muted-foreground mt-1 text-sm">Your recent alerts and messages.</p>
+    <div className="p-6 lg:p-10 max-w-4xl mx-auto w-full space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between gap-4 pb-4 border-b border-border">
+        <div className="space-y-1">
+          <h1 className="text-2xl lg:text-3xl font-bold tracking-tight text-foreground">
+            Notifications
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            Actionable alerts & updates
+          </p>
         </div>
+
         <button 
+          type="button"
           onClick={markAllRead}
-          className="flex items-center gap-2 bg-secondary text-secondary-foreground px-4 py-2 rounded-md font-medium text-sm hover:bg-secondary/80 transition-colors shadow-sm"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors cursor-pointer"
         >
-          <Check className="h-4 w-4" />
-          Mark all read
+          <Check className="h-3.5 w-3.5" />
+          <span>Mark all read</span>
         </button>
       </div>
 
       {loading ? (
         <div className="flex justify-center p-12">
-          <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
+          <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full" />
         </div>
       ) : notifications.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-24 text-center border rounded-xl bg-card/50 border-dashed">
-          <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center mb-4">
-            <Bell className="h-8 w-8 text-muted-foreground" />
-          </div>
-          <h3 className="text-lg font-medium">No notifications</h3>
-          <p className="text-muted-foreground mt-1 max-w-sm">You're all caught up!</p>
+        <div className="flex flex-col items-center justify-center py-20 text-center border border-dashed border-border/80 rounded-2xl bg-card/20">
+          <Bell className="h-8 w-8 text-muted-foreground mb-3 opacity-60" />
+          <h3 className="text-sm font-semibold text-foreground">No notifications</h3>
+          <p className="text-xs text-muted-foreground mt-0.5">You&rsquo;re all caught up!</p>
         </div>
       ) : (
-        <div className="space-y-3">
-          {notifications.map((notification) => (
+        <div className="space-y-2">
+          {notifications.map((item) => (
             <div 
-              key={notification.id} 
-              onClick={() => markAsRead(notification.id, notification.link_url)}
-              className={`flex items-start gap-4 p-4 rounded-xl border transition-all cursor-pointer ${
-                notification.read_status 
-                  ? 'bg-card border-border' 
-                  : 'bg-primary/5 border-primary/20 shadow-sm'
-              }`}
+              key={item.id} 
+              onClick={() => markAsRead(item.id, item.link_url)}
+              className="p-3.5 rounded-xl bg-card border border-border/80 hover:border-border hover:bg-card/80 transition-all flex items-center justify-between gap-4 cursor-pointer group"
             >
-              <div className="p-2 bg-background rounded-full shrink-0 shadow-sm">
-                {getIcon(notification.type)}
-              </div>
-              <div className="flex-1 space-y-1 pt-1">
-                <div className="flex justify-between items-start gap-4">
-                  <h4 className={`text-sm ${notification.read_status ? 'font-medium text-foreground/80' : 'font-bold text-foreground'}`}>
-                    {notification.title}
-                  </h4>
-                  <span className="text-xs text-muted-foreground whitespace-nowrap">
-                    {new Date(notification.created_at).toLocaleDateString()}
-                  </span>
+              <div className="flex items-center gap-3.5 min-w-0">
+                <div className="w-9 h-9 rounded-xl bg-muted/40 flex items-center justify-center shrink-0">
+                  {getIcon(item.type)}
                 </div>
-                <p className={`text-sm ${notification.read_status ? 'text-muted-foreground' : 'text-foreground/90 font-medium'}`}>
-                  {notification.content}
-                </p>
+
+                <div className="min-w-0 space-y-0.5">
+                  <div className="flex items-center gap-2">
+                    <span className="font-semibold text-sm text-foreground group-hover:text-primary transition-colors truncate">
+                      {item.title}
+                    </span>
+                    {!item.read_status && (
+                      <span className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground truncate">
+                    {item.content}
+                  </p>
+                </div>
               </div>
-              {!notification.read_status && (
-                <div className="h-2 w-2 rounded-full bg-primary mt-2 shrink-0" />
-              )}
+
+              <div className="flex items-center gap-3 shrink-0">
+                <span className="text-xs text-muted-foreground">
+                  {formatRelativeTime(new Date(item.created_at))}
+                </span>
+                <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-foreground group-hover:translate-x-0.5 transition-transform" />
+              </div>
             </div>
           ))}
         </div>
