@@ -16,26 +16,31 @@ describe('studchat Mobile Web Design System Tokens & Navigation', () => {
   it('provides the 5 required primary bottom navigation destinations', () => {
     expect(PRIMARY_MOBILE_DESTINATIONS).toHaveLength(5);
     const ids = PRIMARY_MOBILE_DESTINATIONS.map((d) => d.id);
-    expect(ids).toEqual(['home', 'subjects', 'tasks', 'bell', 'me']);
+    expect(ids).toEqual(['home', 'chat', 'subjects', 'tasks', 'me']);
 
     const hrefs = PRIMARY_MOBILE_DESTINATIONS.map((d) => d.href);
     expect(hrefs).toEqual([
       '/dashboard',
+      '/chat',
       '/subjects',
       '/assignments',
-      '/notifications',
       '/profile',
     ]);
   });
 
-  it('correctly identifies subject chat routes to isolate navigation and composer', () => {
+  it('correctly identifies subject and personal chat routes to isolate navigation and composer', () => {
     // Valid subject chat routes
     expect(isSubjectChatRoute('/subjects/chemistry/chat')).toBe(true);
     expect(isSubjectChatRoute('/subjects/ece-math-1/chat')).toBe(true);
     expect(isSubjectChatRoute('/subjects/ece-math-1/chat/thread')).toBe(true);
     expect(isSubjectChatRoute('/subjects/3e20e10b-689e-4c3d-b4f7-7a56111fdb49/chat')).toBe(true);
 
+    // Valid personal/direct chat routes
+    expect(isSubjectChatRoute('/chat/math-1')).toBe(true);
+    expect(isSubjectChatRoute('/chat/p-aarav')).toBe(true);
+
     // Non-chat routes should return false
+    expect(isSubjectChatRoute('/chat')).toBe(false);
     expect(isSubjectChatRoute('/subjects')).toBe(false);
     expect(isSubjectChatRoute('/subjects/chemistry')).toBe(false);
     expect(isSubjectChatRoute('/subjects/chemistry/announcements')).toBe(false);

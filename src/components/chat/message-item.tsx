@@ -16,7 +16,9 @@ import {
   BookmarkCheck, 
   FileText, 
   Image as ImageIcon,
-  MoreHorizontal
+  MoreHorizontal,
+  Copy,
+  CheckCheck
 } from 'lucide-react';
 import { toggleReaction, pinMessage, deleteMessage } from '@/actions/messages';
 import { saveMediaItem, isMediaStored, removeStoredMediaItem } from '@/lib/stored-media';
@@ -28,6 +30,15 @@ interface MessageItemProps {
   onReply: () => void;
   subjectName?: string;
   showSenderInfo?: boolean;
+}
+
+function formatMessageTime(dateString: string): string {
+  try {
+    const d = new Date(dateString);
+    return d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  } catch {
+    return '';
+  }
 }
 
 export function MessageItem({ 
@@ -82,6 +93,15 @@ export function MessageItem({
 
   const handlePin = async () => {
     await pinMessage(message.id);
+  };
+
+  const handleCopyText = async () => {
+    try {
+      await navigator.clipboard.writeText(message.content);
+      toast.success('Copied to clipboard');
+    } catch {
+      toast.error('Failed to copy');
+    }
   };
 
   const handleStoreAttachment = (att: any) => {
@@ -139,46 +159,37 @@ export function MessageItem({
   return (
     <div 
       className={cn(
-        "group flex gap-2.5 max-w-[85%] sm:max-w-[75%]",
-        showSenderInfo ? "mt-3.5" : "mt-1",
+        "group flex gap-2.5 max-w-[90%] sm:max-w-[78%]",
+        showSenderInfo ? "mt-3" : "mt-0.5",
         isOwn ? "ml-auto flex-row-reverse" : ""
       )}
     >
-      {/* Avatar (shown only on group start) */}
-      {showSenderInfo ? (
-        <UserAvatar
-          name={message.sender?.full_name || 'User'}
-          avatarUrl={message.sender?.avatar_url}
-          size="sm"
-          className="shrink-0 mt-0.5"
-        />
-      ) : (
-        <div className="w-8 h-8 shrink-0 invisible pointer-events-none" />
+      {/* Avatar (shown only on group start for other senders) */}
+      {!isOwn && (
+        showSenderInfo ? (
+          <UserAvatar
+            name={message.sender?.full_name || 'User'}
+            avatarUrl={message.sender?.avatar_url}
+            size="sm"
+            className="shrink-0 mt-1 ring-1 ring-white/10"
+          />
+        ) : (
+          <div className="w-8 h-8 shrink-0 invisible pointer-events-none" />
+        )
       )}
 
-      <div className={cn("flex flex-col gap-1 min-w-0", isOwn ? "items-end" : "items-start")}>
-        {/* Sender Name & Time (Shown only on first message of group) */}
-        {showSenderInfo && (
-          <div className="flex items-center gap-2 text-xs text-muted-foreground mx-1">
-            <span className="font-semibold text-foreground text-xs">
+      <div className={cn("flex flex-col gap-0.5 min-w-0", isOwn ? "items-end" : "items-start")}>
+        {/* Sender Name (Shown only on first message of group for other senders) */}
+        {!isOwn && showSenderInfo && (
+          <div className="flex items-center gap-2 text-xs text-muted-foreground mx-1 mb-0.5">
+            <span className="font-semibold text-foreground/90 text-xs">
               {message.sender?.full_name || 'User'}
             </span>
-            <span className="text-[11px] text-muted-foreground/70">
-              {formatRelativeTime(new Date(message.created_at))}
-            </span>
-            {message.is_pinned && <Pin className="w-3 h-3 text-primary" />}
+            {message.is_pinned && <Pin className="w-3 h-3 text-primary rotate-45" />}
           </div>
         )}
 
-        {/* Compact Reply Reference */}
-        {message.reply_to && (
-          <div className="text-xs bg-muted/60 px-2.5 py-1.5 rounded-lg border-l-2 border-primary mb-0.5 opacity-85 max-w-full truncate">
-            <span className="font-semibold text-foreground">{message.reply_to.sender?.full_name}: </span>
-            <span className="text-muted-foreground">{message.reply_to.content}</span>
-          </div>
-        )}
-
-        {/* Message Bubble */}
+        {/* Message Bubble Container */}
         <div 
           onTouchStart={handleTouchStart}
           onTouchEnd={handleTouchEnd}
@@ -190,14 +201,49 @@ export function MessageItem({
             }
           }}
           className={cn(
-            "relative px-3.5 py-2 rounded-2xl whitespace-pre-wrap break-words text-sm shadow-sm transition-all select-none lg:select-text",
+            "relative px-3 py-2 rounded-2xl whitespace-pre-wrap break-words text-sm shadow-sm transition-all select-none lg:select-text",
             isOwn 
-              ? "bg-primary text-primary-foreground rounded-tr-sm" 
-              : "bg-card border border-border/80 rounded-tl-sm text-foreground"
+              ? "bg-gradient-to-br from-primary to-blue-600 text-primary-foreground rounded-tr-xs shadow-md shadow-primary/10" 
+              : "bg-[#091222] border border-white/10 rounded-tl-xs text-foreground shadow-sm"
           )}
         >
+          {/* WhatsApp-Style Compact Reply Quote Reference */}
+          {message.reply_to && (
+            <div 
+              onClick={onReply}
+              className={cn(
+                "text-xs px-2.5 py-1 rounded-lg border-l-3 mb-1.5 opacity-90 max-w-full truncate cursor-pointer transition-opacity hover:opacity-100",
+                isOwn
+                  ? "bg-black/25 border-white/80 text-white/90"
+                  : "bg-white/5 border-primary text-foreground/90"
+              )}
+            >
+              <span className={cn("font-bold text-[11px] block truncate", isOwn ? "text-cyan-200" : "text-primary")}>
+                {message.reply_to.sender?.full_name || 'User'}
+              </span>
+              <span className="text-[11px] opacity-80 truncate block">
+                {message.reply_to.content}
+              </span>
+            </div>
+          )}
+
           {/* Main Text Content */}
-          <div className="leading-relaxed">{message.content}</div>
+          <div className="leading-relaxed text-[13.5px] sm:text-sm">{message.content}</div>
+
+          {/* Bottom-right timestamp & status ticks */}
+          <div className="flex items-center justify-end gap-1 mt-0.5 -mb-0.5 text-[10px] select-none">
+            {message.is_edited && (
+              <span className={cn("text-[9px] italic mr-0.5", isOwn ? "text-primary-foreground/70" : "text-muted-foreground/60")}>
+                edited
+              </span>
+            )}
+            <span className={cn("font-medium", isOwn ? "text-primary-foreground/75" : "text-muted-foreground/70")}>
+              {formatMessageTime(message.created_at)}
+            </span>
+            {isOwn && (
+              <CheckCheck className="w-3.5 h-3.5 text-cyan-200 inline shrink-0" />
+            )}
+          </div>
 
           {/* Media Attachments */}
           {message.attachments && message.attachments.length > 0 && (
@@ -286,6 +332,13 @@ export function MessageItem({
               className="p-1.5 hover:bg-muted rounded-lg text-muted-foreground hover:text-primary transition-colors cursor-pointer"
             >
               <Bookmark className="w-3.5 h-3.5" />
+            </button>
+            <button
+              onClick={handleCopyText}
+              title="Copy text"
+              className="p-1.5 hover:bg-muted rounded-lg text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+            >
+              <Copy className="w-3.5 h-3.5" />
             </button>
             <button
               onClick={onReply}

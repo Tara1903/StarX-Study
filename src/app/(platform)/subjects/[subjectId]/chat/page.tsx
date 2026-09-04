@@ -52,6 +52,7 @@ export default async function ChatPage({ params }: ChatPageProps) {
               academicContext={subject.academicContext}
               room={subject.room}
               color={subject.color}
+              backHref={`/subjects/${subject.id}`}
             />
           </Suspense>
         </div>

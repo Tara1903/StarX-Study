@@ -10,6 +10,7 @@ import { UserAvatar } from '@/components/ui/user-avatar';
 
 import {
   LayoutDashboard,
+  MessageSquare,
   BookOpen,
   ClipboardList,
   Megaphone,
@@ -49,6 +50,7 @@ export function Sidebar() {
 
   const primaryNav = [
     { name: 'Home', href: ROUTES.DASHBOARD, icon: LayoutDashboard },
+    { name: 'Chat', href: ROUTES.CHAT, icon: MessageSquare, badge: 4 },
     { name: 'Subjects', href: ROUTES.SUBJECTS, icon: BookOpen },
     { name: 'Assignments', href: ROUTES.ASSIGNMENTS, icon: ClipboardList },
     { name: 'Announcements', href: ROUTES.ANNOUNCEMENTS, icon: Megaphone },

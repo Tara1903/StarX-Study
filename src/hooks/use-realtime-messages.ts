@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/client';
 import type { MessageWithSender } from '@/types';
 import { MESSAGES_PER_PAGE } from '@/lib/constants';
 import { getSubjectUuid, isUuid } from '@/lib/subject-resolver';
+import { getInitialSeedMessages } from '@/lib/conversations';
 
 export function useRealtimeMessages(subjectId: string, subjectUuid?: string) {
   const [messages, setMessages] = useState<MessageWithSender[]>([]);
@@ -43,12 +44,25 @@ export function useRealtimeMessages(subjectId: string, subjectUuid?: string) {
         if (filtered.length > 0) {
           setMessages(filtered);
           setIsLoading(false);
+          return;
+        }
+      }
+
+      // If personal chat with no local messages, load seed messages
+      if (subjectId.startsWith('p-') || subjectId.startsWith('personal-')) {
+        const seeds = getInitialSeedMessages(subjectId);
+        if (seeds.length > 0) {
+          setMessages(seeds);
+          setIsLoading(false);
+          try {
+            localStorage.setItem(storageKey, JSON.stringify(seeds));
+          } catch {}
         }
       }
     } catch {
       // ignore JSON parse error
     }
-  }, [storageKey, clearKey]);
+  }, [storageKey, clearKey, subjectId]);
 
   const saveToLocalCache = useCallback(
     (msgs: MessageWithSender[]) => {

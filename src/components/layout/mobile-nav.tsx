@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, BookOpen, ClipboardList, Bell, User } from 'lucide-react';
+import { LayoutDashboard, MessageSquare, BookOpen, ClipboardList, User } from 'lucide-react';
 import { isSubjectChatRoute } from '@/lib/mobile-tokens';
 import { useUser } from '@/components/providers/user-provider';
 import { UserAvatar } from '@/components/ui/user-avatar';
@@ -11,7 +11,7 @@ export function MobileNav() {
   const pathname = usePathname();
   const { profile } = useUser();
 
-  // Hide bottom navigation completely when inside subject chat
+  // Hide bottom navigation completely when inside active conversation
   // Chat composer serves as the bottom interaction surface to prevent competing bars
   if (isSubjectChatRoute(pathname)) {
     return null;
@@ -23,6 +23,14 @@ export function MobileNav() {
       name: 'Home',
       href: '/dashboard',
       icon: LayoutDashboard,
+    },
+    {
+      id: 'chat',
+      name: 'Chat',
+      href: '/chat',
+      icon: MessageSquare,
+      matchPrefix: true,
+      badge: 4,
     },
     {
       id: 'subjects',
@@ -37,13 +45,6 @@ export function MobileNav() {
       href: '/assignments',
       icon: ClipboardList,
       matchPrefix: true,
-    },
-    {
-      id: 'bell',
-      name: 'Notifications',
-      href: '/notifications',
-      icon: Bell,
-      badge: 3,
     },
     {
       id: 'me',

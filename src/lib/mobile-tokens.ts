@@ -16,19 +16,23 @@ export interface MobileNavDestination {
 
 export const PRIMARY_MOBILE_DESTINATIONS: MobileNavDestination[] = [
   { id: 'home', name: 'Home', href: '/dashboard' },
+  { id: 'chat', name: 'Chat', href: '/chat', badge: 4 },
   { id: 'subjects', name: 'Subjects', href: '/subjects' },
   { id: 'tasks', name: 'Assignments', href: '/assignments' },
-  { id: 'bell', name: 'Notifications', href: '/notifications', badge: 3 },
   { id: 'me', name: 'Profile', href: '/profile' },
 ];
 
 /**
- * Determines whether the current path is inside a subject chat.
+ * Determines whether the current path is inside an active conversation.
  * Chat requires an immersive mobile experience without the global bottom navigation.
  */
-export function isSubjectChatRoute(pathname: string): boolean {
+export function isImmersiveChatRoute(pathname: string): boolean {
   if (!pathname) return false;
-  return /^\/subjects\/[^/]+\/chat(\/.*)?$/.test(pathname);
+  return /^\/subjects\/[^/]+\/chat(\/.*)?$/.test(pathname) || /^\/chat\/[^/]+/.test(pathname);
+}
+
+export function isSubjectChatRoute(pathname: string): boolean {
+  return isImmersiveChatRoute(pathname);
 }
 
 /**
@@ -47,6 +51,9 @@ export function getMobileHeaderInfo(pathname: string): {
   // Root primary destinations
   if (pathname === '/dashboard') {
     return { isRoot: true, title: 'Dashboard', showBack: false, backHref: '/dashboard' };
+  }
+  if (pathname === '/chat') {
+    return { isRoot: true, title: 'Chats', showBack: false, backHref: '/dashboard' };
   }
   if (pathname === '/subjects') {
     return { isRoot: true, title: 'My Subjects', showBack: false, backHref: '/dashboard' };
@@ -77,6 +84,15 @@ export function getMobileHeaderInfo(pathname: string): {
       title: 'Subject Chat',
       showBack: true,
       backHref: subjectId ? `/subjects/${subjectId}` : '/subjects',
+    };
+  }
+
+  if (/^\/chat\/[^/]+/.test(pathname)) {
+    return {
+      isRoot: false,
+      title: 'Conversation',
+      showBack: true,
+      backHref: '/chat',
     };
   }
 
