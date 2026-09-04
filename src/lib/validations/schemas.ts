@@ -103,9 +103,12 @@ export const enrollMemberSchema = z.object({
 // ============================================
 
 export const sendMessageSchema = z.object({
-  subject_id: z.string().min(1, "Subject ID is required"),
+  subject_id: z.string().optional().nullable(),
+  conversation_id: z.string().uuid().optional().nullable(),
   content: z.string().min(1, "Message cannot be empty").max(4000, "Message is too long"),
   reply_to_id: z.string().uuid().optional().nullable(),
+}).refine((data) => Boolean(data.subject_id || data.conversation_id), {
+  message: "Either subject_id or conversation_id is required",
 });
 
 export const editMessageSchema = z.object({

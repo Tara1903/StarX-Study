@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import {
   Search,
   X,
@@ -12,14 +12,15 @@ import {
   CheckCheck,
   BellOff,
   Pin,
+  Loader2,
 } from 'lucide-react';
 import { ChatConversationRow } from './chat-conversation-row';
 import {
-  getAllConversations,
   filterConversations,
   type ChatConversation,
   type ConversationFilterCategory,
 } from '@/lib/conversations';
+import { getUserConversations, markConversationRead } from '@/actions/conversations';
 import { NewChatDialog } from './new-chat-dialog';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -35,19 +36,41 @@ export function ChatConversationList({
   onSelectConversation,
   className,
 }: ChatConversationListProps) {
+  const [conversations, setConversations] = useState<ChatConversation[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState<ConversationFilterCategory>('all');
   const [isNewChatOpen, setIsNewChatOpen] = useState(false);
   const [showOptionsMenu, setShowOptionsMenu] = useState(false);
   const [unreadOverride, setUnreadOverride] = useState<Record<string, number>>({});
 
+  useEffect(() => {
+    let isMounted = true;
+    async function load() {
+      try {
+        setLoading(true);
+        const res = await getUserConversations();
+        if (isMounted && res.success) {
+          setConversations(res.data);
+        }
+      } catch (err) {
+        console.error('Failed to load user conversations:', err);
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    }
+    load();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   const allConversations = useMemo(() => {
-    const raw = getAllConversations();
-    return raw.map((c) => ({
+    return conversations.map((c) => ({
       ...c,
       unreadCount: unreadOverride[c.id] !== undefined ? unreadOverride[c.id] : c.unreadCount,
     }));
-  }, [unreadOverride]);
+  }, [conversations, unreadOverride]);
 
   const filteredConversations = useMemo(() => {
     return filterConversations(allConversations, searchQuery, activeCategory);
@@ -67,10 +90,11 @@ export function ChatConversationList({
     return allConversations.reduce((acc, c) => acc + (c.unreadCount || 0), 0);
   }, [allConversations]);
 
-  const handleMarkAllRead = () => {
+  const handleMarkAllRead = async () => {
     const overrides: Record<string, number> = {};
     allConversations.forEach((c) => {
       overrides[c.id] = 0;
+      markConversationRead(c.id).catch(() => {});
     });
     setUnreadOverride(overrides);
     setShowOptionsMenu(false);
@@ -225,7 +249,12 @@ export function ChatConversationList({
 
       {/* Conversations Stream */}
       <div className="flex-1 overflow-y-auto px-2 py-2 space-y-0.5">
-        {filteredConversations.length === 0 ? (
+        {loading ? (
+          <div className="flex flex-col items-center justify-center p-12 text-center text-muted-foreground space-y-2 mt-8">
+            <Loader2 className="w-6 h-6 animate-spin text-primary" />
+            <p className="text-xs text-muted-foreground">Loading your chats...</p>
+          </div>
+        ) : filteredConversations.length === 0 ? (
           <div className="flex flex-col items-center justify-center p-8 text-center text-muted-foreground space-y-2 mt-8">
             <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-muted-foreground">
               <MessageSquare className="w-6 h-6" />

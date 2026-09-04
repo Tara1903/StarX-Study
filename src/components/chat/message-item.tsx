@@ -117,7 +117,7 @@ export function MessageItem({
         name: att.file_name || 'Classroom_Resource.png',
         type: isImg ? 'image' : att.file_name?.endsWith('.pdf') ? 'pdf' : 'document',
         size: att.file_size ? `${(att.file_size / 1024 / 1024).toFixed(1)} MB` : '1.2 MB',
-        subjectId: message.subject_id,
+        subjectId: message.subject_id || undefined,
         subjectName: subjectName,
         senderName: message.sender?.full_name || 'Class Participant',
       });
@@ -143,7 +143,7 @@ export function MessageItem({
       name,
       type: 'image',
       size: '1.8 MB',
-      subjectId: message.subject_id,
+      subjectId: message.subject_id || undefined,
       subjectName,
       senderName: message.sender?.full_name || 'Class Participant',
     });

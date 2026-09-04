@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
 import { GroupInfoPanel } from '@/components/chat/group-info/group-info-panel';
-import { getGroupInfo } from '@/lib/group-info-data';
+import { getRealGroupInfo } from '@/actions/group-info';
 
 interface SubjectGroupInfoPageProps {
   params: Promise<{
@@ -13,7 +13,7 @@ export async function generateMetadata({
   params,
 }: SubjectGroupInfoPageProps): Promise<Metadata> {
   const { subjectId } = await params;
-  const data = getGroupInfo(subjectId);
+  const data = await getRealGroupInfo(subjectId);
   return {
     title: data ? `${data.name} | Info` : 'Group Info | studchat',
     description: data ? `Group and member details for ${data.name} on studchat` : 'Group details on studchat',
@@ -22,7 +22,7 @@ export async function generateMetadata({
 
 export default async function SubjectGroupInfoPage({ params }: SubjectGroupInfoPageProps) {
   const { subjectId } = await params;
-  const data = getGroupInfo(subjectId);
+  const data = await getRealGroupInfo(subjectId);
   if (!data) {
     notFound();
   }

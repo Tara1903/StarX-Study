@@ -2,7 +2,7 @@ import { notFound, redirect } from 'next/navigation';
 import { Metadata } from 'next';
 import { createClient } from '@/lib/supabase/server';
 import { GroupInfoPanel } from '@/components/chat/group-info/group-info-panel';
-import { getGroupInfo } from '@/lib/group-info-data';
+import { getRealGroupInfo } from '@/actions/group-info';
 
 interface GroupInfoPageProps {
   params: Promise<{
@@ -14,7 +14,7 @@ export async function generateMetadata({
   params,
 }: GroupInfoPageProps): Promise<Metadata> {
   const { conversationId } = await params;
-  const data = getGroupInfo(conversationId);
+  const data = await getRealGroupInfo(conversationId);
   return {
     title: data ? `${data.name} | Info` : 'Group Info | studchat',
     description: data ? `Group and member details for ${data.name} on studchat` : 'Group details on studchat',
@@ -25,10 +25,12 @@ export default async function GroupInfoPage({ params }: GroupInfoPageProps) {
   const { conversationId } = await params;
   const supabase = await createClient();
 
-  // Authentication check
   const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    redirect('/login');
+  }
 
-  const data = getGroupInfo(conversationId);
+  const data = await getRealGroupInfo(conversationId);
   if (!data) {
     notFound();
   }

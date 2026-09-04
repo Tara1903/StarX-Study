@@ -8,7 +8,8 @@ import { MessageList } from '@/components/chat/message-list';
 import { MessageInput } from '@/components/chat/message-input';
 import { UserAvatar } from '@/components/ui/user-avatar';
 import { GroupInfoPanel } from '@/components/chat/group-info/group-info-panel';
-import { getGroupInfo } from '@/lib/group-info-data';
+import { getRealGroupInfo } from '@/actions/group-info';
+import type { GroupInfoData } from '@/lib/group-info-data';
 import type { ChatConversation } from '@/lib/conversations';
 import { 
   Users, 
@@ -94,7 +95,19 @@ export function ChatContainer({
   const deleteMenuRef = useRef<HTMLDivElement>(null);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
 
-  const groupInfoData = useMemo(() => getGroupInfo(subjectId), [subjectId]);
+  const [groupInfoData, setGroupInfoData] = useState<GroupInfoData | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    getRealGroupInfo(subjectId).then((data) => {
+      if (isMounted) {
+        setGroupInfoData(data);
+      }
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, [subjectId]);
   const isPersonal = conversationType === 'personal';
   const effectiveBackHref = backHref || (isPersonal ? '/chat' : `/chat/${subjectId}`);
 

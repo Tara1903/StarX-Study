@@ -8,7 +8,6 @@ import { useUser } from '@/components/providers/user-provider';
 import { createClient } from '@/lib/supabase/client';
 import { UserAvatar } from '@/components/ui/user-avatar';
 import { DesktopSearchDialog } from '@/components/layout/desktop-search-dialog';
-import { ECE_SUBJECTS } from '@/lib/ece-data';
 import { isDesktopChatRoute } from '@/lib/mobile-tokens';
 
 export function Header() {
@@ -58,9 +57,9 @@ export function Header() {
 
     if (pathname.startsWith('/subjects/')) {
       const parts = pathname.split('/');
-      const subjectId = parts[2];
-      const foundSub = ECE_SUBJECTS.find((s) => s.id === subjectId);
-      const subName = foundSub ? foundSub.name : 'Subject';
+      const subjectId = parts[2] || '';
+      const rawName = subjectId.replace(/[-_]/g, ' ');
+      const subName = rawName ? rawName.charAt(0).toUpperCase() + rawName.slice(1) : 'Subject';
 
       if (parts.length === 3) return subName;
       if (parts[3] === 'chat') return `${subName} • Chat`;

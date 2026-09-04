@@ -1,10 +1,10 @@
 "use client";
+
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import type { MessageWithSender } from '@/types';
 import { MESSAGES_PER_PAGE } from '@/lib/constants';
 import { getSubjectUuid, isUuid } from '@/lib/subject-resolver';
-import { getInitialSeedMessages } from '@/lib/conversations';
 
 export function useRealtimeMessages(subjectId: string, subjectUuid?: string) {
   const [messages, setMessages] = useState<MessageWithSender[]>([]);
@@ -18,10 +18,9 @@ export function useRealtimeMessages(subjectId: string, subjectUuid?: string) {
   const cursorRef = useRef<string | null>(null);
   const broadcastChannelRef = useRef<any>(null);
 
-  const targetUuid = subjectUuid || getSubjectUuid(subjectId);
-  const storageKey = `studchat_msgs_${subjectId}`;
-  const clearKey = `studchat_cleared_at_${subjectId}`;
-  const muteKey = `studchat_muted_${subjectId}`;
+  const targetUuid = subjectUuid || (isUuid(subjectId) ? subjectId : getSubjectUuid(subjectId));
+  const clearKey = `studchat_cleared_at_${targetUuid || subjectId}`;
+  const muteKey = `studchat_muted_${targetUuid || subjectId}`;
 
   // Check initial mute state
   useEffect(() => {
@@ -30,224 +29,168 @@ export function useRealtimeMessages(subjectId: string, subjectUuid?: string) {
     }
   }, [muteKey]);
 
-  // Load cached messages on mount for instant rendering
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    try {
-      const clearedAt = localStorage.getItem(clearKey);
-      const cached = localStorage.getItem(storageKey);
-      if (cached) {
-        const parsed: MessageWithSender[] = JSON.parse(cached);
-        const filtered = clearedAt
-          ? parsed.filter((m) => new Date(m.created_at) > new Date(clearedAt))
-          : parsed;
-        if (filtered.length > 0) {
-          setMessages(filtered);
-          setIsLoading(false);
-          return;
-        }
-      }
-
-      // If personal chat with no local messages, load seed messages
-      if (subjectId.startsWith('p-') || subjectId.startsWith('personal-')) {
-        const seeds = getInitialSeedMessages(subjectId);
-        if (seeds.length > 0) {
-          setMessages(seeds);
-          setIsLoading(false);
-          try {
-            localStorage.setItem(storageKey, JSON.stringify(seeds));
-          } catch {}
-        }
-      }
-    } catch {
-      // ignore JSON parse error
-    }
-  }, [storageKey, clearKey, subjectId]);
-
-  const saveToLocalCache = useCallback(
-    (msgs: MessageWithSender[]) => {
-      if (typeof window === 'undefined') return;
-      try {
-        localStorage.setItem(storageKey, JSON.stringify(msgs.slice(0, 100)));
-      } catch {
-        // storage quota fallback
-      }
-    },
-    [storageKey]
-  );
-
   const fetchMessages = useCallback(async (isLoadMore = false) => {
+    if (!targetUuid || !isUuid(targetUuid)) {
+      setIsLoading(false);
+      setIsLoadingMore(false);
+      setMessages([]);
+      return;
+    }
+
     try {
       if (isLoadMore) setIsLoadingMore(true);
       else setIsLoading(true);
 
       const clearedAt = typeof window !== 'undefined' ? localStorage.getItem(clearKey) : null;
 
-      // If targetUuid is a valid UUID, query Supabase DB
-      if (isUuid(targetUuid)) {
-        let query = supabase
-          .from('messages')
-          .select(`
+      let query = supabase
+        .from('messages')
+        .select(`
+          *,
+          sender:profiles(id, full_name, avatar_url, avatar_type, avatar_preset_id, avatar_emoji),
+          reactions:message_reactions(*),
+          attachments:message_attachments(*),
+          reply_to:messages!messages_reply_to_id_fkey(
             *,
-            sender:profiles(id, full_name, avatar_url),
-            reactions:message_reactions(*),
-            attachments:message_attachments(*),
-            reply_to:messages!messages_reply_to_id_fkey(
-              *,
-              sender:profiles(id, full_name, avatar_url)
-            )
-          `)
-          .eq('subject_id', targetUuid)
-          .eq('status', 'published')
-          .order('created_at', { ascending: false })
-          .limit(MESSAGES_PER_PAGE);
+            sender:profiles(id, full_name, avatar_url)
+          )
+        `)
+        .or(`subject_id.eq.${targetUuid},conversation_id.eq.${targetUuid}`)
+        .eq('status', 'published')
+        .order('created_at', { ascending: false })
+        .limit(MESSAGES_PER_PAGE);
 
-        if (isLoadMore && cursorRef.current) {
-          query = query.lt('created_at', cursorRef.current);
-        }
-
-        const { data, error: fetchError } = await query;
-
-        if (!fetchError && data) {
-          let formattedData = data as unknown as MessageWithSender[];
-          if (clearedAt) {
-            formattedData = formattedData.filter((m) => new Date(m.created_at) > new Date(clearedAt));
-          }
-
-          if (formattedData.length > 0) {
-            cursorRef.current = formattedData[formattedData.length - 1].created_at;
-          }
-
-          setHasMore(formattedData.length === MESSAGES_PER_PAGE);
-          setMessages((prev) => {
-            const merged = isLoadMore ? [...prev, ...formattedData] : formattedData;
-            // Deduplicate by id
-            const seen = new Set<string>();
-            const deduped = merged.filter((m) => {
-              if (seen.has(m.id)) return false;
-              seen.add(m.id);
-              return true;
-            });
-            saveToLocalCache(deduped);
-            return deduped;
-          });
-          return;
-        }
+      if (isLoadMore && cursorRef.current) {
+        query = query.lt('created_at', cursorRef.current);
       }
 
-      // If DB query didn't return or was skipped, rely on local cache
-      if (typeof window !== 'undefined') {
-        const cached = localStorage.getItem(storageKey);
-        if (cached) {
-          const parsed: MessageWithSender[] = JSON.parse(cached);
-          const filtered = clearedAt
-            ? parsed.filter((m) => new Date(m.created_at) > new Date(clearedAt))
-            : parsed;
-          setMessages(filtered);
-        }
+      const { data, error: fetchError } = await query;
+
+      if (fetchError) {
+        console.error('Error fetching messages from backend:', fetchError);
+        setError(new Error(fetchError.message));
+        return;
       }
+
+      let formattedData = (data as unknown as MessageWithSender[]) || [];
+      if (clearedAt) {
+        formattedData = formattedData.filter((m) => new Date(m.created_at) > new Date(clearedAt));
+      }
+
+      if (formattedData.length > 0) {
+        cursorRef.current = formattedData[formattedData.length - 1].created_at;
+      }
+
+      setHasMore(formattedData.length === MESSAGES_PER_PAGE);
+      setMessages((prev) => {
+        const merged = isLoadMore ? [...prev, ...formattedData] : formattedData;
+        const seen = new Set<string>();
+        return merged.filter((m) => {
+          if (seen.has(m.id)) return false;
+          seen.add(m.id);
+          return true;
+        });
+      });
     } catch (err) {
-      console.error('Error fetching messages:', err);
-      setError(err instanceof Error ? err : new Error('Unknown error'));
+      console.error('Error in fetchMessages:', err);
+      setError(err instanceof Error ? err : new Error('Failed to load messages'));
     } finally {
       setIsLoading(false);
       setIsLoadingMore(false);
     }
-  }, [targetUuid, storageKey, clearKey, supabase, saveToLocalCache]);
+  }, [targetUuid, clearKey, supabase]);
 
   useEffect(() => {
+    // Reset state on subject change
+    cursorRef.current = null;
+    setError(null);
     fetchMessages();
 
-    // 1. Supabase Postgres changes (if table exists)
-    let postgresChannel: any = null;
-    if (isUuid(targetUuid)) {
-      postgresChannel = supabase
-        .channel(`subject:${subjectId}:messages`)
-        .on(
-          'postgres_changes',
-          {
-            event: '*',
-            schema: 'public',
-            table: 'messages',
-            filter: `subject_id=eq.${targetUuid}`,
-          },
-          async (payload) => {
-            if (payload.eventType === 'INSERT') {
-              if (payload.new.status !== 'published') return;
-              
-              const { data } = await supabase
-                .from('messages')
-                .select(`
+    if (!targetUuid || !isUuid(targetUuid)) return;
+
+    // 1. Supabase Postgres changes filtered to this specific target
+    const postgresChannel = supabase
+      .channel(`chat_messages:${targetUuid}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'messages',
+        },
+        async (payload) => {
+          // Verify event belongs strictly to this subject or conversation
+          const msgSubjectId = (payload.new as any)?.subject_id || (payload.old as any)?.subject_id;
+          const msgConvId = (payload.new as any)?.conversation_id || (payload.old as any)?.conversation_id;
+
+          if (msgSubjectId !== targetUuid && msgConvId !== targetUuid) {
+            return;
+          }
+
+          if (payload.eventType === 'INSERT') {
+            if ((payload.new as any).status !== 'published') return;
+
+            const { data } = await supabase
+              .from('messages')
+              .select(`
+                *,
+                sender:profiles(id, full_name, avatar_url, avatar_type, avatar_preset_id, avatar_emoji),
+                reactions:message_reactions(*),
+                attachments:message_attachments(*),
+                reply_to:messages!messages_reply_to_id_fkey(
                   *,
-                  sender:profiles(id, full_name, avatar_url),
-                  reactions:message_reactions(*),
-                  attachments:message_attachments(*),
-                  reply_to:messages!messages_reply_to_id_fkey(
-                    *,
-                    sender:profiles(id, full_name, avatar_url)
-                  )
-                `)
-                .eq('id', payload.new.id)
-                .single();
-                
-              if (data) {
-                const newMsg = data as unknown as MessageWithSender;
-                setMessages((prev) => {
-                  if (prev.some((m) => m.id === newMsg.id)) return prev;
-                  const updated = [newMsg, ...prev];
-                  saveToLocalCache(updated);
-                  return updated;
-                });
-              }
-            } else if (payload.eventType === 'UPDATE') {
+                  sender:profiles(id, full_name, avatar_url)
+                )
+              `)
+              .eq('id', (payload.new as any).id)
+              .single();
+
+            if (data) {
+              const newMsg = data as unknown as MessageWithSender;
               setMessages((prev) => {
-                const updated = prev.map((msg) =>
-                  msg.id === payload.new.id ? { ...msg, ...payload.new } : msg
-                );
-                saveToLocalCache(updated);
-                return updated;
-              });
-            } else if (payload.eventType === 'DELETE') {
-              setMessages((prev) => {
-                const updated = prev.filter((msg) => msg.id !== payload.old.id);
-                saveToLocalCache(updated);
-                return updated;
+                if (prev.some((m) => m.id === newMsg.id)) return prev;
+                return [newMsg, ...prev];
               });
             }
+          } else if (payload.eventType === 'UPDATE') {
+            const updatedItem = payload.new as any;
+            if (updatedItem.status === 'deleted') {
+              setMessages((prev) => prev.filter((m) => m.id !== updatedItem.id));
+            } else {
+              setMessages((prev) =>
+                prev.map((msg) => (msg.id === updatedItem.id ? { ...msg, ...updatedItem } : msg))
+              );
+            }
+          } else if (payload.eventType === 'DELETE') {
+            setMessages((prev) => prev.filter((m) => m.id !== (payload.old as any).id));
           }
-        )
-        .subscribe();
-    }
+        }
+      )
+      .subscribe();
 
-    // 2. Realtime Broadcast Channel (Scoped strictly to this subject!)
+    // 2. Realtime Broadcast Channel scoped strictly to this subject/conversation
     const broadcastChannel = supabase
-      .channel(`subject:${subjectId}:broadcast`)
+      .channel(`broadcast:${targetUuid}`)
       .on('broadcast', { event: 'new_message' }, ({ payload }) => {
         if (!payload || !payload.id) return;
         setMessages((prev) => {
           if (prev.some((m) => m.id === payload.id)) return prev;
-          const updated = [payload as MessageWithSender, ...prev];
-          saveToLocalCache(updated);
-          return updated;
+          return [payload as MessageWithSender, ...prev];
         });
       })
       .on('broadcast', { event: 'delete_message' }, ({ payload }) => {
         if (!payload || !payload.id) return;
-        setMessages((prev) => {
-          const updated = prev.filter((m) => m.id !== payload.id);
-          saveToLocalCache(updated);
-          return updated;
-        });
+        setMessages((prev) => prev.filter((m) => m.id !== payload.id));
       })
       .subscribe();
 
     broadcastChannelRef.current = broadcastChannel;
 
     return () => {
-      if (postgresChannel) supabase.removeChannel(postgresChannel);
+      supabase.removeChannel(postgresChannel);
       supabase.removeChannel(broadcastChannel);
     };
-  }, [subjectId, targetUuid, supabase, fetchMessages, saveToLocalCache]);
+  }, [targetUuid, supabase, fetchMessages]);
 
   const loadMore = useCallback(() => {
     if (!isLoadingMore && hasMore) {
@@ -259,12 +202,9 @@ export function useRealtimeMessages(subjectId: string, subjectUuid?: string) {
     (newMsg: MessageWithSender) => {
       setMessages((prev) => {
         if (prev.some((m) => m.id === newMsg.id)) return prev;
-        const updated = [newMsg, ...prev];
-        saveToLocalCache(updated);
-        return updated;
+        return [newMsg, ...prev];
       });
 
-      // Broadcast to other tabs/participants in this exact subject channel
       if (broadcastChannelRef.current) {
         broadcastChannelRef.current.send({
           type: 'broadcast',
@@ -273,37 +213,30 @@ export function useRealtimeMessages(subjectId: string, subjectUuid?: string) {
         });
       }
     },
-    [saveToLocalCache]
+    []
   );
 
   const clearChatOption = useCallback((option: 'chat_only' | 'media_only' | 'everything') => {
     if (option === 'everything') {
       if (typeof window !== 'undefined') {
         localStorage.setItem(clearKey, new Date().toISOString());
-        localStorage.removeItem(storageKey);
       }
       setMessages([]);
     } else if (option === 'chat_only') {
-      setMessages((prev) => {
-        // Keep messages that have attachments, clear text-only messages
-        const updated = prev
+      setMessages((prev) =>
+        prev
           .filter((m) => m.attachments && m.attachments.length > 0)
-          .map((m) => ({ ...m, content: '📎 [Media File]' }));
-        saveToLocalCache(updated);
-        return updated;
-      });
+          .map((m) => ({ ...m, content: '📎 [Media File]' }))
+      );
     } else if (option === 'media_only') {
-      setMessages((prev) => {
-        // Strip media/attachments from messages while keeping conversation text
-        const updated = prev.map((m) => ({
+      setMessages((prev) =>
+        prev.map((m) => ({
           ...m,
           attachments: [],
-        }));
-        saveToLocalCache(updated);
-        return updated;
-      });
+        }))
+      );
     }
-  }, [clearKey, storageKey, saveToLocalCache]);
+  }, [clearKey]);
 
   const clearChatForMe = useCallback(() => {
     clearChatOption('everything');

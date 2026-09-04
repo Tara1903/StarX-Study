@@ -169,24 +169,6 @@ function LoginContent() {
             'Sign in'
           )}
         </button>
-
-        <div className="relative flex items-center justify-center my-2">
-          <div className="border-t border-white/10 w-full" />
-          <span className="bg-[#050B16] px-2 text-[11px] text-[#6F7B8E] uppercase tracking-wider">or preview</span>
-          <div className="border-t border-white/10 w-full" />
-        </div>
-
-        <button
-          type="button"
-          onClick={() => {
-            document.cookie = "studchat_demo=true; path=/; max-age=86400";
-            window.location.href = redirectTo || '/dashboard';
-          }}
-          className="flex w-full items-center justify-center h-11 rounded-lg bg-white/5 border border-white/10 px-4 py-2 text-sm font-semibold text-white hover:bg-white/10 hover:border-primary/50 transition-all shadow-sm cursor-pointer gap-2"
-        >
-          <Sparkles className="w-4 h-4 text-primary" />
-          <span>Explore Demo Student App</span>
-        </button>
       </form>
 
       <div className="text-center text-sm text-[#A8B2C2]">

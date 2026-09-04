@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import { notFound, redirect } from 'next/navigation';
-import { resolveSubject, getSubjectAnnouncements, isUuid } from '@/lib/subject-resolver';
+import { resolveSubject } from '@/lib/subject-resolver';
 import { SubjectAnnouncementsClient } from './subject-announcements-client';
 
 interface PageProps {
@@ -21,27 +21,35 @@ export default async function SubjectAnnouncementsPage({ params }: PageProps) {
     notFound();
   }
 
-  let announcements: any[] = [];
-  if (isUuid(subject.uuid)) {
-    try {
-      const { data } = await supabase
-        .from('announcements')
-        .select(`
-          *,
-          author:author_id(id, full_name, avatar_url)
-        `)
-        .eq('target_type', 'subject')
-        .eq('target_id', subject.uuid)
-        .order('created_at', { ascending: false });
+  // Verify membership
+  const { data: membership } = await supabase
+    .from('subject_members')
+    .select('id')
+    .eq('subject_id', subject.uuid)
+    .eq('user_id', user.id)
+    .maybeSingle();
 
-      if (data && data.length > 0) {
-        announcements = data;
-      }
-    } catch {}
+  if (!membership) {
+    notFound();
   }
 
-  if (announcements.length === 0) {
-    announcements = getSubjectAnnouncements(subject.id);
+  let announcements: any[] = [];
+  try {
+    const { data, error } = await supabase
+      .from('announcements')
+      .select(`
+        *,
+        author:profiles!author_id(id, full_name, avatar_url)
+      `)
+      .eq('target_type', 'subject')
+      .eq('target_id', subject.uuid)
+      .order('created_at', { ascending: false });
+
+    if (!error && data) {
+      announcements = data;
+    }
+  } catch (err) {
+    console.error('Error fetching subject announcements:', err);
   }
 
   return (

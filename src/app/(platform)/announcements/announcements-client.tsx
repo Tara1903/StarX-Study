@@ -34,88 +34,16 @@ export interface MainAnnouncement {
   readByMe?: boolean;
 }
 
-const INITIAL_ANNOUNCEMENTS: MainAnnouncement[] = [
-  {
-    id: 'ann-1',
-    title: 'Semester Examination & Mid-Term 1 Schedule (July-Dec 2026)',
-    content: 'The official Mid-Term Examination 1 date sheet for B.Tech Semester 1 (ECE & allied branches) has been published by the Controller of Examinations. Exams commence from October 12, 2026. Students must carry their institutional ID cards and arrive at least 15 minutes before reporting time (08:30 AM). Detailed slot-wise timetable is attached below.',
-    category: 'urgent',
-    scope: 'IET, SAGE University • ECE Department',
-    author: 'Dr. Exam Controller',
-    authorRole: 'Examination Cell, SAGE University',
-    date: '2026-09-02T09:30:00Z',
-    isPinned: true,
-    attachmentName: 'BTech_Sem1_MidTerm1_Schedule_2026.pdf',
-    attachmentSize: '1.8 MB',
-    commentsCount: 2,
-    readByMe: false,
-  },
-  {
-    id: 'ann-2',
-    title: 'Mandatory 75% Attendance Requirement Notice',
-    content: 'In accordance with University Academic Regulations, a minimum of 75% attendance across all theory and laboratory sessions (Mathematics-I, Chemistry, Basic Electrical, Engineering Graphics, PCES-I, ESDM) is strictly mandatory to be eligible for end-semester examinations. Students with attendance between 60%-74% must submit validated medical documents to their mentor.',
-    category: 'important',
-    scope: 'Faculty of Engineering & Technology (IET)',
-    author: 'Prof. Academic Dean',
-    authorRole: 'Dean Academic Affairs',
-    date: '2026-09-01T11:00:00Z',
-    isPinned: true,
-    attachmentName: 'Academic_Attendance_Policy_Guidelines.pdf',
-    attachmentSize: '950 KB',
-    commentsCount: 1,
-    readByMe: false,
-  },
-  {
-    id: 'ann-3',
-    title: 'Engineering Graphics & Chemistry Laboratory Safety Protocols',
-    content: 'All First-Year ECE students attending practical sessions in Room No. 03 / Chemistry Lab-I / Drawing Hall must strictly adhere to campus safety norms. White lab coats and safety goggles are compulsory for Chemistry sessions; mini-drafters and calibrated scales are required for Drawing practicals.',
-    category: 'important',
-    scope: 'ECE Department Laboratories',
-    author: 'Prof. Garima Pawar & Prof. Vikas Bakshi',
-    authorRole: 'Lab Superintendents',
-    date: '2026-08-30T14:20:00Z',
-    isPinned: false,
-    commentsCount: 0,
-    readByMe: true,
-  },
-  {
-    id: 'ann-4',
-    title: 'Central Library Extended Evening Reading Room Timings',
-    content: 'To facilitate study and reference work during the academic term, the Central Engineering Library (Block A) reading hall will remain accessible until 09:30 PM on weekdays and 06:00 PM on Saturdays. Access requires biometrics and student smart-card.',
-    category: 'general',
-    scope: 'Campus Facility • All Students',
-    author: 'Chief Librarian',
-    authorRole: 'SAGE Central Library',
-    date: '2026-08-28T16:00:00Z',
-    isPinned: false,
-    commentsCount: 0,
-    readByMe: true,
-  },
-];
-
 export function AnnouncementsClient({ initialData }: { initialData?: MainAnnouncement[] }) {
   const [announcements, setAnnouncements] = useState<MainAnnouncement[]>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('studchat_main_announcements');
-      if (saved) {
-        try {
-          return JSON.parse(saved);
-        } catch {}
-      }
-    }
-    return initialData && initialData.length > 0 ? initialData : INITIAL_ANNOUNCEMENTS;
+    return initialData || [];
   });
 
   const [filter, setFilter] = useState<'all' | 'urgent' | 'important' | 'general'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedAnnouncement, setSelectedAnnouncement] = useState<MainAnnouncement | null>(null);
 
-  const [commentsMap, setCommentsMap] = useState<Record<string, { id: string; author: string; text: string; time: string }[]>>({
-    'ann-1': [
-      { id: 'c1', author: 'Rahul Verma (ECE-104)', text: 'Is the calculator model FX-991EX permitted in Mathematics-I exam?', time: 'Yesterday' },
-      { id: 'c2', author: 'Prof. Ruchi Shrivastava', text: 'Yes, non-programmable scientific calculators are permitted for Unit 1 and Unit 2.', time: 'Yesterday' },
-    ],
-  });
+  const [commentsMap, setCommentsMap] = useState<Record<string, { id: string; author: string; text: string; time: string }[]>>({});
   const [newComment, setNewComment] = useState('');
 
   useEffect(() => {

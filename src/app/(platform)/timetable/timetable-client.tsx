@@ -24,24 +24,58 @@ import {
   Filter
 } from 'lucide-react';
 import { 
-  ECE_SUBJECTS, 
   ECE_TIMETABLE_METADATA, 
   ECE_WEEKLY_SCHEDULE, 
   TIME_SLOTS, 
   ClassPeriod 
 } from '@/lib/ece-data';
+import { createClient } from '@/lib/supabase/client';
 
 export function TimetableClient() {
   const [selectedDay, setSelectedDay] = useState<string>('ALL');
   const [viewMode, setViewMode] = useState<'grid' | 'cards'>('grid');
   const [searchQuery, setSearchQuery] = useState('');
   const [currentDayIndex, setCurrentDayIndex] = useState<number>(-1);
+  const [supabase] = useState(() => createClient());
+  const [enrolledSubjects, setEnrolledSubjects] = useState<any[]>([]);
 
   useEffect(() => {
     // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
     const day = new Date().getDay();
     setCurrentDayIndex(day);
-  }, []);
+
+    async function loadSubjects() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data } = await supabase
+        .from('subject_members')
+        .select(`
+          role,
+          subject:subjects(
+            id,
+            name,
+            code,
+            color
+          )
+        `)
+        .eq('user_id', user.id);
+
+      if (data) {
+        setEnrolledSubjects(
+          data
+            .map((m: any) => ({
+              id: m.subject?.id,
+              name: m.subject?.name,
+              code: m.subject?.code || '',
+              color: m.subject?.color || '#3B82F6',
+              role: m.role,
+            }))
+            .filter((s: any) => s.id)
+        );
+      }
+    }
+    loadSubjects();
+  }, [supabase]);
 
   const daysList = [
     { key: 'ALL', label: 'All Days (Full Week)' },
@@ -78,9 +112,9 @@ export function TimetableClient() {
   };
 
   const findSubjectId = (name: string) => {
-    const found = ECE_SUBJECTS.find(s => 
-      s.name.toLowerCase().includes(name.toLowerCase()) || 
-      name.toLowerCase().includes(s.shortName.toLowerCase())
+    const found = enrolledSubjects.find(s => 
+      s.name?.toLowerCase().includes(name.toLowerCase()) || 
+      name.toLowerCase().includes(s.name?.toLowerCase())
     );
     return found ? found.id : null;
   };
@@ -462,44 +496,52 @@ export function TimetableClient() {
               </tr>
             </thead>
             <tbody className="divide-y divide-border text-sm">
-              {ECE_SUBJECTS.map((sub) => (
-                <tr key={sub.id} className="hover:bg-muted/30 transition-colors">
-                  <td className="p-3 font-mono text-xs font-bold text-primary">
-                    {sub.code}
-                  </td>
-                  <td className="p-3">
-                    <div className="flex items-center gap-2">
-                      <span 
-                        className="w-3 h-3 rounded-full shrink-0" 
-                        style={{ backgroundColor: sub.color }}
-                      />
-                      <span className="font-semibold text-foreground">{sub.name}</span>
-                    </div>
-                  </td>
-                  <td className="p-3 font-medium text-foreground">
-                    <span className="px-2 py-0.5 rounded bg-muted text-xs font-mono">
-                      {sub.shortName}
-                    </span>
-                  </td>
-                  <td className="p-3 font-medium text-foreground">
-                    {sub.facultyName}
-                  </td>
-                  <td className="p-3 font-mono text-muted-foreground">
-                    {sub.facultyAbb}
-                  </td>
-                  <td className="p-3 text-muted-foreground">
-                    {sub.credits} Credits
-                  </td>
-                  <td className="p-3 text-right">
-                    <Link
-                      href={`/subjects/${sub.id}`}
-                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary hover:text-white text-xs font-semibold transition-all"
-                    >
-                      Open Subject
-                    </Link>
+              {enrolledSubjects.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="p-8 text-center text-muted-foreground text-xs">
+                    No enrolled subjects in current curriculum.
                   </td>
                 </tr>
-              ))}
+              ) : (
+                enrolledSubjects.map((sub) => (
+                  <tr key={sub.id} className="hover:bg-muted/30 transition-colors">
+                    <td className="p-3 font-mono text-xs font-bold text-primary">
+                      {sub.code || 'N/A'}
+                    </td>
+                    <td className="p-3">
+                      <div className="flex items-center gap-2">
+                        <span 
+                          className="w-3 h-3 rounded-full shrink-0" 
+                          style={{ backgroundColor: sub.color }}
+                        />
+                        <span className="font-semibold text-foreground">{sub.name}</span>
+                      </div>
+                    </td>
+                    <td className="p-3 font-medium text-foreground">
+                      <span className="px-2 py-0.5 rounded bg-muted text-xs font-mono">
+                        {sub.code ? sub.code.slice(0, 4) : 'SUB'}
+                      </span>
+                    </td>
+                    <td className="p-3 font-medium text-foreground">
+                      {sub.role === 'teacher' ? 'Faculty Member' : 'Enrolled Student'}
+                    </td>
+                    <td className="p-3 font-mono text-muted-foreground">
+                      {sub.role === 'teacher' ? 'FAC' : 'STU'}
+                    </td>
+                    <td className="p-3 text-muted-foreground">
+                      4 Credits
+                    </td>
+                    <td className="p-3 text-right">
+                      <Link
+                        href={`/subjects/${sub.id}`}
+                        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary hover:text-white text-xs font-semibold transition-all"
+                      >
+                        Open Subject
+                      </Link>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>

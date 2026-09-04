@@ -1,23 +1,21 @@
 'use client';
 
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { 
   Search, 
   BookOpen, 
   MessageSquare, 
   FileText, 
-  Megaphone, 
-  ClipboardList, 
-  User, 
-  ArrowRight, 
+  Users, 
   X, 
+  ArrowRight, 
   CornerDownLeft, 
   CalendarDays, 
   Bell 
 } from 'lucide-react';
-import { ECE_SUBJECTS } from '@/lib/ece-data';
 import { ROUTES } from '@/lib/constants';
+import { createClient } from '@/lib/supabase/client';
 
 interface DesktopSearchDialogProps {
   isOpen: boolean;
@@ -27,10 +25,18 @@ interface DesktopSearchDialogProps {
 export function DesktopSearchDialog({ isOpen, onClose }: DesktopSearchDialogProps) {
   const [query, setQuery] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const [userSubjects, setUserSubjects] = useState<{
+    id: string;
+    name: string;
+    code?: string;
+    color?: string;
+    role?: string;
+  }[]>([]);
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
+  const [supabase] = useState(() => createClient());
 
-  // Focus input when modal opens
+  // Focus input when modal opens and load user subjects
   useEffect(() => {
     if (isOpen) {
       setQuery('');
@@ -41,13 +47,47 @@ export function DesktopSearchDialog({ isOpen, onClose }: DesktopSearchDialogProp
     }
   }, [isOpen]);
 
-  // Static searchable items
+  useEffect(() => {
+    async function loadUserSubjects() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data } = await supabase
+        .from('subject_members')
+        .select(`
+          role,
+          subject:subjects(
+            id,
+            name,
+            code,
+            color
+          )
+        `)
+        .eq('user_id', user.id);
+
+      if (data) {
+        setUserSubjects(
+          data
+            .map((m: any) => ({
+              id: m.subject?.id,
+              name: m.subject?.name,
+              code: m.subject?.code || '',
+              color: m.subject?.color || '#3B82F6',
+              role: m.role,
+            }))
+            .filter((s: any) => s.id)
+        );
+      }
+    }
+    loadUserSubjects();
+  }, [supabase]);
+
+  // Searchable items derived strictly from user authorization
   const searchableItems = useMemo(() => {
     const items: Array<{
       id: string;
       title: string;
       subtitle: string;
-      category: 'Subjects' | 'Navigation' | 'Materials' | 'Faculty';
+      category: 'Subjects' | 'Navigation' | 'Materials';
       url: string;
       color?: string;
     }> = [];
@@ -55,6 +95,7 @@ export function DesktopSearchDialog({ isOpen, onClose }: DesktopSearchDialogProp
     // Navigation links
     items.push(
       { id: 'nav-home', title: 'Dashboard', subtitle: 'Overview & Attention items', category: 'Navigation', url: ROUTES.DASHBOARD },
+      { id: 'nav-chat', title: 'Chat Hub', subtitle: 'All messages & conversations', category: 'Navigation', url: ROUTES.CHAT },
       { id: 'nav-subjects', title: 'Subjects', subtitle: 'View all enrolled subjects', category: 'Navigation', url: ROUTES.SUBJECTS },
       { id: 'nav-assignments', title: 'Assignments', subtitle: 'Coursework & deadlines', category: 'Navigation', url: ROUTES.ASSIGNMENTS },
       { id: 'nav-announcements', title: 'Announcements', subtitle: 'Campus & academic notices', category: 'Navigation', url: ROUTES.ANNOUNCEMENTS },
@@ -62,13 +103,13 @@ export function DesktopSearchDialog({ isOpen, onClose }: DesktopSearchDialogProp
       { id: 'nav-profile', title: 'My Profile', subtitle: 'Account & stored media', category: 'Navigation', url: ROUTES.PROFILE },
     );
 
-    // ECE Subjects
-    ECE_SUBJECTS.forEach((sub) => {
+    // User's authorized enrolled subjects
+    userSubjects.forEach((sub) => {
       // Subject overview
       items.push({
         id: `sub-${sub.id}`,
         title: sub.name,
-        subtitle: `${sub.code} • ${sub.facultyName}`,
+        subtitle: sub.code ? `${sub.code} • Enrolled` : 'Enrolled Subject',
         category: 'Subjects',
         url: `/subjects/${sub.id}`,
         color: sub.color,
@@ -78,7 +119,7 @@ export function DesktopSearchDialog({ isOpen, onClose }: DesktopSearchDialogProp
       items.push({
         id: `chat-${sub.id}`,
         title: `${sub.name} Chat`,
-        subtitle: `Jump to ${sub.shortName} live room`,
+        subtitle: `Jump to live discussion room`,
         category: 'Subjects',
         url: `/subjects/${sub.id}/chat`,
         color: sub.color,
@@ -88,28 +129,20 @@ export function DesktopSearchDialog({ isOpen, onClose }: DesktopSearchDialogProp
       items.push({
         id: `mat-${sub.id}`,
         title: `${sub.name} Materials`,
-        subtitle: `Lecture notes, syllabus, reference files`,
+        subtitle: `Lecture notes & reference files`,
         category: 'Materials',
         url: `/subjects/${sub.id}/materials`,
         color: sub.color,
       });
-
-      // Faculty contact
-      items.push({
-        id: `fac-${sub.id}`,
-        title: sub.facultyName,
-        subtitle: `Faculty In-Charge • ${sub.name} (${sub.facultyAbb})`,
-        category: 'Faculty',
-        url: `/subjects/${sub.id}`,
-      });
     });
 
     return items;
-  }, []);
+  }, [userSubjects]);
 
-  // Filter items based on query
+  // Filter items by query
   const filteredItems = useMemo(() => {
     if (!query.trim()) {
+      // Show top suggestions when empty
       return searchableItems.slice(0, 8);
     }
     const q = query.toLowerCase().trim();
@@ -118,7 +151,7 @@ export function DesktopSearchDialog({ isOpen, onClose }: DesktopSearchDialogProp
         item.title.toLowerCase().includes(q) ||
         item.subtitle.toLowerCase().includes(q) ||
         item.category.toLowerCase().includes(q)
-    ).slice(0, 10);
+    );
   }, [query, searchableItems]);
 
   const handleSelect = (url: string) => {
@@ -126,46 +159,32 @@ export function DesktopSearchDialog({ isOpen, onClose }: DesktopSearchDialogProp
     router.push(url);
   };
 
-  // Keyboard navigation
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        e.preventDefault();
-        onClose();
-      } else if (e.key === 'ArrowDown') {
-        e.preventDefault();
-        setSelectedIndex((prev) => (prev + 1) % (filteredItems.length || 1));
-      } else if (e.key === 'ArrowUp') {
-        e.preventDefault();
-        setSelectedIndex((prev) => (prev - 1 + filteredItems.length) % (filteredItems.length || 1));
-      } else if (e.key === 'Enter') {
-        e.preventDefault();
-        if (filteredItems[selectedIndex]) {
-          handleSelect(filteredItems[selectedIndex].url);
-        }
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, filteredItems, selectedIndex]);
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setSelectedIndex((prev) => (prev < filteredItems.length - 1 ? prev + 1 : prev));
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setSelectedIndex((prev) => (prev > 0 ? prev - 1 : 0));
+    } else if (e.key === 'Enter' && filteredItems[selectedIndex]) {
+      e.preventDefault();
+      handleSelect(filteredItems[selectedIndex].url);
+    } else if (e.key === 'Escape') {
+      onClose();
+    }
+  };
 
   if (!isOpen) return null;
 
   return (
-    <div 
-      className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-start justify-center pt-20 px-4 animate-in fade-in duration-150"
-      onClick={onClose}
-    >
+    <div className="fixed inset-0 z-50 flex items-start justify-center pt-20 bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-150">
       <div 
-        className="w-full max-w-xl bg-card border border-border/90 rounded-2xl shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95 duration-150"
-        onClick={(e) => e.stopPropagation()}
+        className="w-full max-w-2xl bg-[#070E1B] border border-white/10 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[550px] animate-in zoom-in-95 duration-150"
+        onKeyDown={handleKeyDown}
       >
-        {/* Search Header */}
-        <div className="flex items-center px-4 py-3 border-b border-border/80 gap-3 bg-muted/20">
-          <Search className="w-5 h-5 text-muted-foreground shrink-0" />
+        {/* Search Input Bar */}
+        <div className="flex items-center gap-3 px-4 py-3.5 border-b border-white/10 bg-white/[0.02]">
+          <Search className="w-5 h-5 text-primary shrink-0" />
           <input
             ref={inputRef}
             type="text"
@@ -174,92 +193,82 @@ export function DesktopSearchDialog({ isOpen, onClose }: DesktopSearchDialogProp
               setQuery(e.target.value);
               setSelectedIndex(0);
             }}
-            placeholder="Search subjects, chat rooms, materials, navigation..."
-            className="flex-1 bg-transparent text-foreground placeholder:text-muted-foreground text-sm outline-none"
+            placeholder="Type a subject, faculty, or page to jump to..."
+            className="w-full bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none"
           />
           {query && (
-            <button 
-              type="button" 
+            <button
+              type="button"
               onClick={() => setQuery('')}
-              className="p-1 rounded-md text-muted-foreground hover:text-foreground"
+              className="p-1 rounded-lg hover:bg-white/10 text-muted-foreground hover:text-foreground"
             >
               <X className="w-4 h-4" />
             </button>
           )}
-          <kbd className="hidden sm:inline-flex items-center gap-0.5 px-2 py-0.5 text-[11px] font-mono text-muted-foreground bg-muted/60 rounded border border-border">
+          <kbd className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-mono text-muted-foreground bg-white/5 border border-white/10 rounded-md">
             ESC
           </kbd>
         </div>
 
         {/* Results List */}
-        <div className="max-h-80 overflow-y-auto p-2 divide-y divide-border/20">
+        <div className="flex-1 overflow-y-auto p-2 space-y-1">
           {filteredItems.length === 0 ? (
-            <div className="p-8 text-center text-sm text-muted-foreground">
-              No matching results found for &ldquo;{query}&rdquo;
+            <div className="py-12 text-center text-muted-foreground text-xs">
+              No results found for "{query}".
             </div>
           ) : (
-            <div className="space-y-1">
-              {filteredItems.map((item, index) => {
-                const isSelected = index === selectedIndex;
-                const Icon = 
-                  item.category === 'Subjects' ? (item.title.includes('Chat') ? MessageSquare : BookOpen) :
-                  item.category === 'Materials' ? FileText :
-                  item.category === 'Faculty' ? User :
-                  ArrowRight;
-
-                return (
-                  <button
-                    key={item.id}
-                    type="button"
-                    onClick={() => handleSelect(item.url)}
-                    onMouseEnter={() => setSelectedIndex(index)}
-                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-left transition-colors cursor-pointer ${
-                      isSelected ? 'bg-primary text-primary-foreground' : 'text-foreground hover:bg-muted/50'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div 
-                        className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
-                          isSelected ? 'bg-white/20 text-white' : 'bg-muted text-foreground'
-                        }`}
-                        style={item.color && !isSelected ? { backgroundColor: `${item.color}20`, color: item.color } : undefined}
-                      >
-                        <Icon className="w-4 h-4" />
-                      </div>
-                      <div className="min-w-0">
-                        <div className="text-sm font-semibold truncate leading-tight">
-                          {item.title}
-                        </div>
-                        <div className={`text-xs truncate mt-0.5 ${isSelected ? 'text-white/80' : 'text-muted-foreground'}`}>
-                          {item.subtitle}
-                        </div>
-                      </div>
+            filteredItems.map((item, index) => {
+              const isSelected = index === selectedIndex;
+              return (
+                <div
+                  key={item.id}
+                  onClick={() => handleSelect(item.url)}
+                  onMouseEnter={() => setSelectedIndex(index)}
+                  className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs cursor-pointer transition-colors ${
+                    isSelected
+                      ? 'bg-primary/15 text-foreground font-medium'
+                      : 'text-foreground/80 hover:bg-white/5'
+                  }`}
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div 
+                      className="w-2 h-7 rounded-full shrink-0"
+                      style={{ backgroundColor: item.color || '#3B82F6' }}
+                    />
+                    <div className="truncate">
+                      <p className="font-semibold text-foreground truncate">{item.title}</p>
+                      <p className="text-[11px] text-muted-foreground truncate">{item.subtitle}</p>
                     </div>
+                  </div>
 
-                    <div className="flex items-center gap-2 shrink-0 ml-3">
-                      <span className={`text-[10px] font-medium px-2 py-0.5 rounded uppercase tracking-wider ${
-                        isSelected ? 'bg-white/20 text-white' : 'bg-muted/70 text-muted-foreground'
-                      }`}>
-                        {item.category}
-                      </span>
-                      {isSelected && (
-                        <CornerDownLeft className="w-3.5 h-3.5 text-white/90" />
-                      )}
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span className="text-[10px] font-medium px-2 py-0.5 rounded-md bg-white/5 text-muted-foreground border border-white/5">
+                      {item.category}
+                    </span>
+                    {isSelected && (
+                      <CornerDownLeft className="w-3.5 h-3.5 text-primary" />
+                    )}
+                  </div>
+                </div>
+              );
+            })
           )}
         </div>
 
-        {/* Footer info */}
-        <div className="px-4 py-2 bg-muted/30 border-t border-border/60 flex items-center justify-between text-[11px] text-muted-foreground">
-          <div className="flex items-center gap-3">
-            <span>↑↓ to navigate</span>
-            <span>↵ to open</span>
+        {/* Modal Footer Key Hints */}
+        <div className="px-4 py-2 border-t border-white/10 bg-white/[0.01] flex items-center justify-between text-[11px] text-muted-foreground">
+          <div className="flex items-center gap-4">
+            <span className="flex items-center gap-1">
+              <kbd className="px-1.5 py-0.5 font-mono text-[10px] bg-white/5 border border-white/10 rounded">↑</kbd>
+              <kbd className="px-1.5 py-0.5 font-mono text-[10px] bg-white/5 border border-white/10 rounded">↓</kbd>
+              Navigate
+            </span>
+            <span className="flex items-center gap-1">
+              <kbd className="px-1.5 py-0.5 font-mono text-[10px] bg-white/5 border border-white/10 rounded">↵</kbd>
+              Open
+            </span>
           </div>
-          <span>studchat global search</span>
+          <span>studchat Global Search</span>
         </div>
       </div>
     </div>

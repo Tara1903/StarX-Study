@@ -16,7 +16,7 @@ export interface MobileNavDestination {
 
 export const PRIMARY_MOBILE_DESTINATIONS: MobileNavDestination[] = [
   { id: 'home', name: 'Home', href: '/dashboard' },
-  { id: 'chat', name: 'Chat', href: '/chat', badge: 4 },
+  { id: 'chat', name: 'Chat', href: '/chat' },
   { id: 'subjects', name: 'Subjects', href: '/subjects' },
   { id: 'tasks', name: 'Assignments', href: '/assignments' },
   { id: 'me', name: 'Profile', href: '/profile' },

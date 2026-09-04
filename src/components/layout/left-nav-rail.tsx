@@ -47,13 +47,21 @@ export function LeftNavRail() {
     pathname.startsWith(ROUTES.CHAT + '/') ||
     /^\/subjects\/[^/]+\/chat(\/.*)?$/.test(pathname);
 
-  const navItems = [
+  interface RailNavItem {
+    id: string;
+    name: string;
+    href: string;
+    icon: any;
+    isActive: boolean;
+    badge?: number;
+  }
+
+  const navItems: RailNavItem[] = [
     {
       id: 'chat',
       name: 'Chats',
       href: ROUTES.CHAT,
       icon: MessageSquare,
-      badge: 4,
       isActive: isChatActive,
     },
     {

@@ -13,7 +13,25 @@ export default async function GlobalAnnouncementsPage() {
   let dbAnnouncements: MainAnnouncement[] = [];
 
   try {
-    const { data } = await supabase
+    // 1. Resolve user's authorized institution and subject scopes
+    const { data: memberships } = await supabase
+      .from('university_memberships')
+      .select('university_id, university:universities(name)')
+      .eq('user_id', user.id);
+
+    const universityIds = (memberships || []).map((m: any) => m.university_id);
+    const rawUni = memberships?.[0]?.university;
+    const universityName = (Array.isArray(rawUni) ? rawUni[0]?.name : (rawUni as any)?.name) || 'Academic Institution';
+
+    const { data: subjectMembers } = await supabase
+      .from('subject_members')
+      .select('subject_id')
+      .eq('user_id', user.id);
+
+    const userSubjectIds = (subjectMembers || []).map((sm: any) => sm.subject_id);
+
+    // 2. Query announcements visible to user's authorized scopes
+    let query = supabase
       .from('announcements')
       .select(`
         id,
@@ -21,20 +39,38 @@ export default async function GlobalAnnouncementsPage() {
         content,
         priority,
         target_type,
+        target_id,
         attachment_name,
         created_at,
-        author:author_id(full_name)
+        author:profiles!author_id(full_name)
       `)
       .order('created_at', { ascending: false })
-      .limit(30);
+      .limit(50);
 
-    if (data && data.length > 0) {
-      dbAnnouncements = data.map((a: any) => ({
+    if (universityIds.length > 0) {
+      query = query.in('university_id', universityIds);
+    }
+
+    const { data, error } = await query;
+
+    if (!error && data) {
+      // Filter by target scope: institution-wide OR user's enrolled subjects
+      const filteredData = data.filter((a: any) => {
+        if (a.target_type === 'university' || a.target_type === 'department' || a.target_type === 'semester') {
+          return true;
+        }
+        if (a.target_type === 'subject') {
+          return userSubjectIds.includes(a.target_id);
+        }
+        return true;
+      });
+
+      dbAnnouncements = filteredData.map((a: any) => ({
         id: a.id,
         title: a.title,
         content: a.content,
         category: a.priority === 'urgent' ? 'urgent' : a.priority === 'important' ? 'important' : 'general',
-        scope: 'IET, SAGE University • ECE Department',
+        scope: universityName,
         author: a.author?.full_name || 'Academic Administration',
         authorRole: 'Official Notice',
         date: a.created_at,
@@ -44,8 +80,8 @@ export default async function GlobalAnnouncementsPage() {
         readByMe: false,
       }));
     }
-  } catch {
-    // Falls back to initial announcements in AnnouncementsClient
+  } catch (err) {
+    console.error('Error fetching global announcements:', err);
   }
 
   return <AnnouncementsClient initialData={dbAnnouncements} />;

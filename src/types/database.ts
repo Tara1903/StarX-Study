@@ -122,9 +122,27 @@ export interface SubjectMember {
   joined_at: string;
 }
 
+export interface Conversation {
+  id: string;
+  type: "subject" | "personal";
+  subject_id: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ConversationParticipant {
+  id: string;
+  conversation_id: string;
+  user_id: string;
+  role: string;
+  joined_at: string;
+  last_read_at: string;
+}
+
 export interface Message {
   id: string;
-  subject_id: string;
+  subject_id: string | null;
+  conversation_id?: string | null;
   sender_id: string | null;
   content: string;
   status: MessageStatus;

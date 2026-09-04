@@ -1,50 +1,139 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { Search, X, Users, BookOpen, GraduationCap, Check } from 'lucide-react';
+import { Search, X, Users, BookOpen, GraduationCap, Loader2 } from 'lucide-react';
 import { UserAvatar } from '@/components/ui/user-avatar';
-import { ECE_SUBJECTS } from '@/lib/ece-data';
-import { INITIAL_PERSONAL_CHATS } from '@/lib/conversations';
+import { createClient } from '@/lib/supabase/client';
+import { getOrCreatePersonalConversation } from '@/actions/conversations';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 
 interface NewChatDialogProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
+interface ContactItem {
+  id: string;
+  name: string;
+  subtitle: string;
+  role: 'teacher' | 'student' | 'subject';
+  type: 'personal' | 'subject';
+  avatarUrl?: string | null;
+  avatarType?: any;
+  avatarPresetId?: string | null;
+  avatarEmoji?: string | null;
+  color?: string;
+  personUserId?: string;
+}
+
 export function NewChatDialog({ isOpen, onClose }: NewChatDialogProps) {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState<'all' | 'teachers' | 'students' | 'subjects'>('all');
+  const [contacts, setContacts] = useState<ContactItem[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [startingChat, setStartingChat] = useState<string | null>(null);
+  const [supabase] = useState(() => createClient());
 
-  const contacts = useMemo(() => {
-    // 1. Personal contacts
-    const personalItems = INITIAL_PERSONAL_CHATS.map((c) => ({
-      id: c.id,
-      name: c.name,
-      subtitle: c.subtitle,
-      role: c.role || 'student',
-      type: 'personal' as const,
-      avatarPresetId: c.avatarPresetId,
-      avatarEmoji: c.avatarEmoji,
-      color: undefined,
-    }));
+  useEffect(() => {
+    if (!isOpen) return;
 
-    // 2. Subject cohort groups
-    const subjectItems = ECE_SUBJECTS.map((s) => ({
-      id: s.id,
-      name: s.name,
-      subtitle: `${s.code} • ${s.facultyAbb} (${s.facultyName})`,
-      role: 'subject' as const,
-      type: 'subject' as const,
-      avatarPresetId: undefined,
-      avatarEmoji: undefined,
-      color: s.color,
-    }));
+    let isMounted = true;
+    async function loadContacts() {
+      try {
+        setLoading(true);
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
 
-    return [...personalItems, ...subjectItems];
-  }, []);
+        const items: ContactItem[] = [];
+
+        // 1. Fetch user's enrolled subjects
+        const { data: mySubjects } = await supabase
+          .from('subject_members')
+          .select(`
+            subject:subjects(id, name, color)
+          `)
+          .eq('user_id', user.id);
+
+        if (mySubjects) {
+          mySubjects.forEach((sm: any) => {
+            if (sm.subject) {
+              items.push({
+                id: sm.subject.id,
+                name: sm.subject.name,
+                subtitle: 'Subject Group Room',
+                role: 'subject',
+                type: 'subject',
+                color: sm.subject.color || '#3B82F6',
+              });
+            }
+          });
+        }
+
+        // 2. Fetch peers & teachers from shared university memberships
+        const { data: myMemberships } = await supabase
+          .from('university_memberships')
+          .select('university_id')
+          .eq('user_id', user.id);
+
+        const uniIds = (myMemberships || []).map((m: any) => m.university_id);
+
+        if (uniIds.length > 0) {
+          const { data: peers } = await supabase
+            .from('university_memberships')
+            .select(`
+              user_id,
+              role,
+              profile:profiles!inner(
+                id,
+                full_name,
+                avatar_url,
+                avatar_type,
+                avatar_preset_id,
+                avatar_emoji,
+                bio
+              )
+            `)
+            .in('university_id', uniIds)
+            .neq('user_id', user.id)
+            .limit(50);
+
+          if (peers) {
+            peers.forEach((p: any) => {
+              const prof = p.profile;
+              items.push({
+                id: `user-${prof.id}`,
+                personUserId: prof.id,
+                name: prof.full_name,
+                subtitle: p.role === 'teacher' ? 'Faculty Member' : 'Student Classmate',
+                role: p.role === 'teacher' ? 'teacher' : 'student',
+                type: 'personal',
+                avatarUrl: prof.avatar_url,
+                avatarType: prof.avatar_type || 'initials',
+                avatarPresetId: prof.avatar_preset_id,
+                avatarEmoji: prof.avatar_emoji,
+              });
+            });
+          }
+        }
+
+        if (isMounted) {
+          setContacts(items);
+        }
+      } catch (err) {
+        console.error('Error loading contacts in NewChatDialog:', err);
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    }
+
+    loadContacts();
+    return () => {
+      isMounted = false;
+    };
+  }, [isOpen, supabase]);
 
   const filteredContacts = useMemo(() => {
     let list = contacts;
@@ -71,9 +160,29 @@ export function NewChatDialog({ isOpen, onClose }: NewChatDialogProps) {
 
   if (!isOpen) return null;
 
-  const handleSelect = (id: string) => {
-    onClose();
-    router.push(`/chat/${id}`);
+  const handleSelect = async (contact: ContactItem) => {
+    if (contact.type === 'subject') {
+      onClose();
+      router.push(`/chat/${contact.id}`);
+      return;
+    }
+
+    if (contact.personUserId) {
+      try {
+        setStartingChat(contact.id);
+        const res = await getOrCreatePersonalConversation(contact.personUserId);
+        if (res.success && res.conversationId) {
+          onClose();
+          router.push(`/chat/${res.conversationId}`);
+        } else {
+          toast.error(res.error || 'Could not start personal chat');
+        }
+      } catch {
+        toast.error('Failed to create chat session');
+      } finally {
+        setStartingChat(null);
+      }
+    }
   };
 
   return (
@@ -181,7 +290,12 @@ export function NewChatDialog({ isOpen, onClose }: NewChatDialogProps) {
 
         {/* Contact List */}
         <div className="flex-1 overflow-y-auto p-2 space-y-1 divide-y divide-white/5">
-          {filteredContacts.length === 0 ? (
+          {loading ? (
+            <div className="p-8 text-center text-muted-foreground text-xs flex items-center justify-center gap-2">
+              <Loader2 className="w-4 h-4 animate-spin text-primary" />
+              <span>Loading contacts...</span>
+            </div>
+          ) : filteredContacts.length === 0 ? (
             <div className="p-8 text-center text-muted-foreground text-xs">
               No matching members or subjects found.
             </div>
@@ -190,8 +304,9 @@ export function NewChatDialog({ isOpen, onClose }: NewChatDialogProps) {
               <button
                 key={contact.id}
                 type="button"
-                onClick={() => handleSelect(contact.id)}
-                className="w-full flex items-center gap-3 p-2.5 rounded-xl hover:bg-white/5 active:bg-white/10 transition-all text-left cursor-pointer group"
+                disabled={startingChat === contact.id}
+                onClick={() => handleSelect(contact)}
+                className="w-full flex items-center gap-3 p-2.5 rounded-xl hover:bg-white/5 active:bg-white/10 transition-all text-left cursor-pointer group disabled:opacity-50"
               >
                 {contact.type === 'subject' ? (
                   <div
@@ -208,9 +323,10 @@ export function NewChatDialog({ isOpen, onClose }: NewChatDialogProps) {
                 ) : (
                   <UserAvatar
                     name={contact.name}
-                    avatarType="preset"
+                    avatarType={contact.avatarType}
                     avatarPresetId={contact.avatarPresetId}
                     avatarEmoji={contact.avatarEmoji}
+                    avatarUrl={contact.avatarUrl}
                     size="md"
                     className="w-10 h-10 rounded-xl ring-1 ring-white/10 shrink-0"
                   />
@@ -231,6 +347,10 @@ export function NewChatDialog({ isOpen, onClose }: NewChatDialogProps) {
                     {contact.subtitle}
                   </p>
                 </div>
+
+                {startingChat === contact.id && (
+                  <Loader2 className="w-4 h-4 animate-spin text-primary shrink-0" />
+                )}
               </button>
             ))
           )}

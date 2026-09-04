@@ -1,10 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { X, Search, UserPlus, Check, Loader2 } from 'lucide-react';
 import { UserAvatar } from '@/components/ui/user-avatar';
-import { getEligibleUsersToAdd, type GroupMember } from '@/lib/group-info-data';
-import { addGroupMemberAction } from '@/actions/group-info';
+import { getRealEligibleUsersToAdd, addGroupMemberAction } from '@/actions/group-info';
+import type { GroupMember } from '@/lib/group-info-data';
 import { toast } from 'sonner';
 
 interface AddMemberDialogProps {
@@ -23,12 +23,28 @@ export function AddMemberDialog({
   onMemberAdded,
 }: AddMemberDialogProps) {
   const [search, setSearch] = useState('');
+  const [candidates, setCandidates] = useState<GroupMember[]>([]);
+  const [isLoadingCandidates, setIsLoadingCandidates] = useState(false);
   const [selectedCandidate, setSelectedCandidate] = useState<GroupMember | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  useEffect(() => {
+    if (!isOpen) return;
+    setIsLoadingCandidates(true);
+    getRealEligibleUsersToAdd(conversationId, currentMemberIds)
+      .then((res) => {
+        setCandidates(res);
+      })
+      .catch((err) => {
+        console.error('Failed to load eligible members:', err);
+      })
+      .finally(() => {
+        setIsLoadingCandidates(false);
+      });
+  }, [isOpen, conversationId, currentMemberIds]);
+
   if (!isOpen) return null;
 
-  const candidates = getEligibleUsersToAdd(conversationId, currentMemberIds);
   const filtered = candidates.filter(
     (c) =>
       c.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -62,7 +78,7 @@ export function AddMemberDialog({
         <div className="flex items-center justify-between pb-3 border-b border-white/10 shrink-0">
           <div>
             <h3 className="text-base font-bold text-foreground">Add People</h3>
-            <p className="text-xs text-muted-foreground">Select authorized cohort members</p>
+            <p className="text-xs text-muted-foreground">Select authorized members from your institution</p>
           </div>
           <button
             onClick={onClose}
@@ -81,7 +97,7 @@ export function AddMemberDialog({
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search eligible students or faculty..."
+              placeholder="Search students or faculty..."
               className="w-full pl-8 pr-3 py-2 bg-white/5 border border-white/10 rounded-xl text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-all"
             />
           </div>
@@ -89,9 +105,13 @@ export function AddMemberDialog({
 
         {/* Candidates List */}
         <div className="flex-1 overflow-y-auto space-y-1 py-1">
-          {filtered.length === 0 ? (
+          {isLoadingCandidates ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="w-6 h-6 animate-spin text-primary" />
+            </div>
+          ) : filtered.length === 0 ? (
             <p className="text-xs text-muted-foreground text-center py-8">
-              No eligible cohort candidates found.
+              No eligible members found.
             </p>
           ) : (
             filtered.map((candidate) => {

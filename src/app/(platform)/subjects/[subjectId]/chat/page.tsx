@@ -40,6 +40,18 @@ export default async function ChatPage({ params }: ChatPageProps) {
     notFound();
   }
 
+  // Verify membership
+  const { data: membership } = await supabase
+    .from('subject_members')
+    .select('id')
+    .eq('subject_id', subject.uuid)
+    .eq('user_id', user.id)
+    .maybeSingle();
+
+  if (!membership) {
+    notFound();
+  }
+
   return (
     <div className="h-full lg:h-screen flex w-full overflow-hidden bg-[#050B16]">
       {/* Desktop Sidebar (Hidden on Mobile) */}

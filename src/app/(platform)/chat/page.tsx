@@ -13,8 +13,9 @@ export default async function ChatHubPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  // If user is not authenticated and not demo, redirect
-  // (Demo user is handled in platform layout)
+  if (!user) {
+    redirect('/login');
+  }
 
   return (
     <div className="h-[calc(100vh-4.25rem)] lg:h-screen flex w-full overflow-hidden bg-[#050B16]">

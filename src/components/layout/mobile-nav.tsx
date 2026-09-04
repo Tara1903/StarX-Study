@@ -17,7 +17,17 @@ export function MobileNav() {
     return null;
   }
 
-  const items = [
+  interface MobileNavItem {
+    id: string;
+    name: string;
+    href: string;
+    icon: any;
+    matchPrefix?: boolean;
+    useAvatar?: boolean;
+    badge?: number;
+  }
+
+  const items: MobileNavItem[] = [
     {
       id: 'home',
       name: 'Home',
@@ -30,7 +40,6 @@ export function MobileNav() {
       href: '/chat',
       icon: MessageSquare,
       matchPrefix: true,
-      badge: 4,
     },
     {
       id: 'subjects',

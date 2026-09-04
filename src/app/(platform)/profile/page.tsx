@@ -43,7 +43,6 @@ import { AvatarSelectorDialog } from '@/components/profile/avatar-selector-dialo
 import { EditProfileDialog } from '@/components/profile/edit-profile-dialog';
 import { getStoredMedia, removeStoredMediaItem, StoredMediaItem } from '@/lib/stored-media';
 import { updateUserPassword } from '@/actions/profile';
-import { ECE_SUBJECTS } from '@/lib/ece-data';
 import { toast } from 'sonner';
 import type { Profile } from '@/types';
 
@@ -51,6 +50,13 @@ export default function ProfilePage() {
   const { activeRole, profile: initialProfile } = useUser();
   const [userProfile, setUserProfile] = useState<Partial<Profile>>(initialProfile || {});
   const [authUser, setAuthUser] = useState<any>(null);
+  const [enrolledSubjects, setEnrolledSubjects] = useState<{
+    id: string;
+    name: string;
+    code?: string;
+    color?: string;
+    role?: string;
+  }[]>([]);
   const [loading, setLoading] = useState(true);
   const [supabase] = useState(() => createClient());
   const router = useRouter();
@@ -95,6 +101,33 @@ export default function ProfilePage() {
 
         if (dbProfile) {
           setUserProfile((prev) => ({ ...prev, ...dbProfile }));
+        }
+
+        const { data: dbMembers } = await supabase
+          .from('subject_members')
+          .select(`
+            role,
+            subject:subjects(
+              id,
+              name,
+              color,
+              icon,
+              code
+            )
+          `)
+          .eq('user_id', user.id);
+
+        if (dbMembers) {
+          const subs = dbMembers
+            .map((m: any) => ({
+              id: m.subject?.id,
+              name: m.subject?.name,
+              color: m.subject?.color || '#3B82F6',
+              code: m.subject?.code || '',
+              role: m.role,
+            }))
+            .filter((s: any) => s.id);
+          setEnrolledSubjects(subs);
         }
       }
 
@@ -478,29 +511,35 @@ export default function ProfilePage() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 pt-1">
-          {ECE_SUBJECTS.map((sub) => (
-            <Link
-              key={sub.id}
-              href={`/subjects/${sub.id}`}
-              className="p-3.5 rounded-2xl border border-border bg-muted/20 hover:border-primary/50 hover:bg-muted/40 transition-all flex items-center justify-between group"
-            >
-              <div className="min-w-0 flex items-center gap-3">
-                <div 
-                  className="w-3 h-9 rounded-full shrink-0" 
-                  style={{ backgroundColor: sub.color }} 
-                />
-                <div className="truncate">
-                  <p className="font-semibold text-xs text-foreground group-hover:text-primary transition-colors truncate">
-                    {sub.name}
-                  </p>
-                  <p className="text-[11px] text-muted-foreground font-mono mt-0.5">
-                    {sub.code} • {sub.facultyAbb}
-                  </p>
+          {enrolledSubjects.length === 0 ? (
+            <div className="col-span-full py-8 text-center border border-dashed border-border rounded-2xl bg-muted/10">
+              <p className="text-xs text-muted-foreground">No enrolled subjects found.</p>
+            </div>
+          ) : (
+            enrolledSubjects.map((sub) => (
+              <Link
+                key={sub.id}
+                href={`/subjects/${sub.id}`}
+                className="p-3.5 rounded-2xl border border-border bg-muted/20 hover:border-primary/50 hover:bg-muted/40 transition-all flex items-center justify-between group"
+              >
+                <div className="min-w-0 flex items-center gap-3">
+                  <div 
+                    className="w-3 h-9 rounded-full shrink-0" 
+                    style={{ backgroundColor: sub.color }} 
+                  />
+                  <div className="truncate">
+                    <p className="font-semibold text-xs text-foreground group-hover:text-primary transition-colors truncate">
+                      {sub.name}
+                    </p>
+                    <p className="text-[11px] text-muted-foreground font-mono mt-0.5">
+                      {sub.code ? `${sub.code} • ` : ''}{sub.role === 'teacher' ? 'Faculty' : 'Student'}
+                    </p>
+                  </div>
                 </div>
-              </div>
-              <ArrowRight className="w-3.5 h-3.5 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all shrink-0" />
-            </Link>
-          ))}
+                <ArrowRight className="w-3.5 h-3.5 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all shrink-0" />
+              </Link>
+            ))
+          )}
         </div>
       </div>
       </>
