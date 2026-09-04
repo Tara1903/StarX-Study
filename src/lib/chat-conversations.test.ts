@@ -40,13 +40,17 @@ describe('Chat Conversations Module', () => {
     expect(fallback?.type).toBe('personal');
   });
 
-  it('filters conversations by category', () => {
+  it('filters conversations by category including unread and pinned', () => {
     const all = getAllConversations();
     const subjectsOnly = filterConversations(all, '', 'subjects');
     const personalOnly = filterConversations(all, '', 'personal');
+    const unreadOnly = filterConversations(all, '', 'unread');
+    const pinnedOnly = filterConversations(all, '', 'pinned');
 
     expect(subjectsOnly.every((c) => c.type === 'subject')).toBe(true);
     expect(personalOnly.every((c) => c.type === 'personal')).toBe(true);
+    expect(unreadOnly.every((c) => (c.unreadCount || 0) > 0)).toBe(true);
+    expect(pinnedOnly.every((c) => c.isPinned)).toBe(true);
   });
 
   it('filters conversations by search query', () => {

@@ -36,6 +36,19 @@ export function isSubjectChatRoute(pathname: string): boolean {
 }
 
 /**
+ * Determines whether the desktop application shell should render the Left Navigation Rail
+ * and full-bleed h-screen chat layout (WhatsApp Web/Desktop architecture).
+ */
+export function isDesktopChatRoute(pathname: string): boolean {
+  if (!pathname) return false;
+  return (
+    pathname === '/chat' ||
+    pathname.startsWith('/chat/') ||
+    /^\/subjects\/[^/]+\/chat(\/.*)?$/.test(pathname)
+  );
+}
+
+/**
  * Determines mobile header variant and navigation state.
  */
 export function getMobileHeaderInfo(pathname: string): {

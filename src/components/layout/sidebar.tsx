@@ -7,6 +7,8 @@ import { useUser } from '@/components/providers/user-provider';
 import { ROUTES } from '@/lib/constants';
 import { createClient } from '@/lib/supabase/client';
 import { UserAvatar } from '@/components/ui/user-avatar';
+import { isDesktopChatRoute } from '@/lib/mobile-tokens';
+import { LeftNavRail } from './left-nav-rail';
 
 import {
   LayoutDashboard,
@@ -31,6 +33,11 @@ export function Sidebar() {
   const router = useRouter();
   const { profile, activeRole } = useUser();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  // If viewing a conversation or chat hub on desktop, switch to compact Left Nav Rail
+  if (isDesktopChatRoute(pathname)) {
+    return <LeftNavRail />;
+  }
 
   const handleLogout = async () => {
     if (confirm('Are you sure you want to log out?')) {

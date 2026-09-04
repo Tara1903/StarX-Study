@@ -133,6 +133,10 @@ export function ChatContainer({
     return list;
   }, [messages, showPinnedOnly, searchQuery]);
 
+  const pinnedMessage = useMemo(() => {
+    return messages.find((m) => m.is_pinned);
+  }, [messages]);
+
   const handleClearOption = (option: 'chat_only' | 'media_only' | 'everything') => {
     setIsDeleteMenuOpen(false);
     if (option === 'chat_only') {
@@ -536,6 +540,25 @@ export function ChatContainer({
                 <X className="w-3.5 h-3.5" />
               </button>
             )}
+          </div>
+        )}
+
+        {/* WhatsApp-Style Pinned Message Banner */}
+        {pinnedMessage && !isSearchOpen && (
+          <div
+            onClick={() => {
+              toast.info(`Pinned notice: "${pinnedMessage.content}"`, {
+                duration: 4000,
+              });
+            }}
+            className="px-3.5 py-1.5 bg-[#091324] border-t border-white/5 flex items-center justify-between text-xs text-foreground cursor-pointer hover:bg-primary/10 transition-colors shrink-0 select-none"
+          >
+            <div className="flex items-center gap-2 min-w-0">
+              <Pin className="w-3.5 h-3.5 text-primary rotate-45 shrink-0" />
+              <span className="font-semibold text-primary shrink-0 text-[11px]">Pinned:</span>
+              <span className="text-foreground/90 truncate text-[11px]">{pinnedMessage.content}</span>
+            </div>
+            <span className="text-[10px] text-muted-foreground shrink-0 ml-2 font-medium">Notice &rarr;</span>
           </div>
         )}
       </div>

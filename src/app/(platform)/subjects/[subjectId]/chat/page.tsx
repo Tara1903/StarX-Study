@@ -1,8 +1,9 @@
 import { Suspense } from 'react';
 import { notFound, redirect } from 'next/navigation';
+import { Metadata } from 'next';
 import { createClient } from '@/lib/supabase/server';
 import { ChatContainer } from '@/components/chat/chat-container';
-import { DesktopChatSidebar } from '@/components/chat/desktop-chat-sidebar';
+import { ChatConversationList } from '@/components/chat/chat-conversation-list';
 import { resolveSubject } from '@/lib/subject-resolver';
 import { Loader2 } from 'lucide-react';
 
@@ -10,6 +11,18 @@ interface ChatPageProps {
   params: Promise<{
     subjectId: string;
   }>;
+}
+
+export async function generateMetadata({
+  params,
+}: ChatPageProps): Promise<Metadata> {
+  const { subjectId } = await params;
+  const supabase = await createClient();
+  const subject = await resolveSubject(subjectId, supabase);
+  return {
+    title: subject ? `${subject.name} • Chat | studchat` : 'Subject Chat | studchat',
+    description: subject ? `Chat in ${subject.name} on studchat` : 'Subject Chat on studchat',
+  };
 }
 
 export default async function ChatPage({ params }: ChatPageProps) {
@@ -28,34 +41,35 @@ export default async function ChatPage({ params }: ChatPageProps) {
   }
 
   return (
-    <div className="h-full sm:h-[calc(100vh-4.25rem)] p-0 sm:p-4 max-w-7xl mx-auto flex w-full overflow-hidden">
-      <div className="flex w-full h-full border-0 sm:border border-border/80 rounded-none sm:rounded-2xl overflow-hidden shadow-none sm:shadow-lg bg-card/20">
-        {/* Desktop Two-Pane Subject Switcher (Hidden on Mobile) */}
-        <DesktopChatSidebar currentSubjectId={subject.id} />
+    <div className="h-full lg:h-screen flex w-full overflow-hidden bg-[#050B16]">
+      {/* Desktop Sidebar (Hidden on Mobile) */}
+      <div className="hidden lg:flex lg:w-[360px] xl:w-[400px] h-full shrink-0 flex-col border-r border-white/10">
+        <ChatConversationList currentConversationId={subject.id} />
+      </div>
 
-        {/* Chat Stream & Composer Area */}
-        <div className="flex-1 flex flex-col h-full overflow-hidden min-w-0">
-          <Suspense
-            fallback={
-              <div className="h-full flex items-center justify-center">
-                <Loader2 className="w-8 h-8 animate-spin text-primary" />
-              </div>
-            }
-          >
-            <ChatContainer
-              subjectId={subject.id}
-              subjectUuid={subject.uuid}
-              subjectName={subject.name}
-              subjectCode={subject.code}
-              facultyName={subject.facultyName}
-              facultyAbb={subject.facultyAbb}
-              academicContext={subject.academicContext}
-              room={subject.room}
-              color={subject.color}
-              backHref={`/subjects/${subject.id}`}
-            />
-          </Suspense>
-        </div>
+      {/* Active Conversation Area (Full width on Mobile, Flex-1 on Desktop) */}
+      <div className="flex-1 flex flex-col h-full overflow-hidden min-w-0">
+        <Suspense
+          fallback={
+            <div className="h-full flex items-center justify-center bg-[#050B16]">
+              <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            </div>
+          }
+        >
+          <ChatContainer
+            subjectId={subject.id}
+            subjectUuid={subject.uuid}
+            subjectName={subject.name}
+            subjectCode={subject.code}
+            facultyName={subject.facultyName}
+            facultyAbb={subject.facultyAbb}
+            academicContext={subject.academicContext}
+            room={subject.room}
+            color={subject.color}
+            conversationType="subject"
+            backHref={`/subjects/${subject.id}`}
+          />
+        </Suspense>
       </div>
     </div>
   );

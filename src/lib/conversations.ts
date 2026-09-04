@@ -231,17 +231,23 @@ export function getConversationById(id: string): ChatConversation | null {
   return null;
 }
 
+export type ConversationFilterCategory = 'all' | 'unread' | 'subjects' | 'personal' | 'pinned';
+
 export function filterConversations(
   conversations: ChatConversation[],
   query: string,
-  category: 'all' | 'subjects' | 'personal' = 'all'
+  category: ConversationFilterCategory = 'all'
 ): ChatConversation[] {
   let list = conversations;
 
-  if (category === 'subjects') {
+  if (category === 'unread') {
+    list = list.filter((c) => (c.unreadCount || 0) > 0);
+  } else if (category === 'subjects') {
     list = list.filter((c) => c.type === 'subject');
   } else if (category === 'personal') {
     list = list.filter((c) => c.type === 'personal');
+  } else if (category === 'pinned') {
+    list = list.filter((c) => c.isPinned);
   }
 
   if (query.trim()) {

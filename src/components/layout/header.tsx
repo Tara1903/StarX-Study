@@ -9,6 +9,7 @@ import { createClient } from '@/lib/supabase/client';
 import { UserAvatar } from '@/components/ui/user-avatar';
 import { DesktopSearchDialog } from '@/components/layout/desktop-search-dialog';
 import { ECE_SUBJECTS } from '@/lib/ece-data';
+import { isDesktopChatRoute } from '@/lib/mobile-tokens';
 
 export function Header() {
   const { profile } = useUser();
@@ -70,6 +71,12 @@ export function Header() {
 
     return 'studchat';
   };
+
+  // When viewing chat conversations or chat hub on desktop, hide the generic header
+  // Chat has its own dedicated top bar and full 100vh height like WhatsApp Web
+  if (isDesktopChatRoute(pathname)) {
+    return null;
+  }
 
   return (
     <>

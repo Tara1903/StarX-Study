@@ -17,7 +17,7 @@ export default async function ChatHubPage() {
   // (Demo user is handled in platform layout)
 
   return (
-    <div className="h-[calc(100vh-4.25rem)] lg:h-[calc(100vh-4rem)] flex w-full overflow-hidden bg-[#050B16]">
+    <div className="h-[calc(100vh-4.25rem)] lg:h-screen flex w-full overflow-hidden bg-[#050B16]">
       {/* WhatsApp Web-Style Left Conversation List */}
       <div className="w-full lg:w-[360px] xl:w-[400px] h-full shrink-0 flex flex-col">
         <ChatConversationList />

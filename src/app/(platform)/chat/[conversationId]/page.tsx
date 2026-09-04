@@ -59,7 +59,7 @@ export default async function ChatConversationPage({ params }: ChatConversationP
   }
 
   return (
-    <div className="h-[calc(100vh-4.25rem)] lg:h-[calc(100vh-4rem)] flex w-full overflow-hidden bg-[#050B16]">
+    <div className="h-full lg:h-screen flex w-full overflow-hidden bg-[#050B16]">
       {/* Desktop Sidebar (Hidden on Mobile) */}
       <div className="hidden lg:flex lg:w-[360px] xl:w-[400px] h-full shrink-0 flex-col border-r border-white/10">
         <ChatConversationList currentConversationId={conv.id} />
