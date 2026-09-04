@@ -86,13 +86,13 @@ export default async function GlobalAssignmentsPage() {
   const completedAssignments = displayAssignments.filter((a) => a.status !== 'Pending');
 
   return (
-    <div className="p-6 lg:p-10 max-w-5xl mx-auto space-y-8">
+    <div className="p-4 sm:p-6 lg:p-10 max-w-5xl mx-auto space-y-6 sm:space-y-8">
       {/* Header (Section 12 & 33) */}
       <header className="space-y-1">
-        <h1 className="text-2xl lg:text-3xl font-bold tracking-tight text-foreground">
+        <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight text-foreground">
           Assignments
         </h1>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-xs sm:text-sm text-muted-foreground">
           Your active coursework & submissions
         </p>
       </header>

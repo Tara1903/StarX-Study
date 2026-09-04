@@ -67,32 +67,32 @@ export function MaterialsClient({ subject, materials }: MaterialsClientProps) {
   };
 
   return (
-    <div className="p-6 lg:p-10 max-w-5xl mx-auto space-y-6">
+    <div className="p-4 sm:p-6 lg:p-10 max-w-5xl mx-auto space-y-6">
       {/* Back Link */}
       <div>
         <Link
           href={`/subjects/${subject.id}`}
-          className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+          className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground active:scale-95 transition-all py-1"
         >
-          <ArrowLeft className="w-3.5 h-3.5" />
+          <ArrowLeft className="w-4 h-4" />
           <span>Back to {subject.name}</span>
         </Link>
       </div>
 
       {/* Header */}
-      <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-border">
+      <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-white/10 sm:border-border">
         <div className="space-y-1">
-          <h1 className="text-2xl lg:text-3xl font-bold tracking-tight text-foreground">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight text-foreground">
             Materials
           </h1>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-xs sm:text-sm text-muted-foreground">
             {subject.name} • {subject.facultyName}
           </p>
         </div>
 
         <Link
           href={`/subjects/${subject.id}/chat`}
-          className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-muted/40 hover:bg-muted text-xs font-semibold text-foreground transition-colors"
+          className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-primary/10 hover:bg-primary/20 text-xs font-semibold text-primary active:scale-95 transition-all"
         >
           <MessageSquare className="w-4 h-4 text-primary" />
           <span>Go to Chat</span>

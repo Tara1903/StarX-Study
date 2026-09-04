@@ -341,18 +341,18 @@ export default function ProfilePage() {
       {/* ============================================ */}
       {/* 2. PROFILE SECTION TABS */}
       {/* ============================================ */}
-      <div className="flex items-center gap-1 border-b border-border pb-px overflow-x-auto scrollbar-none">
+      <div className="flex items-center gap-1 border-b border-white/10 sm:border-border pb-px overflow-x-auto scrollbar-none -mx-4 px-4 sm:mx-0 sm:px-0">
         {[
-          { id: 'overview', label: 'Overview', icon: User },
+          { id: 'overview', label: 'Profile', icon: User },
           { id: 'media', label: `Stored Media (${storedMedia.length})`, icon: FolderArchive },
-          { id: 'notifications', label: 'Notifications', icon: BellRing },
+          { id: 'notifications', label: 'Preferences', icon: BellRing },
           { id: 'security', label: 'Security', icon: KeyRound },
         ].map((tab) => (
           <button
             key={tab.id}
             type="button"
             onClick={() => setActiveTab(tab.id as any)}
-            className={`inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-all cursor-pointer ${
+            className={`inline-flex items-center gap-2 px-3.5 sm:px-4 py-2.5 text-xs sm:text-sm font-medium border-b-2 whitespace-nowrap active:scale-95 transition-all cursor-pointer shrink-0 ${
               activeTab === tab.id
                 ? 'border-primary text-primary font-semibold'
                 : 'border-transparent text-muted-foreground hover:text-foreground'

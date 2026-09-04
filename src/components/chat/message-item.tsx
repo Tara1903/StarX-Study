@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@/components/providers/user-provider';
 import type { MessageWithSender } from '@/types';
@@ -15,11 +15,13 @@ import {
   Bookmark, 
   BookmarkCheck, 
   FileText, 
-  Image as ImageIcon 
+  Image as ImageIcon,
+  MoreHorizontal
 } from 'lucide-react';
 import { toggleReaction, pinMessage, deleteMessage } from '@/actions/messages';
 import { saveMediaItem, isMediaStored, removeStoredMediaItem } from '@/lib/stored-media';
 import { toast } from 'sonner';
+import { MessageActionSheet } from './message-action-sheet';
 
 interface MessageItemProps {
   message: MessageWithSender;
@@ -48,6 +50,25 @@ export function MessageItem({
     }
     return initial;
   });
+
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const touchTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  const handleTouchStart = () => {
+    touchTimerRef.current = setTimeout(() => {
+      if (typeof window !== 'undefined' && 'vibrate' in navigator) {
+        navigator.vibrate?.(40);
+      }
+      setIsSheetOpen(true);
+    }, 400);
+  };
+
+  const handleTouchEnd = () => {
+    if (touchTimerRef.current) {
+      clearTimeout(touchTimerRef.current);
+      touchTimerRef.current = null;
+    }
+  };
 
   const handleReaction = async (emoji: string) => {
     await toggleReaction(message.id, emoji);
@@ -158,12 +179,23 @@ export function MessageItem({
         )}
 
         {/* Message Bubble */}
-        <div className={cn(
-          "relative px-3.5 py-2 rounded-2xl whitespace-pre-wrap break-words text-sm shadow-sm transition-all",
-          isOwn 
-            ? "bg-primary text-primary-foreground rounded-tr-sm" 
-            : "bg-card border border-border/80 rounded-tl-sm text-foreground"
-        )}>
+        <div 
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+          onTouchMove={handleTouchEnd}
+          onContextMenu={(e) => {
+            if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+              e.preventDefault();
+              setIsSheetOpen(true);
+            }
+          }}
+          className={cn(
+            "relative px-3.5 py-2 rounded-2xl whitespace-pre-wrap break-words text-sm shadow-sm transition-all select-none lg:select-text",
+            isOwn 
+              ? "bg-primary text-primary-foreground rounded-tr-sm" 
+              : "bg-card border border-border/80 rounded-tl-sm text-foreground"
+          )}
+        >
           {/* Main Text Content */}
           <div className="leading-relaxed">{message.content}</div>
 
@@ -312,6 +344,34 @@ export function MessageItem({
           </div>
         )}
       </div>
+
+      {/* Mobile More Options Button */}
+      <button
+        type="button"
+        onClick={() => setIsSheetOpen(true)}
+        aria-label="Message options"
+        className="lg:hidden self-center p-1 rounded-lg text-muted-foreground/40 hover:text-foreground active:scale-95 transition-all shrink-0 cursor-pointer"
+      >
+        <MoreHorizontal className="w-4 h-4" />
+      </button>
+
+      {/* Mobile Touch Action Sheet */}
+      <MessageActionSheet
+        isOpen={isSheetOpen}
+        onClose={() => setIsSheetOpen(false)}
+        messageContent={message.content}
+        senderName={message.sender?.full_name || 'User'}
+        isSaved={message.attachments?.some((att) => storedMap[att.id])}
+        canPin={isTeacher}
+        isPinned={!!message.is_pinned}
+        canDelete={isOwn || isTeacher}
+        isOwn={isOwn}
+        onReact={handleReaction}
+        onReply={onReply}
+        onSaveMedia={handleStoreDirectContent}
+        onPin={isTeacher ? handlePin : undefined}
+        onDelete={handleDelete}
+      />
     </div>
   );
 }

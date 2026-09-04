@@ -122,14 +122,24 @@ export function MessageInput({ subjectId, replyTo, onCancelReply, onMessageSent 
   };
 
   return (
-    <div className="p-3 sm:p-4 border-t border-border/80 bg-background/95 backdrop-blur-md pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] sticky bottom-0 z-20">
+    <div className="p-2.5 sm:p-4 border-t border-white/10 bg-[#050B16]/95 backdrop-blur-md pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))] sticky bottom-0 z-20">
       {/* Reply Banner */}
       {replyTo && (
-        <div className="flex items-center justify-between bg-muted/80 px-3 py-2 rounded-xl border-l-4 border-primary text-xs mb-2 shadow-sm">
-          <div className="truncate">
-            <span className="font-semibold text-foreground">{replyTo.sender?.full_name}:</span> {replyTo.content}
+        <div className="flex items-center justify-between bg-[#070E1B] border border-white/10 px-3 py-1.5 rounded-xl border-l-3 border-l-[#168BFF] text-xs mb-2 shadow-sm">
+          <div className="min-w-0 pr-2">
+            <span className="text-[11px] font-semibold text-[#168BFF] block truncate">
+              Replying to {replyTo.sender?.full_name || 'User'}
+            </span>
+            <p className="text-xs text-muted-foreground truncate">
+              “{replyTo.content}”
+            </p>
           </div>
-          <button onClick={onCancelReply} className="text-muted-foreground hover:text-foreground p-1 cursor-pointer">
+          <button 
+            type="button"
+            onClick={onCancelReply} 
+            aria-label="Cancel reply"
+            className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground active:scale-95 shrink-0 cursor-pointer"
+          >
             <X className="w-3.5 h-3.5" />
           </button>
         </div>
@@ -137,7 +147,7 @@ export function MessageInput({ subjectId, replyTo, onCancelReply, onMessageSent 
 
       {/* Selected File Preview Banner */}
       {selectedFile && (
-        <div className="flex items-center justify-between bg-primary/10 border border-primary/20 px-3 py-2 rounded-xl text-xs mb-2">
+        <div className="flex items-center justify-between bg-primary/10 border border-primary/20 px-3 py-1.5 rounded-xl text-xs mb-2">
           <div className="flex items-center gap-2 min-w-0">
             {selectedFile.type.includes('image') ? (
               <img src={selectedFile.url} alt="preview" className="w-6 h-6 object-cover rounded-md shrink-0" />
@@ -152,14 +162,15 @@ export function MessageInput({ subjectId, replyTo, onCancelReply, onMessageSent 
           <button
             type="button"
             onClick={() => setSelectedFile(null)}
-            className="text-muted-foreground hover:text-destructive p-1 cursor-pointer"
+            aria-label="Remove attached file"
+            className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground hover:text-destructive active:scale-95 shrink-0 cursor-pointer"
           >
             <X className="w-3.5 h-3.5" />
           </button>
         </div>
       )}
       
-      <form onSubmit={handleSubmit} className="flex items-end gap-2 relative">
+      <form onSubmit={handleSubmit} className="flex items-end gap-1.5 sm:gap-2 relative">
         {/* Hidden File Input */}
         <input
           type="file"
@@ -169,17 +180,17 @@ export function MessageInput({ subjectId, replyTo, onCancelReply, onMessageSent 
           className="hidden"
         />
 
-        {/* Paperclip button */}
+        {/* Paperclip button - 44px+ touch target */}
         <Button
           type="button"
           size="icon"
           variant="ghost"
           onClick={() => fileInputRef.current?.click()}
           title="Attach image or document"
-          className="shrink-0 rounded-xl h-10 w-10 text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors cursor-pointer"
+          className="shrink-0 rounded-xl h-11 w-11 sm:h-10 sm:w-10 text-muted-foreground hover:text-primary hover:bg-primary/10 active:scale-95 transition-all cursor-pointer"
           disabled={isRestricted}
         >
-          <Paperclip className="w-4 h-4" />
+          <Paperclip className="w-5 h-5 sm:w-4 sm:h-4" />
         </Button>
         
         {/* Message Input */}
@@ -188,20 +199,20 @@ export function MessageInput({ subjectId, replyTo, onCancelReply, onMessageSent 
           value={content}
           onChange={handleChange}
           onKeyDown={handleKeyDown}
-          placeholder={isRestricted ? "You are restricted from messaging" : "Type a message or share an image..."}
+          placeholder={isRestricted ? "Messaging is restricted" : "Type a message..."}
           disabled={isRestricted || isSubmitting}
-          className="min-h-[40px] max-h-[120px] resize-none rounded-2xl py-2.5 px-3.5 text-xs sm:text-sm border-muted focus-visible:ring-1"
+          className="min-h-[44px] sm:min-h-[40px] max-h-[120px] resize-none rounded-2xl py-2.5 px-3.5 text-sm border-white/10 bg-white/5 focus-visible:ring-1 focus-visible:ring-primary focus-visible:border-primary placeholder:text-muted-foreground/60 transition-colors"
           rows={1}
         />
         
-        {/* Send Button */}
+        {/* Send Button - 44px+ touch target */}
         <Button 
           type="submit" 
           size="icon" 
-          className="shrink-0 rounded-xl h-10 w-10 bg-primary text-primary-foreground hover:bg-primary/90 transition-all cursor-pointer shadow-sm" 
+          className="shrink-0 rounded-xl h-11 w-11 sm:h-10 sm:w-10 bg-primary text-primary-foreground hover:bg-primary/90 active:scale-95 transition-all cursor-pointer shadow-md" 
           disabled={(!content.trim() && !selectedFile) || isSubmitting || isRestricted}
         >
-          <SendHorizontal className="w-4 h-4" />
+          <SendHorizontal className="w-5 h-5 sm:w-4 sm:h-4" />
         </Button>
       </form>
       

@@ -59,13 +59,13 @@ export default async function SubjectsPage() {
   }
 
   return (
-    <div className="p-6 lg:p-10 max-w-6xl mx-auto space-y-8">
+    <div className="p-4 sm:p-6 lg:p-10 max-w-6xl mx-auto space-y-6 lg:space-y-8">
       {/* Clean Page Header */}
       <header className="space-y-1">
-        <h1 className="text-2xl lg:text-3xl font-bold tracking-tight text-foreground">
+        <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight text-foreground">
           Subjects
         </h1>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-xs sm:text-sm text-muted-foreground">
           Your enrolled subjects
         </p>
       </header>

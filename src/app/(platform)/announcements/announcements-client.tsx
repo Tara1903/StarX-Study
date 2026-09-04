@@ -158,13 +158,13 @@ export function AnnouncementsClient({ initialData }: { initialData?: MainAnnounc
   };
 
   return (
-    <div className="p-6 lg:p-10 max-w-4xl mx-auto space-y-6">
+    <div className="p-4 sm:p-6 lg:p-10 max-w-4xl mx-auto space-y-6">
       {/* Header */}
       <header className="space-y-1">
-        <h1 className="text-2xl lg:text-3xl font-bold tracking-tight text-foreground">
+        <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight text-foreground">
           Announcements
         </h1>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-xs sm:text-sm text-muted-foreground">
           Campus & academic updates
         </p>
       </header>
@@ -253,18 +253,21 @@ export function AnnouncementsClient({ initialData }: { initialData?: MainAnnounc
         )}
       </div>
 
-      {/* Detail Dialog (Click to open full content) */}
+      {/* Detail Sheet/Dialog (Click to open full content) */}
       {selectedAnnouncement && (
         <div
-          className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in"
+          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-end sm:items-center justify-center sm:p-4 animate-in fade-in duration-150"
           onClick={() => setSelectedAnnouncement(null)}
         >
           <div
-            className="w-full max-w-lg bg-card border border-border rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh] animate-in zoom-in-95"
+            className="w-full sm:max-w-lg bg-[#070E1B] sm:bg-card border-t sm:border border-white/10 sm:border-border rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] sm:max-h-[85vh] animate-in slide-in-from-bottom sm:zoom-in-95 duration-200 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] sm:pb-0"
             onClick={(e) => e.stopPropagation()}
           >
+            {/* Grabber handle on mobile */}
+            <div className="w-10 h-1 bg-white/20 rounded-full mx-auto my-2.5 sm:hidden shrink-0" />
+
             {/* Modal Header */}
-            <div className="p-5 border-b border-border flex items-start justify-between gap-3">
+            <div className="p-4 sm:p-5 border-b border-white/10 sm:border-border flex items-start justify-between gap-3">
               <div className="space-y-1 min-w-0">
                 <span
                   className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider inline-block ${

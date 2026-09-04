@@ -88,37 +88,37 @@ export default function DashboardPage() {
   ];
 
   return (
-    <div className="p-6 lg:p-10 max-w-6xl mx-auto space-y-10">
-      {/* Clean Greeting */}
-      <header className="space-y-1.5">
-        <h1 className="text-2xl lg:text-3xl font-bold tracking-tight text-foreground">
+    <div className="p-4 sm:p-6 lg:p-10 max-w-6xl mx-auto space-y-6 lg:space-y-10">
+      {/* Clean Mobile-Optimized Greeting */}
+      <header className="space-y-1">
+        <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight text-foreground">
           {greeting}, {firstName}.
         </h1>
-        <p className="text-sm text-muted-foreground">
-          Here&rsquo;s what needs your attention.
+        <p className="text-xs sm:text-sm text-muted-foreground">
+          Here&rsquo;s what needs your attention today.
         </p>
       </header>
 
-      {/* Subjects Section */}
-      <section className="space-y-4">
+      {/* Subjects Quick Section - 1-tap horizontal scroll on mobile */}
+      <section className="space-y-3 sm:space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-base font-semibold text-foreground tracking-tight">
+          <h2 className="text-sm sm:text-base font-semibold text-foreground tracking-tight">
             Subjects
           </h2>
           <Link
             href="/subjects"
-            className="text-xs text-muted-foreground hover:text-primary transition-colors flex items-center gap-1 font-medium"
+            className="text-xs text-primary hover:underline transition-colors flex items-center gap-1 font-medium active:scale-95"
           >
             <span>All subjects</span>
             <ChevronRight className="w-3.5 h-3.5" />
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="flex sm:grid sm:grid-cols-2 lg:grid-cols-3 gap-3 overflow-x-auto sm:overflow-x-visible pb-2 sm:pb-0 scrollbar-none -mx-4 px-4 sm:mx-0 sm:px-0">
           {ECE_SUBJECTS.map((sub) => (
             <div
               key={sub.id}
-              className="group p-4 rounded-2xl bg-card border border-border/90 hover:border-border hover:bg-card/80 transition-all flex flex-col justify-between space-y-4 shadow-sm"
+              className="min-w-[240px] sm:min-w-0 p-3.5 sm:p-4 rounded-2xl bg-[#070E1B] sm:bg-card border border-white/10 sm:border-border/90 hover:border-border hover:bg-card/80 transition-all flex flex-col justify-between space-y-3 sm:space-y-4 shadow-sm shrink-0 sm:shrink"
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-3 min-w-0">
@@ -128,7 +128,7 @@ export default function DashboardPage() {
                   />
                   <div className="min-w-0">
                     <Link
-                      href={`/subjects/${sub.id}`}
+                      href={`/subjects/${sub.id}/chat`}
                       className="font-semibold text-sm text-foreground hover:text-primary transition-colors block truncate"
                     >
                       {sub.name}
@@ -140,13 +140,13 @@ export default function DashboardPage() {
                 </div>
               </div>
 
-              <div className="flex items-center justify-between pt-3 border-t border-border/50 text-xs">
+              <div className="flex items-center justify-between pt-2.5 sm:pt-3 border-t border-white/10 sm:border-border/50 text-xs">
                 <span className="text-muted-foreground/80 text-[11px]">
                   I Sem • ECE
                 </span>
                 <Link
                   href={`/subjects/${sub.id}/chat`}
-                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium text-primary hover:bg-primary/10 transition-colors"
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-primary bg-primary/10 hover:bg-primary hover:text-primary-foreground active:scale-95 transition-all"
                 >
                   <MessageSquare className="w-3.5 h-3.5" />
                   <span>Chat</span>
@@ -158,7 +158,7 @@ export default function DashboardPage() {
       </section>
 
       {/* Two-Column Section: Upcoming & Recent */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 pt-2">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 pt-1 sm:pt-2">
         {/* Upcoming */}
         <section className="space-y-4">
           <div className="flex items-center justify-between">

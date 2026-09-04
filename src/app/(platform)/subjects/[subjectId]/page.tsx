@@ -43,31 +43,31 @@ export default async function SubjectOverviewPage({ params }: PageProps) {
   ];
 
   return (
-    <div className="p-6 lg:p-10 max-w-5xl mx-auto space-y-8">
+    <div className="p-4 sm:p-6 lg:p-10 max-w-5xl mx-auto space-y-6 sm:space-y-8">
       {/* Back Link */}
       <div>
         <Link
           href="/subjects"
-          className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+          className="inline-flex items-center gap-2 text-xs font-medium text-muted-foreground hover:text-foreground active:scale-95 transition-all py-1"
         >
-          <ArrowLeft className="w-3.5 h-3.5" />
+          <ArrowLeft className="w-4 h-4" />
           <span>Subjects</span>
         </Link>
       </div>
 
       {/* Clean Subject Header (Section 18 & 19) */}
-      <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-border">
+      <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 sm:pb-6 border-b border-white/10 sm:border-border">
         <div className="space-y-1">
           <div className="flex items-center gap-2.5">
             <span
               className="w-3 h-3 rounded-full shrink-0"
               style={{ backgroundColor: subject.color || '#3B82F6' }}
             />
-            <h1 className="text-2xl lg:text-3xl font-bold tracking-tight text-foreground">
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight text-foreground truncate">
               {subject.name}
             </h1>
           </div>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-xs sm:text-sm text-muted-foreground">
             {subject.facultyName} <span className="mx-1.5 opacity-40">•</span> I Sem • B.Tech ECE
           </p>
         </div>
@@ -75,23 +75,27 @@ export default async function SubjectOverviewPage({ params }: PageProps) {
         <div className="flex items-center gap-2.5">
           <Link
             href={`/subjects/${subjectId}/chat`}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground font-semibold text-xs rounded-xl hover:bg-primary/90 transition-all shadow-sm"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-primary text-primary-foreground font-semibold text-xs rounded-xl hover:bg-primary/90 active:scale-95 transition-all shadow-sm"
           >
             <MessageSquare className="w-4 h-4" />
-            <span>Open Chat</span>
+            <span>Open Subject Chat</span>
           </Link>
         </div>
       </header>
 
-      {/* Horizontal Navigation Tabs (Section 20) */}
-      <nav className="flex items-center gap-2 border-b border-border pb-px overflow-x-auto scrollbar-none">
+      {/* Horizontal Navigation Tabs (Section 20 & 43) */}
+      <nav className="flex items-center gap-1.5 sm:gap-2 border-b border-white/10 sm:border-border pb-px overflow-x-auto scrollbar-none -mx-4 px-4 sm:mx-0 sm:px-0">
         {tabs.map((tab) => (
           <Link
             key={tab.name}
             href={tab.href}
-            className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors"
+            className={`inline-flex items-center gap-2 px-3.5 sm:px-4 py-2.5 text-xs sm:text-sm font-medium rounded-xl whitespace-nowrap active:scale-95 transition-colors shrink-0 ${
+              tab.primary 
+                ? 'bg-primary/10 text-primary border border-primary/20' 
+                : 'text-muted-foreground hover:text-foreground hover:bg-white/5'
+            }`}
           >
-            <tab.icon className="w-4 h-4 text-muted-foreground" />
+            <tab.icon className="w-4 h-4" />
             <span>{tab.name}</span>
           </Link>
         ))}

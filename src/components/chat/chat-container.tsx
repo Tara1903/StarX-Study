@@ -110,13 +110,13 @@ export function ChatContainer({
     setIsDeleteMenuOpen(false);
     if (option === 'chat_only') {
       clearChatOption('chat_only');
-      toast.success('Cleared chat only (media preserved)');
+      toast.success('Cleared chat text for you (media preserved)');
     } else if (option === 'media_only') {
       clearChatOption('media_only');
-      toast.success('Cleared media only (chat text preserved)');
+      toast.success('Cleared media for you (chat text preserved)');
     } else if (option === 'everything') {
       clearChatOption('everything');
-      toast.success('Cleared everything in this subject chat');
+      toast.success('Cleared chat for you (shared history preserved for class)');
     }
   };
 
@@ -254,7 +254,7 @@ export function ChatContainer({
                     className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium text-destructive hover:bg-destructive/10 transition-colors"
                   >
                     <Trash2 className="w-4 h-4 text-destructive" />
-                    <span>Clear Chat Options...</span>
+                    <span>Clear Chat (for me only)...</span>
                   </button>
                 </div>
               )}
@@ -331,17 +331,17 @@ export function ChatContainer({
 
                 {/* Dropdown with 3 options */}
               {isDeleteMenuOpen && (
-                <div className="absolute right-0 top-full mt-2 w-72 rounded-2xl bg-card/95 backdrop-blur-xl border border-border shadow-2xl p-2 z-50 animate-in fade-in zoom-in-95">
-                  <div className="px-3 py-2 border-b border-border/60 mb-1">
-                    <p className="text-xs font-bold text-foreground">Clear Chat Options</p>
-                    <p className="text-[11px] text-muted-foreground">Select what you want to remove</p>
+                <div className="absolute right-0 top-full mt-2 w-72 rounded-2xl bg-[#070E1B] backdrop-blur-xl border border-white/10 shadow-2xl p-2 z-50 animate-in fade-in zoom-in-95">
+                  <div className="px-3 py-2 border-b border-white/10 mb-1">
+                    <p className="text-xs font-bold text-foreground">Clear Chat (Personal View)</p>
+                    <p className="text-[11px] text-muted-foreground">Clears messages on your device without deleting shared class history</p>
                   </div>
 
                   {/* Option 1: Clear chat only */}
                   <button
                     type="button"
                     onClick={() => handleClearOption('chat_only')}
-                    className="w-full flex items-start gap-3 p-2.5 rounded-xl text-left hover:bg-muted/80 transition-colors cursor-pointer group"
+                    className="w-full flex items-start gap-3 p-2.5 rounded-xl text-left hover:bg-white/5 transition-colors cursor-pointer group"
                   >
                     <div className="p-2 rounded-lg bg-blue-500/10 text-blue-400 group-hover:bg-blue-500/20 shrink-0 mt-0.5">
                       <MessageSquareText className="w-4 h-4" />
@@ -360,7 +360,7 @@ export function ChatContainer({
                   <button
                     type="button"
                     onClick={() => handleClearOption('media_only')}
-                    className="w-full flex items-start gap-3 p-2.5 rounded-xl text-left hover:bg-muted/80 transition-colors cursor-pointer group"
+                    className="w-full flex items-start gap-3 p-2.5 rounded-xl text-left hover:bg-white/5 transition-colors cursor-pointer group"
                   >
                     <div className="p-2 rounded-lg bg-amber-500/10 text-amber-400 group-hover:bg-amber-500/20 shrink-0 mt-0.5">
                       <FileImage className="w-4 h-4" />
@@ -379,17 +379,17 @@ export function ChatContainer({
                   <button
                     type="button"
                     onClick={() => handleClearOption('everything')}
-                    className="w-full flex items-start gap-3 p-2.5 rounded-xl text-left hover:bg-red-500/10 transition-colors cursor-pointer group border-t border-border/60 mt-1 pt-2"
+                    className="w-full flex items-start gap-3 p-2.5 rounded-xl text-left hover:bg-red-500/10 transition-colors cursor-pointer group border-t border-white/10 mt-1 pt-2"
                   >
                     <div className="p-2 rounded-lg bg-red-500/10 text-red-400 group-hover:bg-red-500/20 shrink-0 mt-0.5">
                       <Trash2 className="w-4 h-4 text-red-400" />
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className="text-xs font-semibold text-red-400 group-hover:text-red-300 transition-colors">
-                        3. Clear everything
+                        3. Clear everything (for me)
                       </p>
                       <p className="text-[11px] text-muted-foreground leading-tight mt-0.5">
-                        Deletes all messages and media in this subject
+                        Clears all messages & media from your view (class history stays intact)
                       </p>
                     </div>
                   </button>
