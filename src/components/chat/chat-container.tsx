@@ -7,7 +7,8 @@ import { usePresence } from '@/hooks/use-presence';
 import { MessageList } from '@/components/chat/message-list';
 import { MessageInput } from '@/components/chat/message-input';
 import { UserAvatar } from '@/components/ui/user-avatar';
-import { ChatDetailsSheet } from '@/components/chat/chat-details-sheet';
+import { GroupInfoPanel } from '@/components/chat/group-info/group-info-panel';
+import { getGroupInfo } from '@/lib/group-info-data';
 import type { ChatConversation } from '@/lib/conversations';
 import { 
   Users, 
@@ -27,6 +28,7 @@ import {
 import type { MessageWithSender, AvatarType } from '@/types';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
 
 interface ChatContainerProps {
   subjectId: string;
@@ -86,12 +88,13 @@ export function ChatContainer({
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [showPinnedOnly, setShowPinnedOnly] = useState(false);
-  const [isDetailsSheetOpen, setIsDetailsSheetOpen] = useState(false);
+  const [isGroupInfoOpen, setIsGroupInfoOpen] = useState(false);
   const [isDeleteMenuOpen, setIsDeleteMenuOpen] = useState(false);
   const [isMobileActionsOpen, setIsMobileActionsOpen] = useState(false);
   const deleteMenuRef = useRef<HTMLDivElement>(null);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
 
+  const groupInfoData = useMemo(() => getGroupInfo(subjectId), [subjectId]);
   const isPersonal = conversationType === 'personal';
   const effectiveBackHref = backHref || (isPersonal ? '/chat' : `/chat/${subjectId}`);
 
@@ -188,59 +191,61 @@ export function ChatContainer({
   ]);
 
   return (
-    <div className="flex flex-col h-full bg-[#050B16] overflow-hidden select-text">
-      {/* WhatsApp-Style Chat Header */}
-      <div className="px-3 sm:px-4 py-2.5 sm:py-3 border-b border-white/10 bg-[#070E1B]/95 backdrop-blur-md flex flex-col gap-2 pt-[calc(0.6rem+env(safe-area-inset-top,0px))] sm:pt-3 shrink-0 z-20">
-        <div className="flex items-center justify-between gap-2 sm:gap-3">
-          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
-            {/* Back Button */}
-            <Link
-              href={effectiveBackHref}
-              title="Back"
-              className="p-1.5 -ml-1 rounded-xl text-muted-foreground hover:text-foreground hover:bg-white/5 active:scale-95 transition-all shrink-0 cursor-pointer"
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </Link>
+    <div className="flex h-full w-full bg-[#050B16] overflow-hidden select-text relative">
+      {/* Center Chat Area */}
+      <div className="flex-1 flex flex-col h-full overflow-hidden min-w-0">
+        {/* WhatsApp-Style Chat Header */}
+        <div className="px-3 sm:px-4 py-2.5 sm:py-3 border-b border-white/10 bg-[#070E1B]/95 backdrop-blur-md flex flex-col gap-2 pt-[calc(0.6rem+env(safe-area-inset-top,0px))] sm:pt-3 shrink-0 z-20">
+          <div className="flex items-center justify-between gap-2 sm:gap-3">
+            <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+              {/* Back Button */}
+              <Link
+                href={effectiveBackHref}
+                title="Back"
+                className="p-1.5 -ml-1 rounded-xl text-muted-foreground hover:text-foreground hover:bg-white/5 active:scale-95 transition-all shrink-0 cursor-pointer"
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </Link>
 
-            {/* Avatar or Subject Accent Icon */}
-            <div 
-              onClick={() => setIsDetailsSheetOpen(true)}
-              className="relative shrink-0 cursor-pointer hover:opacity-90 transition-opacity"
-            >
-              {isPersonal ? (
-                <>
-                  <UserAvatar
-                    name={subjectName}
-                    avatarUrl={avatarUrl}
-                    avatarType={avatarType || 'preset'}
-                    avatarPresetId={avatarPresetId}
-                    avatarEmoji={avatarEmoji}
-                    size="md"
-                    className="w-10 h-10 rounded-2xl ring-1 ring-white/10"
-                  />
-                  {onlineStatus === 'online' && (
-                    <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-[#070E1B]" />
-                  )}
-                </>
-              ) : (
-                <div
-                  className="w-10 h-10 rounded-2xl flex items-center justify-center font-bold text-xs ring-1 ring-white/10"
-                  style={{
-                    backgroundColor: color ? `${color}25` : 'rgba(59, 130, 246, 0.2)',
-                    color: color || '#3B82F6',
-                    border: `1px solid ${color ? `${color}40` : 'rgba(59, 130, 246, 0.3)'}`,
-                  }}
-                >
-                  {facultyAbb ? facultyAbb.slice(0, 3) : <Users className="w-5 h-5" />}
-                </div>
-              )}
-            </div>
+              {/* Avatar or Subject Accent Icon */}
+              <div 
+                onClick={() => setIsGroupInfoOpen(true)}
+                className="relative shrink-0 cursor-pointer hover:opacity-90 transition-opacity"
+              >
+                {isPersonal ? (
+                  <>
+                    <UserAvatar
+                      name={subjectName}
+                      avatarUrl={avatarUrl}
+                      avatarType={avatarType || 'preset'}
+                      avatarPresetId={avatarPresetId}
+                      avatarEmoji={avatarEmoji}
+                      size="md"
+                      className="w-10 h-10 rounded-2xl ring-1 ring-white/10"
+                    />
+                    {onlineStatus === 'online' && (
+                      <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-[#070E1B]" />
+                    )}
+                  </>
+                ) : (
+                  <div
+                    className="w-10 h-10 rounded-2xl flex items-center justify-center font-bold text-xs ring-1 ring-white/10"
+                    style={{
+                      backgroundColor: color ? `${color}25` : 'rgba(59, 130, 246, 0.2)',
+                      color: color || '#3B82F6',
+                      border: `1px solid ${color ? `${color}40` : 'rgba(59, 130, 246, 0.3)'}`,
+                    }}
+                  >
+                    {facultyAbb ? facultyAbb.slice(0, 3) : <Users className="w-5 h-5" />}
+                  </div>
+                )}
+              </div>
 
-            {/* Title & Status Subtitle */}
-            <div 
-              onClick={() => setIsDetailsSheetOpen(true)}
-              className="min-w-0 flex flex-col cursor-pointer"
-            >
+              {/* Title & Status Subtitle */}
+              <div 
+                onClick={() => setIsGroupInfoOpen(true)}
+                className="min-w-0 flex flex-col cursor-pointer"
+              >
               <div className="flex items-center gap-1.5 sm:gap-2">
                 <h1 className="font-bold text-sm sm:text-base lg:text-lg tracking-tight text-foreground truncate">
                   {subjectName}
@@ -343,13 +348,13 @@ export function ChatContainer({
                   <button
                     type="button"
                     onClick={() => {
-                      setIsDetailsSheetOpen(true);
+                      setIsGroupInfoOpen(true);
                       setIsMobileActionsOpen(false);
                     }}
                     className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium text-foreground hover:bg-white/5 transition-colors cursor-pointer"
                   >
                     <Info className="w-4 h-4 text-primary" />
-                    <span>{isPersonal ? 'Contact Details' : 'Subject Details'}</span>
+                    <span>{isPersonal ? 'Contact Info' : 'Group Info'}</span>
                   </button>
 
                   <div className="border-t border-white/10 my-1" />
@@ -411,13 +416,16 @@ export function ChatContainer({
                 {isMuted ? <BellOff className="w-4 h-4 text-amber-400" /> : <Bell className="w-4 h-4" />}
               </Button>
 
-              {/* Details Drawer */}
+              {/* Group / Contact Info */}
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => setIsDetailsSheetOpen(true)}
-                title={isPersonal ? 'Contact Info' : 'Subject Details'}
-                className="h-9 w-9 rounded-xl text-muted-foreground hover:text-foreground cursor-pointer"
+                onClick={() => setIsGroupInfoOpen((prev) => !prev)}
+                title={isPersonal ? 'Contact Info' : 'Group Info'}
+                className={cn(
+                  "h-9 w-9 rounded-xl transition-colors cursor-pointer",
+                  isGroupInfoOpen ? "bg-primary/20 text-primary" : "text-muted-foreground hover:text-foreground"
+                )}
               >
                 <Info className="w-4 h-4" />
               </Button>
@@ -545,23 +553,46 @@ export function ChatContainer({
         />
       </div>
 
-      {/* Message Composer */}
-      <MessageInput
-        subjectId={subjectId}
-        replyTo={replyTo}
-        onCancelReply={() => setReplyTo(null)}
-        onMessageSent={appendMessage}
-      />
+        {/* Message Composer */}
+        <MessageInput
+          subjectId={subjectId}
+          replyTo={replyTo}
+          onCancelReply={() => setReplyTo(null)}
+          onMessageSent={appendMessage}
+        />
+      </div>
 
-      {/* Details Sheet Modal */}
-      <ChatDetailsSheet
-        isOpen={isDetailsSheetOpen}
-        onClose={() => setIsDetailsSheetOpen(false)}
-        conversation={conversationForDetails}
-        isMuted={isMuted}
-        onToggleMute={handleToggleMute}
-        onClearChat={handleClearOption}
-      />
+      {/* Desktop Right Side Panel: Group Info (WhatsApp Web style) */}
+      {isGroupInfoOpen && groupInfoData && (
+        <div className="hidden lg:flex w-[360px] xl:w-[400px] h-full shrink-0 border-l border-white/10 z-20 animate-in slide-in-from-right duration-200">
+          <GroupInfoPanel
+            data={groupInfoData}
+            onClose={() => setIsGroupInfoOpen(false)}
+            onTriggerSearch={() => setIsSearchOpen(true)}
+            onToggleMute={handleToggleMute}
+            onClearChat={handleClearOption}
+            isMuted={isMuted}
+          />
+        </div>
+      )}
+
+      {/* Mobile Full-Screen View: Group Info (WhatsApp Mobile style) */}
+      {isGroupInfoOpen && groupInfoData && (
+        <div className="lg:hidden fixed inset-0 z-50 bg-[#050B16] overflow-hidden animate-in slide-in-from-right duration-200">
+          <GroupInfoPanel
+            data={groupInfoData}
+            onClose={() => setIsGroupInfoOpen(false)}
+            onTriggerSearch={() => {
+              setIsGroupInfoOpen(false);
+              setIsSearchOpen(true);
+            }}
+            onToggleMute={handleToggleMute}
+            onClearChat={handleClearOption}
+            isMuted={isMuted}
+            isMobileFullPage={true}
+          />
+        </div>
+      )}
     </div>
   );
 }
