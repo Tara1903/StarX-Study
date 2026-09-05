@@ -26,6 +26,7 @@ import {
 import { 
   ECE_TIMETABLE_METADATA, 
   ECE_WEEKLY_SCHEDULE, 
+  ECE_SUBJECTS,
   TIME_SLOTS, 
   ClassPeriod 
 } from '@/lib/ece-data';
@@ -54,7 +55,7 @@ export function TimetableClient() {
           subject:subjects(
             id,
             name,
-            code,
+            description,
             color
           )
         `)
@@ -111,11 +112,23 @@ export function TimetableClient() {
     }
   };
 
-  const findSubjectId = (name: string) => {
-    const found = enrolledSubjects.find(s => 
-      s.name?.toLowerCase().includes(name.toLowerCase()) || 
-      name.toLowerCase().includes(s.name?.toLowerCase())
-    );
+  const findSubjectId = (name: string, shortName?: string) => {
+    const qName = name.toLowerCase().trim();
+    const qShort = shortName?.toLowerCase().trim();
+
+    const found = enrolledSubjects.find(s => {
+      const sName = (s.name || '').toLowerCase();
+      const sDesc = (s.description || '').toLowerCase();
+      if (sName.includes(qName) || qName.includes(sName)) return true;
+      if (qShort && (sName.includes(qShort) || sDesc.includes(qShort))) return true;
+      if (qName.includes('pces') && sName.includes('communication')) return true;
+      if (qName.includes('esdm') && sName.includes('environmental')) return true;
+      if (qName.includes('electrical') && sName.includes('electrical')) return true;
+      if (qName.includes('graphics') && sName.includes('graphics')) return true;
+      if (qName.includes('chemistry') && sName.includes('chemistry')) return true;
+      if (qName.includes('math') && sName.includes('mathematics')) return true;
+      return false;
+    });
     return found ? found.id : null;
   };
 
@@ -318,7 +331,47 @@ export function TimetableClient() {
                           );
                         }
 
-                        const subjectId = findSubjectId(period.subjectName);
+                        const subjectId = findSubjectId(period.subjectName, period.shortName);
+
+                        const cardContent = (
+                          <div 
+                            className={`h-full min-h-[76px] p-2.5 rounded-xl border flex flex-col justify-between transition-all ${
+                              subjectId ? 'hover:scale-[1.03] hover:shadow-lg cursor-pointer group ring-1 ring-transparent hover:ring-primary/40' : 'hover:scale-[1.01]'
+                            }`}
+                            style={{ 
+                              backgroundColor: `${period.color || '#3B82F6'}15`,
+                              borderColor: `${period.color || '#3B82F6'}40`,
+                            }}
+                          >
+                            <div>
+                              <div className="flex items-center justify-between gap-1 mb-1">
+                                <span 
+                                  className="text-xs font-bold truncate"
+                                  style={{ color: period.color || '#3B82F6' }}
+                                >
+                                  {period.shortName}
+                                </span>
+                                {getPeriodTypeBadge(period.type)}
+                              </div>
+                              <div className="text-xs font-medium text-foreground line-clamp-1 leading-snug">
+                                {period.subjectName}
+                              </div>
+                            </div>
+
+                            <div className="mt-2 pt-1 border-t border-white/5 flex flex-col text-[11px] text-muted-foreground">
+                              {period.facultyName && (
+                                <span className="truncate text-foreground/80 font-medium">
+                                  👨‍🏫 {period.facultyAbb || period.facultyName}
+                                </span>
+                              )}
+                              {period.room && (
+                                <span className="truncate text-[10px] text-muted-foreground">
+                                  📍 {period.room}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        );
 
                         return (
                           <td 
@@ -326,41 +379,13 @@ export function TimetableClient() {
                             colSpan={period.slotsSpan || 1}
                             className="p-2 border-r border-border align-top"
                           >
-                            <div 
-                              className="h-full min-h-[76px] p-2.5 rounded-xl border flex flex-col justify-between transition-all hover:scale-[1.02] hover:shadow-md"
-                              style={{ 
-                                backgroundColor: `${period.color || '#3B82F6'}15`,
-                                borderColor: `${period.color || '#3B82F6'}40`,
-                              }}
-                            >
-                              <div>
-                                <div className="flex items-center justify-between gap-1 mb-1">
-                                  <span 
-                                    className="text-xs font-bold truncate"
-                                    style={{ color: period.color || '#3B82F6' }}
-                                  >
-                                    {period.shortName}
-                                  </span>
-                                  {getPeriodTypeBadge(period.type)}
-                                </div>
-                                <div className="text-xs font-medium text-foreground line-clamp-1 leading-snug">
-                                  {period.subjectName}
-                                </div>
-                              </div>
-
-                              <div className="mt-2 pt-1 border-t border-white/5 flex flex-col text-[11px] text-muted-foreground">
-                                {period.facultyName && (
-                                  <span className="truncate text-foreground/80 font-medium">
-                                    👨‍🏫 {period.facultyAbb || period.facultyName}
-                                  </span>
-                                )}
-                                {period.room && (
-                                  <span className="truncate text-[10px] text-muted-foreground">
-                                    📍 {period.room}
-                                  </span>
-                                )}
-                              </div>
-                            </div>
+                            {subjectId ? (
+                              <Link href={`/subjects/${subjectId}/chat`} title={`Open ${period.subjectName} Subject Group Chat`}>
+                                {cardContent}
+                              </Link>
+                            ) : (
+                              cardContent
+                            )}
                           </td>
                         );
                       })}
@@ -408,6 +433,7 @@ export function TimetableClient() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                   {dayItem.periods.map((period, idx) => {
                     const slotInfo = TIME_SLOTS.find(s => s.slot === period.slot);
+                    const subjectId = findSubjectId(period.subjectName, period.shortName);
 
                     return (
                       <div 
@@ -427,15 +453,29 @@ export function TimetableClient() {
                             {getPeriodTypeBadge(period.type)}
                           </div>
 
-                          <h4 
-                            className="font-bold text-base mb-1"
-                            style={{ color: period.color || '#3B82F6' }}
-                          >
-                            {period.subjectName}
-                          </h4>
-                          <span className="text-xs font-semibold px-2 py-0.5 rounded bg-background/50 border border-border inline-block mb-2">
-                            {period.shortName}
-                          </span>
+                          <div className="flex items-start justify-between gap-2 mb-1">
+                            <h4 
+                              className="font-bold text-base leading-snug"
+                              style={{ color: period.color || '#3B82F6' }}
+                            >
+                              {period.subjectName}
+                            </h4>
+                          </div>
+
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className="text-xs font-semibold px-2 py-0.5 rounded bg-background/50 border border-border inline-block">
+                              {period.shortName}
+                            </span>
+                            {subjectId && (
+                              <Link
+                                href={`/subjects/${subjectId}/chat`}
+                                className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500 hover:text-white transition-all inline-flex items-center gap-1"
+                                title={`Open ${period.subjectName} Subject Group Chat`}
+                              >
+                                Chat Group 💬
+                              </Link>
+                            )}
+                          </div>
                         </div>
 
                         <div className="mt-3 pt-3 border-t border-border/50 text-xs space-y-1 text-muted-foreground">
@@ -492,21 +532,21 @@ export function TimetableClient() {
                 <th className="p-3">Assigned Faculty</th>
                 <th className="p-3">Faculty Abb</th>
                 <th className="p-3">Credits</th>
-                <th className="p-3 text-right">Action</th>
+                <th className="p-3 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border text-sm">
-              {enrolledSubjects.length === 0 ? (
-                <tr>
-                  <td colSpan={7} className="p-8 text-center text-muted-foreground text-xs">
-                    No enrolled subjects in current curriculum.
-                  </td>
-                </tr>
-              ) : (
-                enrolledSubjects.map((sub) => (
+              {ECE_SUBJECTS.map((sub) => {
+                const enrolled = enrolledSubjects.find(s => 
+                  s.name?.toLowerCase().includes(sub.name.toLowerCase()) || 
+                  sub.name.toLowerCase().includes(s.name?.toLowerCase())
+                );
+                const targetId = enrolled?.id;
+
+                return (
                   <tr key={sub.id} className="hover:bg-muted/30 transition-colors">
                     <td className="p-3 font-mono text-xs font-bold text-primary">
-                      {sub.code || 'N/A'}
+                      {sub.code}
                     </td>
                     <td className="p-3">
                       <div className="flex items-center gap-2">
@@ -518,30 +558,48 @@ export function TimetableClient() {
                       </div>
                     </td>
                     <td className="p-3 font-medium text-foreground">
-                      <span className="px-2 py-0.5 rounded bg-muted text-xs font-mono">
-                        {sub.code ? sub.code.slice(0, 4) : 'SUB'}
+                      <span className="px-2 py-0.5 rounded bg-muted text-xs font-mono font-semibold">
+                        {sub.shortName}
                       </span>
                     </td>
                     <td className="p-3 font-medium text-foreground">
-                      {sub.role === 'teacher' ? 'Faculty Member' : 'Enrolled Student'}
+                      {sub.facultyName}
                     </td>
-                    <td className="p-3 font-mono text-muted-foreground">
-                      {sub.role === 'teacher' ? 'FAC' : 'STU'}
+                    <td className="p-3 font-mono text-primary font-bold">
+                      {sub.facultyAbb}
                     </td>
                     <td className="p-3 text-muted-foreground">
-                      4 Credits
+                      {sub.credits} Credits
                     </td>
                     <td className="p-3 text-right">
-                      <Link
-                        href={`/subjects/${sub.id}`}
-                        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary hover:text-white text-xs font-semibold transition-all"
-                      >
-                        Open Subject
-                      </Link>
+                      {targetId ? (
+                        <div className="inline-flex items-center justify-end gap-2">
+                          <Link
+                            href={`/subjects/${targetId}/chat`}
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500 hover:text-white text-xs font-semibold transition-all"
+                            title="Open Subject Group Chat"
+                          >
+                            Chat 💬
+                          </Link>
+                          <Link
+                            href={`/subjects/${targetId}`}
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-primary/10 text-primary hover:bg-primary hover:text-white text-xs font-semibold transition-all"
+                          >
+                            Hub
+                          </Link>
+                        </div>
+                      ) : (
+                        <Link
+                          href="/subjects"
+                          className="text-xs text-primary/80 hover:underline font-medium"
+                        >
+                          View in Subjects
+                        </Link>
+                      )}
                     </td>
                   </tr>
-                ))
-              )}
+                );
+              })}
             </tbody>
           </table>
         </div>
