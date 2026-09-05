@@ -20,7 +20,7 @@ export async function getRealGroupInfo(targetId: string): Promise<GroupInfoData 
   // 1. Check if targetId is a subject
   const subject = await resolveSubject(targetId, supabase);
   if (subject) {
-    // Verify membership
+    // Verify membership or institute_head access
     const { data: membership } = await supabase
       .from('subject_members')
       .select('id, role')
@@ -28,7 +28,19 @@ export async function getRealGroupInfo(targetId: string): Promise<GroupInfoData 
       .eq('user_id', user.id)
       .maybeSingle();
 
-    if (!membership) return null;
+    let isAuthorized = !!membership;
+    if (!isAuthorized && subject.universityId) {
+      const { data: headMember } = await supabase
+        .from('university_memberships')
+        .select('role')
+        .eq('university_id', subject.universityId)
+        .eq('user_id', user.id)
+        .eq('role', 'institute_head')
+        .maybeSingle();
+      if (headMember) isAuthorized = true;
+    }
+
+    if (!isAuthorized) return null;
 
     // Fetch members
     const { data: dbMembers } = await supabase
@@ -350,8 +362,20 @@ export async function updateGroupDetails(input: z.infer<typeof updateGroupSchema
       .eq('user_id', user.id)
       .maybeSingle();
 
-    if (!member || member.role !== 'teacher') {
-      return { success: false, error: 'Unauthorized: Only faculty can modify group details.' };
+    let isAuthorized = member?.role === 'teacher';
+    if (!isAuthorized && subject.universityId) {
+      const { data: headMember } = await supabase
+        .from('university_memberships')
+        .select('role')
+        .eq('university_id', subject.universityId)
+        .eq('user_id', user.id)
+        .eq('role', 'institute_head')
+        .maybeSingle();
+      if (headMember) isAuthorized = true;
+    }
+
+    if (!isAuthorized) {
+      return { success: false, error: 'Unauthorized: Only faculty and institute heads can modify group details.' };
     }
 
     const updateData: Record<string, any> = {};
@@ -394,8 +418,20 @@ export async function addGroupMemberAction(conversationId: string, memberId: str
       .eq('user_id', user.id)
       .maybeSingle();
 
-    if (!member || member.role !== 'teacher') {
-      return { success: false, error: 'Unauthorized: Only faculty members can add participants.' };
+    let isAuthorized = member?.role === 'teacher';
+    if (!isAuthorized && subject.universityId) {
+      const { data: headMember } = await supabase
+        .from('university_memberships')
+        .select('role')
+        .eq('university_id', subject.universityId)
+        .eq('user_id', user.id)
+        .eq('role', 'institute_head')
+        .maybeSingle();
+      if (headMember) isAuthorized = true;
+    }
+
+    if (!isAuthorized) {
+      return { success: false, error: 'Unauthorized: Only faculty and institute heads can add participants.' };
     }
 
     const { error: insertError } = await supabase

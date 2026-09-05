@@ -21,17 +21,33 @@ export default async function SubjectMaterialsPage({ params }: PageProps) {
     notFound();
   }
 
-  // Verify membership
+  // Verify membership or institute head
   const { data: membership } = await supabase
     .from('subject_members')
-    .select('id')
+    .select('role')
     .eq('subject_id', subject.uuid)
     .eq('user_id', user.id)
     .maybeSingle();
 
+  let isInstituteHead = false;
   if (!membership) {
-    notFound();
+    if (subject.universityId) {
+      const { data: uniMember } = await supabase
+        .from('university_memberships')
+        .select('role')
+        .eq('university_id', subject.universityId)
+        .eq('user_id', user.id)
+        .eq('role', 'institute_head')
+        .maybeSingle();
+
+      if (uniMember) isInstituteHead = true;
+    }
+    if (!isInstituteHead) {
+      notFound();
+    }
   }
+
+  const isTeacher = membership?.role === 'teacher' || isInstituteHead;
 
   let materials: any[] = [];
   try {
@@ -46,6 +62,7 @@ export default async function SubjectMaterialsPage({ params }: PageProps) {
         id: m.id,
         title: m.title,
         description: m.description || undefined,
+        topic: m.topic || 'General',
         file_name: m.file_name,
         file_type: m.file_type,
         file_size: m.file_size,
@@ -53,6 +70,7 @@ export default async function SubjectMaterialsPage({ params }: PageProps) {
         created_at: m.created_at,
         category: m.topic || m.file_type?.split('/')[1] || 'document',
         size: `${(m.file_size / (1024 * 1024)).toFixed(1)} MB`,
+        uploadedBy: m.uploaded_by,
       }));
     }
   } catch (err) {
@@ -63,11 +81,14 @@ export default async function SubjectMaterialsPage({ params }: PageProps) {
     <MaterialsClient
       subject={{
         id: subject.id,
+        uuid: subject.uuid,
         name: subject.name,
         facultyName: subject.facultyName,
         color: subject.color,
       }}
       materials={materials}
+      isTeacher={isTeacher}
+      currentUserId={user.id}
     />
   );
 }

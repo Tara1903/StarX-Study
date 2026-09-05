@@ -89,7 +89,7 @@ export function MobileSearchSheet({ isOpen, onClose }: MobileSearchSheetProps) {
         title: `${sub.name} Chat`,
         subtitle: `Jump into live room`,
         category: 'subjects',
-        url: `/subjects/${sub.id}/chat`,
+        url: `/chat/${sub.id}`,
         color: sub.color,
       });
 

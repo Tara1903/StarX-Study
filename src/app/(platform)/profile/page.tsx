@@ -258,9 +258,13 @@ export default function ProfilePage() {
     );
   }
 
-  const displayName = userProfile.display_name || userProfile.full_name || 'Student';
-  const fullName = userProfile.full_name || authUser?.email?.split('@')[0] || 'Student';
-  const email = authUser?.email || userProfile.email || 'student@sageuniversity.edu.in';
+  const roleLabel = 
+    activeRole === 'institute_head' ? 'Institute Head' :
+    activeRole === 'teacher' ? 'Teacher' : 'Student';
+
+  const displayName = userProfile.display_name || userProfile.full_name || roleLabel;
+  const fullName = userProfile.full_name || authUser?.email?.split('@')[0] || roleLabel;
+  const email = authUser?.email || userProfile.email || 'user@sageuniversity.edu.in';
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-5xl mx-auto w-full flex flex-col gap-8 pb-16">
@@ -336,9 +340,9 @@ export default function ProfilePage() {
                   @{userProfile.display_name}
                 </span>
               )}
-              <span className="inline-flex items-center gap-1 px-3 py-0.5 rounded-full text-xs font-semibold bg-primary/10 text-primary border border-primary/20 capitalize">
+              <span className="inline-flex items-center gap-1 px-3 py-0.5 rounded-full text-xs font-semibold bg-primary/10 text-primary border border-primary/20">
                 <Shield className="w-3 h-3" />
-                {activeRole.replace('_', ' ') || 'Student'}
+                {roleLabel}
               </span>
             </div>
 

@@ -13,10 +13,14 @@ import {
   Info,
   CheckCircle2,
   ChevronRight,
-  Sparkles
+  Plus,
+  Loader2,
+  Megaphone
 } from 'lucide-react';
 import { formatRelativeTime } from '@/lib/utils';
 import { toast } from 'sonner';
+import { createAnnouncement } from '@/actions/announcements';
+import type { UserRole } from '@/types/database';
 
 export interface MainAnnouncement {
   id: string;
@@ -34,7 +38,19 @@ export interface MainAnnouncement {
   readByMe?: boolean;
 }
 
-export function AnnouncementsClient({ initialData }: { initialData?: MainAnnouncement[] }) {
+interface AnnouncementsClientProps {
+  initialData?: MainAnnouncement[];
+  userRole?: UserRole;
+  universityId?: string;
+  authorizedSubjects?: { id: string; name: string }[];
+}
+
+export function AnnouncementsClient({ 
+  initialData,
+  userRole = 'student',
+  universityId,
+  authorizedSubjects = []
+}: AnnouncementsClientProps) {
   const [announcements, setAnnouncements] = useState<MainAnnouncement[]>(() => {
     return initialData || [];
   });
@@ -43,8 +59,18 @@ export function AnnouncementsClient({ initialData }: { initialData?: MainAnnounc
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedAnnouncement, setSelectedAnnouncement] = useState<MainAnnouncement | null>(null);
 
-  const [commentsMap, setCommentsMap] = useState<Record<string, { id: string; author: string; text: string; time: string }[]>>({});
-  const [newComment, setNewComment] = useState('');
+  // Creation modal state
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [newTitle, setNewTitle] = useState('');
+  const [newContent, setNewContent] = useState('');
+  const [newPriority, setNewPriority] = useState<'normal' | 'important' | 'urgent'>('normal');
+  const [targetType, setTargetType] = useState<'university' | 'subject'>(
+    userRole === 'teacher' ? 'subject' : 'university'
+  );
+  const [targetSubjectId, setTargetSubjectId] = useState(authorizedSubjects[0]?.id || '');
+  const [isPublishing, setIsPublishing] = useState(false);
+
+  const isTeacherOrHead = userRole === 'teacher' || userRole === 'institute_head';
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -72,223 +98,367 @@ export function AnnouncementsClient({ initialData }: { initialData?: MainAnnounc
     }
   };
 
-  const handleAddComment = (annId: string) => {
-    if (!newComment.trim()) return;
-    setCommentsMap((prev) => ({
-      ...prev,
-      [annId]: [
-        ...(prev[annId] || []),
-        { id: `c_${Date.now()}`, author: 'You', text: newComment.trim(), time: 'Just now' }
-      ]
-    }));
-    setNewComment('');
-    toast.success('Comment posted');
+  const handlePublish = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newTitle.trim() || !newContent.trim()) {
+      toast.error('Title and message content are required');
+      return;
+    }
+
+    if (!universityId) {
+      toast.error('Institution context not found');
+      return;
+    }
+
+    const resolvedTargetType = userRole === 'teacher' ? 'subject' : targetType;
+    const resolvedTargetId = resolvedTargetType === 'university' ? universityId : targetSubjectId;
+
+    if (resolvedTargetType === 'subject' && !resolvedTargetId) {
+      toast.error('Please select an authorized subject course');
+      return;
+    }
+
+    try {
+      setIsPublishing(true);
+      const fd = new FormData();
+      fd.append('university_id', universityId);
+      fd.append('title', newTitle.trim());
+      fd.append('content', newContent.trim());
+      fd.append('priority', newPriority);
+      fd.append('target_type', resolvedTargetType);
+      fd.append('target_id', resolvedTargetId);
+
+      const res = await createAnnouncement(fd);
+      if (res.error) {
+        toast.error(res.error);
+        return;
+      }
+
+      toast.success('Announcement published successfully');
+      setIsCreateOpen(false);
+      setNewTitle('');
+      setNewContent('');
+      setNewPriority('normal');
+    } catch {
+      toast.error('Failed to publish announcement');
+    } finally {
+      setIsPublishing(false);
+    }
   };
 
   return (
     <div className="p-4 sm:p-6 lg:p-10 max-w-4xl mx-auto space-y-6">
       {/* Header */}
-      <header className="space-y-1">
-        <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight text-foreground">
-          Announcements
-        </h1>
-        <p className="text-xs sm:text-sm text-muted-foreground">
-          Campus & academic updates
-        </p>
+      <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-white/10 sm:border-border">
+        <div className="space-y-1">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight text-foreground">
+            Announcements
+          </h1>
+          <p className="text-xs sm:text-sm text-muted-foreground">
+            {isTeacherOrHead ? 'Publish official notices and academic updates' : 'Campus & academic updates'}
+          </p>
+        </div>
+
+        {isTeacherOrHead && (
+          <button
+            type="button"
+            onClick={() => setIsCreateOpen(true)}
+            className="inline-flex items-center gap-2 px-4 py-2.5 bg-primary text-primary-foreground text-xs font-semibold rounded-xl hover:bg-primary/90 active:scale-95 transition-all shadow-sm cursor-pointer"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Publish Notice</span>
+          </button>
+        )}
       </header>
 
       {/* Search & Minimal Filters */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="relative w-full sm:max-w-md">
+          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search notices..."
-            className="w-full pl-9 pr-4 py-1.5 bg-card border border-border/80 rounded-xl text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none transition-colors"
+            placeholder="Search notices by title or author..."
+            className="w-full pl-9 pr-4 py-2 bg-card border border-border/80 rounded-xl text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none transition-colors"
           />
         </div>
 
-        <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none">
-          {(['all', 'urgent', 'important', 'general'] as const).map((cat) => (
+        <div className="flex items-center gap-1.5 p-1 rounded-xl bg-card border border-border shrink-0">
+          {(['all', 'urgent', 'important', 'general'] as const).map((t) => (
             <button
-              key={cat}
+              key={t}
               type="button"
-              onClick={() => setFilter(cat)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold capitalize transition-colors cursor-pointer ${
-                filter === cat
+              onClick={() => setFilter(t)}
+              className={`px-3 py-1 rounded-lg text-xs font-semibold capitalize transition-all cursor-pointer ${
+                filter === t
                   ? 'bg-primary text-primary-foreground shadow-sm'
-                  : 'text-muted-foreground hover:text-foreground hover:bg-muted/40'
+                  : 'text-muted-foreground hover:text-foreground'
               }`}
             >
-              {cat}
+              {t}
             </button>
           ))}
         </div>
       </div>
 
-      {/* Feed List (Section 29 standard: clean list rows, no full-paragraph dumps in feed) */}
-      <div className="space-y-2">
-        {filtered.length === 0 ? (
-          <div className="p-12 text-center text-sm text-muted-foreground bg-card/30 border border-border/60 rounded-2xl">
-            No announcements found.
+      {/* Announcements List */}
+      {announcements.length === 0 ? (
+        <div className="p-12 text-center text-sm text-muted-foreground bg-card/30 border border-border/60 rounded-2xl max-w-md mx-auto space-y-3">
+          <div className="w-12 h-12 rounded-2xl bg-muted/40 border border-border flex items-center justify-center mx-auto text-muted-foreground">
+            <Megaphone className="w-6 h-6" />
           </div>
-        ) : (
-          filtered.map((item) => {
-            const isUrgent = item.category === 'urgent';
-            const isImportant = item.category === 'important';
-
-            return (
-              <div
-                key={item.id}
-                onClick={() => handleOpenDetail(item)}
-                className="group p-4 rounded-xl bg-card border border-border/80 hover:border-border hover:bg-card/80 transition-all flex items-center justify-between gap-4 cursor-pointer"
-              >
-                <div className="min-w-0 space-y-1">
+          <h3 className="font-bold text-foreground text-base">No Announcements</h3>
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            There are no active notices or announcements at this time.
+          </p>
+        </div>
+      ) : filtered.length === 0 ? (
+        <div className="p-8 text-center text-xs text-muted-foreground bg-card/30 border border-border/60 rounded-2xl">
+          No announcements match your search filter.
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {filtered.map((item) => (
+            <div
+              key={item.id}
+              onClick={() => handleOpenDetail(item)}
+              className="p-4 sm:p-5 rounded-2xl bg-card border border-border/80 hover:border-border transition-all cursor-pointer space-y-3 shadow-sm group"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="space-y-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <span
-                      className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider ${
-                        isUrgent
-                          ? 'bg-red-500/15 text-red-400 border border-red-500/20'
-                          : isImportant
-                          ? 'bg-amber-500/15 text-amber-400 border border-amber-500/20'
-                          : 'bg-muted text-muted-foreground'
+                      className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${
+                        item.category === 'urgent'
+                          ? 'bg-red-500/10 text-red-400 border border-red-500/20'
+                          : item.category === 'important'
+                          ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                          : 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
                       }`}
                     >
                       {item.category}
                     </span>
-                    {!item.readByMe && (
-                      <span className="w-1.5 h-1.5 rounded-full bg-primary" />
-                    )}
+                    <span className="text-xs text-muted-foreground font-medium truncate">
+                      {item.scope}
+                    </span>
                   </div>
 
-                  <h2 className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors truncate">
+                  <h3 className="font-bold text-sm sm:text-base text-foreground group-hover:text-primary transition-colors truncate">
                     {item.title}
-                  </h2>
-
-                  <p className="text-xs text-muted-foreground truncate">
-                    {item.scope} <span className="opacity-40">•</span> {formatRelativeTime(new Date(item.date))}
-                  </p>
+                  </h3>
                 </div>
 
-                <div className="flex items-center gap-2 shrink-0 text-muted-foreground group-hover:text-foreground">
-                  <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
-                </div>
+                <span className="text-[11px] text-muted-foreground shrink-0 flex items-center gap-1">
+                  <Clock className="w-3 h-3" />
+                  <span>{formatRelativeTime(new Date(item.date))}</span>
+                </span>
               </div>
-            );
-          })
-        )}
-      </div>
 
-      {/* Detail Sheet/Dialog (Click to open full content) */}
+              <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
+                {item.content}
+              </p>
+
+              <div className="flex items-center justify-between text-xs text-muted-foreground pt-2 border-t border-border/40">
+                <span className="truncate">By <strong className="text-foreground font-medium">{item.author}</strong></span>
+                <span className="text-primary group-hover:underline flex items-center gap-1 font-medium">
+                  <span>Read details</span>
+                  <ChevronRight className="w-3 h-3" />
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Detail Modal */}
       {selectedAnnouncement && (
-        <div
-          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-end sm:items-center justify-center sm:p-4 animate-in fade-in duration-150"
-          onClick={() => setSelectedAnnouncement(null)}
-        >
-          <div
-            className="w-full sm:max-w-lg bg-[#070E1B] sm:bg-card border-t sm:border border-white/10 sm:border-border rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] sm:max-h-[85vh] animate-in slide-in-from-bottom sm:zoom-in-95 duration-200 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] sm:pb-0"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Grabber handle on mobile */}
-            <div className="w-10 h-1 bg-white/20 rounded-full mx-auto my-2.5 sm:hidden shrink-0" />
-
-            {/* Modal Header */}
-            <div className="p-4 sm:p-5 border-b border-white/10 sm:border-border flex items-start justify-between gap-3">
-              <div className="space-y-1 min-w-0">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
+          <div className="w-full max-w-lg p-6 bg-card border border-border rounded-2xl shadow-2xl space-y-4 max-h-[85vh] overflow-y-auto">
+            <div className="flex items-start justify-between gap-3 pb-3 border-b border-border/40">
+              <div className="space-y-1">
                 <span
-                  className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider inline-block ${
+                  className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${
                     selectedAnnouncement.category === 'urgent'
-                      ? 'bg-red-500/15 text-red-400 border border-red-500/20'
+                      ? 'bg-red-500/10 text-red-400'
                       : selectedAnnouncement.category === 'important'
-                      ? 'bg-amber-500/15 text-amber-400 border border-amber-500/20'
-                      : 'bg-muted text-muted-foreground'
+                      ? 'bg-amber-500/10 text-amber-400'
+                      : 'bg-blue-500/10 text-blue-400'
                   }`}
                 >
                   {selectedAnnouncement.category}
                 </span>
-                <h3 className="text-base font-bold text-foreground leading-snug">
+                <h2 className="text-base sm:text-lg font-bold text-foreground">
                   {selectedAnnouncement.title}
-                </h3>
+                </h2>
                 <p className="text-xs text-muted-foreground">
-                  {selectedAnnouncement.author} • {selectedAnnouncement.scope}
+                  {selectedAnnouncement.author} • {formatRelativeTime(new Date(selectedAnnouncement.date))}
                 </p>
               </div>
 
               <button
                 type="button"
                 onClick={() => setSelectedAnnouncement(null)}
-                className="p-1 rounded-lg text-muted-foreground hover:text-foreground"
+                className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground cursor-pointer"
               >
-                <X className="w-5 h-5" />
+                <X className="w-4 h-4" />
               </button>
             </div>
 
-            {/* Modal Content */}
-            <div className="p-5 overflow-y-auto space-y-4 text-sm leading-relaxed text-foreground">
-              <p className="whitespace-pre-wrap">{selectedAnnouncement.content}</p>
+            <div className="text-xs sm:text-sm text-foreground/90 whitespace-pre-wrap leading-relaxed py-2">
+              {selectedAnnouncement.content}
+            </div>
 
-              {/* Attachment */}
-              {selectedAnnouncement.attachmentName && (
-                <div className="p-3 rounded-xl bg-muted/30 border border-border/80 flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    <FileText className="w-4 h-4 text-primary shrink-0" />
-                    <span className="text-xs font-medium truncate">
-                      {selectedAnnouncement.attachmentName}
-                    </span>
+            <div className="flex justify-end pt-3 border-t border-border/40">
+              <button
+                type="button"
+                onClick={() => setSelectedAnnouncement(null)}
+                className="px-4 py-2 bg-primary text-primary-foreground font-semibold text-xs rounded-xl hover:bg-primary/90 cursor-pointer"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Publish Modal */}
+      {isCreateOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
+          <div className="w-full max-w-md p-6 bg-card border border-border rounded-2xl shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-3 border-b border-border/40">
+              <div className="flex items-center gap-2">
+                <Megaphone className="w-4 h-4 text-primary" />
+                <h2 className="text-base font-bold text-foreground">Publish Announcement</h2>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsCreateOpen(false)}
+                className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handlePublish} className="space-y-4">
+              {/* Audience Scope */}
+              {userRole === 'institute_head' && (
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-foreground">Target Audience</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setTargetType('university')}
+                      className={`p-2 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
+                        targetType === 'university'
+                          ? 'bg-primary/10 border-primary text-primary'
+                          : 'bg-muted/40 border-border text-muted-foreground'
+                      }`}
+                    >
+                      Entire Institution
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setTargetType('subject')}
+                      className={`p-2 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
+                        targetType === 'subject'
+                          ? 'bg-primary/10 border-primary text-primary'
+                          : 'bg-muted/40 border-border text-muted-foreground'
+                      }`}
+                    >
+                      Specific Subject
+                    </button>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => toast.success(`Downloaded ${selectedAnnouncement.attachmentName}`)}
-                    className="inline-flex items-center gap-1 text-xs text-primary font-semibold hover:underline shrink-0"
-                  >
-                    <Download className="w-3.5 h-3.5" />
-                    <span>Download</span>
-                  </button>
                 </div>
               )}
 
-              {/* Discussion comments */}
-              <div className="pt-3 border-t border-border/60 space-y-3">
-                <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                  Responses
-                </h4>
-                
-                <div className="space-y-2 max-h-40 overflow-y-auto">
-                  {(commentsMap[selectedAnnouncement.id] || []).map((c) => (
-                    <div key={c.id} className="p-2.5 rounded-lg bg-muted/20 border border-border/40 text-xs space-y-1">
-                      <div className="flex items-center justify-between text-[11px]">
-                        <span className="font-semibold text-foreground">{c.author}</span>
-                        <span className="text-muted-foreground">{c.time}</span>
-                      </div>
-                      <p className="text-muted-foreground">{c.text}</p>
-                    </div>
-                  ))}
-                  {(!commentsMap[selectedAnnouncement.id] || commentsMap[selectedAnnouncement.id].length === 0) && (
-                    <p className="text-xs text-muted-foreground italic">No comments on this notice yet.</p>
-                  )}
-                </div>
-
-                <div className="flex items-center gap-2 pt-2">
-                  <input
-                    type="text"
-                    value={newComment}
-                    onChange={(e) => setNewComment(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleAddComment(selectedAnnouncement.id)}
-                    placeholder="Add a reply..."
-                    className="flex-1 px-3 py-1.5 bg-muted/40 border border-border/80 rounded-lg text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => handleAddComment(selectedAnnouncement.id)}
-                    className="p-1.5 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+              {(userRole === 'teacher' || targetType === 'subject') && (
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-foreground">
+                    {userRole === 'teacher' ? 'Your Subject Course' : 'Target Subject'}
+                  </label>
+                  <select
+                    required
+                    value={targetSubjectId}
+                    onChange={(e) => setTargetSubjectId(e.target.value)}
+                    className="w-full p-2.5 rounded-xl bg-muted/40 border border-border text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
                   >
-                    <Send className="w-3.5 h-3.5" />
-                  </button>
+                    <option value="" disabled>Select subject...</option>
+                    {authorizedSubjects.map((s) => (
+                      <option key={s.id} value={s.id} className="bg-card text-foreground">
+                        {s.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-foreground">Title</label>
+                <input
+                  type="text"
+                  required
+                  value={newTitle}
+                  onChange={(e) => setNewTitle(e.target.value)}
+                  placeholder="e.g. Unit 3 Test Schedule, Class Postponed"
+                  className="w-full p-2.5 rounded-xl bg-muted/40 border border-border text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-foreground">Priority</label>
+                <div className="grid grid-cols-3 gap-2">
+                  {(['normal', 'important', 'urgent'] as const).map((p) => (
+                    <button
+                      key={p}
+                      type="button"
+                      onClick={() => setNewPriority(p)}
+                      className={`py-1.5 rounded-lg text-xs font-semibold capitalize border transition-all cursor-pointer ${
+                        newPriority === p
+                          ? p === 'urgent'
+                            ? 'bg-red-500/10 border-red-500/40 text-red-400'
+                            : p === 'important'
+                            ? 'bg-amber-500/10 border-amber-500/40 text-amber-400'
+                            : 'bg-primary/10 border-primary/40 text-primary'
+                          : 'bg-muted/30 border-border text-muted-foreground'
+                      }`}
+                    >
+                      {p}
+                    </button>
+                  ))}
                 </div>
               </div>
-            </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-foreground">Announcement Text</label>
+                <textarea
+                  rows={4}
+                  required
+                  value={newContent}
+                  onChange={(e) => setNewContent(e.target.value)}
+                  placeholder="Write clear, detailed notice content for recipients..."
+                  className="w-full p-2.5 rounded-xl bg-muted/40 border border-border text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary leading-relaxed"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-border/40">
+                <button
+                  type="button"
+                  onClick={() => setIsCreateOpen(false)}
+                  className="px-4 py-2 text-xs font-semibold text-muted-foreground hover:text-foreground cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isPublishing}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground text-xs font-semibold rounded-xl hover:bg-primary/90 disabled:opacity-50 transition-all shadow-sm cursor-pointer"
+                >
+                  {isPublishing && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                  <span>Publish Notice</span>
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

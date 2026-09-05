@@ -62,7 +62,7 @@ export function SubjectAnnouncementsClient({ subject, announcements }: SubjectAn
         </div>
 
         <Link
-          href={`/subjects/${subject.id}/chat`}
+          href={`/chat/${subject.id}`}
           className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-muted/40 hover:bg-muted text-xs font-semibold text-foreground transition-colors"
         >
           <MessageSquare className="w-4 h-4 text-primary" />

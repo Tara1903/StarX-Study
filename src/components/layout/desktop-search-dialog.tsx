@@ -121,7 +121,7 @@ export function DesktopSearchDialog({ isOpen, onClose }: DesktopSearchDialogProp
         title: `${sub.name} Chat`,
         subtitle: `Jump to live discussion room`,
         category: 'Subjects',
-        url: `/subjects/${sub.id}/chat`,
+        url: `/chat/${sub.id}`,
         color: sub.color,
       });
 

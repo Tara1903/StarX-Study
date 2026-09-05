@@ -1,6 +1,8 @@
 'use client';
 
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
+import Link from 'next/link';
+import { useParams } from 'next/navigation';
 import {
   Search,
   X,
@@ -13,6 +15,7 @@ import {
   BellOff,
   Pin,
   Loader2,
+  ArrowLeft,
 } from 'lucide-react';
 import { ChatConversationRow } from './chat-conversation-row';
 import {
@@ -22,6 +25,8 @@ import {
 } from '@/lib/conversations';
 import { getUserConversations, markConversationRead } from '@/actions/conversations';
 import { NewChatDialog } from './new-chat-dialog';
+import { useUser } from '@/components/providers/user-provider';
+import { UserAvatar } from '@/components/ui/user-avatar';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
@@ -36,6 +41,11 @@ export function ChatConversationList({
   onSelectConversation,
   className,
 }: ChatConversationListProps) {
+  const params = useParams();
+  const routeConvId = params?.conversationId as string | undefined;
+  const activeId = currentConversationId || routeConvId;
+  const { profile } = useUser();
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const [conversations, setConversations] = useState<ChatConversation[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -100,9 +110,48 @@ export function ChatConversationList({
     setShowOptionsMenu(false);
     toast.success('Marked all conversations as read');
   };
+  // Global shortcut (Ctrl+K or Cmd+K) to focus chat search
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   return (
     <div className={cn('flex flex-col h-full bg-[#050B16] border-r border-white/10 select-none relative', className)}>
+      {/* Top Header: ← studchat Workspace Exit + Profile */}
+      <div className="px-3.5 py-2.5 flex items-center justify-between border-b border-white/5 bg-[#070E1B]/80 shrink-0 select-none">
+        <Link
+          href="/dashboard"
+          title="Back to studchat (Dashboard)"
+          className="inline-flex items-center gap-2 px-2 py-1 -ml-1 rounded-xl text-muted-foreground hover:text-foreground hover:bg-white/5 active:scale-95 transition-all group cursor-pointer"
+        >
+          <ArrowLeft className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
+          <img
+            src="/logo.jpg"
+            alt="studchat logo"
+            className="w-5 h-5 rounded-lg object-cover ring-1 ring-white/15"
+          />
+          <span className="font-bold text-sm tracking-tight text-foreground group-hover:text-primary transition-colors">
+            studchat
+          </span>
+        </Link>
+
+        {/* Profile Shortcut */}
+        <Link
+          href="/profile"
+          title="My Profile"
+          className="p-0.5 rounded-xl hover:ring-2 hover:ring-primary/40 transition-all cursor-pointer"
+        >
+          <UserAvatar profile={profile} size="xs" className="w-7 h-7 rounded-lg ring-1 ring-white/10" />
+        </Link>
+      </div>
+
       {/* List Header */}
       <div className="p-3 sm:p-3.5 border-b border-white/10 shrink-0 space-y-2.5">
         <div className="flex items-center justify-between">
@@ -170,6 +219,7 @@ export function ChatConversationList({
         <div className="relative">
           <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/70" />
           <input
+            ref={searchInputRef}
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -279,7 +329,7 @@ export function ChatConversationList({
                   <ChatConversationRow
                     key={conv.id}
                     conversation={conv}
-                    isActive={conv.id === currentConversationId}
+                    isActive={conv.id === activeId}
                     onClick={() => onSelectConversation?.(conv)}
                   />
                 ))}
@@ -297,7 +347,7 @@ export function ChatConversationList({
               <ChatConversationRow
                 key={conv.id}
                 conversation={conv}
-                isActive={conv.id === currentConversationId}
+                isActive={conv.id === activeId}
                 onClick={() => onSelectConversation?.(conv)}
               />
             ))}

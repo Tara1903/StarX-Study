@@ -1,9 +1,7 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { UserProvider } from '@/components/providers/user-provider';
-import { Sidebar } from '@/components/layout/sidebar';
-import { Header } from '@/components/layout/header';
-import { MobileAppShell } from '@/components/layout/mobile-app-shell';
+import { PlatformShell } from '@/components/layout/platform-shell';
 
 import type { UserRole } from '@/types/database';
 
@@ -48,15 +46,9 @@ export default async function PlatformLayout({ children }: { children: React.Rea
         activeRole
       }}
     >
-      <div className="flex h-screen bg-background text-foreground overflow-hidden">
-        <Sidebar />
-        <div className="flex-1 flex flex-col overflow-hidden">
-          <Header />
-          <MobileAppShell>
-            {children}
-          </MobileAppShell>
-        </div>
-      </div>
+      <PlatformShell>
+        {children}
+      </PlatformShell>
     </UserProvider>
   );
 }

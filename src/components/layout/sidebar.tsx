@@ -7,9 +7,6 @@ import { useUser } from '@/components/providers/user-provider';
 import { ROUTES } from '@/lib/constants';
 import { createClient } from '@/lib/supabase/client';
 import { UserAvatar } from '@/components/ui/user-avatar';
-import { isDesktopChatRoute } from '@/lib/mobile-tokens';
-import { LeftNavRail } from './left-nav-rail';
-
 import {
   LayoutDashboard,
   MessageSquare,
@@ -34,10 +31,6 @@ export function Sidebar() {
   const { profile, activeRole } = useUser();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
-  // If viewing a conversation or chat hub on desktop, switch to compact Left Nav Rail
-  if (isDesktopChatRoute(pathname)) {
-    return <LeftNavRail />;
-  }
 
   const handleLogout = async () => {
     if (confirm('Are you sure you want to log out?')) {
@@ -55,23 +48,19 @@ export function Sidebar() {
     }
   };
 
-  const primaryNav = [
+  const navItems = [
     { name: 'Home', href: ROUTES.DASHBOARD, icon: LayoutDashboard },
     { name: 'Chat', href: ROUTES.CHAT, icon: MessageSquare },
     { name: 'Subjects', href: ROUTES.SUBJECTS, icon: BookOpen },
     { name: 'Assignments', href: ROUTES.ASSIGNMENTS, icon: ClipboardList },
     { name: 'Announcements', href: ROUTES.ANNOUNCEMENTS, icon: Megaphone },
+    ...(activeRole === 'institute_head'
+      ? [
+          { name: 'People', href: ROUTES.PEOPLE, icon: Users },
+          { name: 'Moderation', href: ROUTES.MODERATION, icon: Shield },
+        ]
+      : []),
     { name: 'Notifications', href: ROUTES.NOTIFICATIONS, icon: Bell },
-  ];
-
-  const adminNav = [
-    { name: 'Users', href: ROUTES.ADMIN_USERS, icon: Users },
-    { name: 'Departments', href: ROUTES.ADMIN_DEPARTMENTS, icon: Layers },
-    { name: 'Subjects', href: ROUTES.ADMIN_SUBJECTS, icon: BookMarked },
-    { name: 'Enrollment', href: ROUTES.ADMIN_ENROLLMENT, icon: UserPlus },
-    { name: 'Moderation', href: ROUTES.ADMIN_MODERATION, icon: Shield },
-    { name: 'Reports', href: ROUTES.ADMIN_REPORTS, icon: Flag },
-    { name: 'Settings', href: ROUTES.ADMIN_SETTINGS, icon: Settings },
   ];
 
   const renderNavItem = (item: { name: string; href: string; icon: any; badge?: number }) => {
@@ -115,20 +104,8 @@ export function Sidebar() {
       {/* Primary Navigation */}
       <div className="flex-1 overflow-y-auto p-3 space-y-6">
         <div className="space-y-1">
-          {primaryNav.map(renderNavItem)}
+          {navItems.map(renderNavItem)}
         </div>
-
-        {/* Admin Navigation (Authorized Only) */}
-        {activeRole === 'institute_head' && (
-          <div className="pt-2 border-t border-border/60">
-            <h4 className="px-3.5 text-[11px] font-semibold text-muted-foreground/70 uppercase tracking-wider mb-2">
-              Administration
-            </h4>
-            <div className="space-y-1">
-              {adminNav.map(renderNavItem)}
-            </div>
-          </div>
-        )}
       </div>
 
       {/* Sidebar Profile Area */}

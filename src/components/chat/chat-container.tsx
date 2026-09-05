@@ -50,6 +50,7 @@ interface ChatContainerProps {
   onlineStatus?: 'online' | 'offline' | 'typing';
   bio?: string;
   role?: string;
+  defaultGroupInfoOpen?: boolean;
 }
 
 export function ChatContainer({
@@ -71,6 +72,7 @@ export function ChatContainer({
   onlineStatus = 'online',
   bio,
   role,
+  defaultGroupInfoOpen = false,
 }: ChatContainerProps) {
   const { 
     messages, 
@@ -89,7 +91,7 @@ export function ChatContainer({
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [showPinnedOnly, setShowPinnedOnly] = useState(false);
-  const [isGroupInfoOpen, setIsGroupInfoOpen] = useState(false);
+  const [isGroupInfoOpen, setIsGroupInfoOpen] = useState(defaultGroupInfoOpen);
   const [isDeleteMenuOpen, setIsDeleteMenuOpen] = useState(false);
   const [isMobileActionsOpen, setIsMobileActionsOpen] = useState(false);
   const deleteMenuRef = useRef<HTMLDivElement>(null);
@@ -108,6 +110,29 @@ export function ChatContainer({
       isMounted = false;
     };
   }, [subjectId]);
+
+  useEffect(() => {
+    if (defaultGroupInfoOpen !== undefined) {
+      setIsGroupInfoOpen(defaultGroupInfoOpen);
+    }
+  }, [defaultGroupInfoOpen]);
+
+  // Keyboard shortcut: Escape closes Group Info or in-chat Search
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') {
+        if (isGroupInfoOpen) {
+          setIsGroupInfoOpen(false);
+        } else if (isSearchOpen) {
+          setIsSearchOpen(false);
+          setSearchQuery('');
+        }
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isGroupInfoOpen, isSearchOpen]);
+
   const isPersonal = conversationType === 'personal';
   const effectiveBackHref = backHref || (isPersonal ? '/chat' : `/chat/${subjectId}`);
 
@@ -598,9 +623,9 @@ export function ChatContainer({
         />
       </div>
 
-      {/* Desktop Right Side Panel: Group Info (WhatsApp Web style) */}
+      {/* Desktop 3-Panel Layout (>= 1280px): Inline third panel alongside active conversation */}
       {isGroupInfoOpen && groupInfoData && (
-        <div className="hidden lg:flex w-[360px] xl:w-[400px] h-full shrink-0 border-l border-white/10 z-20 animate-in slide-in-from-right duration-200">
+        <div className="hidden xl:flex w-[350px] 2xl:w-[380px] h-full shrink-0 border-l border-white/10 z-20 animate-in slide-in-from-right duration-200">
           <GroupInfoPanel
             data={groupInfoData}
             onClose={() => setIsGroupInfoOpen(false)}
@@ -612,7 +637,21 @@ export function ChatContainer({
         </div>
       )}
 
-      {/* Mobile Full-Screen View: Group Info (WhatsApp Mobile style) */}
+      {/* Small Desktop (1024px - 1279px): Floating side panel to prevent squeezing conversation */}
+      {isGroupInfoOpen && groupInfoData && (
+        <div className="hidden lg:flex xl:hidden absolute right-0 top-0 bottom-0 w-[380px] max-w-full h-full z-30 bg-[#050B16] border-l border-white/10 shadow-2xl animate-in slide-in-from-right duration-200">
+          <GroupInfoPanel
+            data={groupInfoData}
+            onClose={() => setIsGroupInfoOpen(false)}
+            onTriggerSearch={() => setIsSearchOpen(true)}
+            onToggleMute={handleToggleMute}
+            onClearChat={handleClearOption}
+            isMuted={isMuted}
+          />
+        </div>
+      )}
+
+      {/* Mobile Full-Screen View (< 1024px): Group Info full page */}
       {isGroupInfoOpen && groupInfoData && (
         <div className="lg:hidden fixed inset-0 z-50 bg-[#050B16] overflow-hidden animate-in slide-in-from-right duration-200">
           <GroupInfoPanel

@@ -14,6 +14,7 @@ export interface ResolvedSubject {
   room: string;
   academicContext: string;
   universityName: string;
+  universityId?: string;
   departmentName: string;
   semesterInfo: string;
   type: 'theory' | 'lab' | 'hybrid';
@@ -44,6 +45,7 @@ export async function resolveSubject(
           color,
           icon,
           description,
+          university_id,
           university:universities(id, name),
           semester:semesters(
             id,
@@ -84,6 +86,7 @@ export async function resolveSubject(
         const deptName = data.semester?.department?.name || 'Academic Department';
         const semName = data.semester?.name || 'Current Semester';
         const uniName = data.university?.name || 'University';
+        const uniId = data.university?.id || data.university_id || '';
 
         return {
           id: data.id,
@@ -101,6 +104,7 @@ export async function resolveSubject(
           room: 'Room No. 03',
           academicContext: `${deptName} • ${semName}`,
           universityName: uniName,
+          universityId: uniId,
           departmentName: deptName,
           semesterInfo: semName,
           type: 'theory',

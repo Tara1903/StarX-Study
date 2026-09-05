@@ -366,7 +366,27 @@ export async function pinMessage(messageId: string) {
       .eq('user_id', user.id)
       .maybeSingle();
 
-    if (member && member.role === 'teacher') isAuthorized = true;
+    if (member && member.role === 'teacher') {
+      isAuthorized = true;
+    } else {
+      const { data: subject } = await supabase
+        .from('subjects')
+        .select('university_id')
+        .eq('id', message.subject_id)
+        .maybeSingle();
+
+      if (subject) {
+        const { data: uniMember } = await supabase
+          .from('university_memberships')
+          .select('role')
+          .eq('university_id', subject.university_id)
+          .eq('user_id', user.id)
+          .eq('role', 'institute_head')
+          .maybeSingle();
+
+        if (uniMember) isAuthorized = true;
+      }
+    }
   } else if (message.conversation_id) {
     const { data: participant } = await supabase
       .from('conversation_participants')
@@ -380,9 +400,10 @@ export async function pinMessage(messageId: string) {
 
   if (!isAuthorized) return { success: false, error: 'Unauthorized to pin messages here' };
 
+  const newPinned = !message.is_pinned;
   const { error } = await supabase
     .from('messages')
-    .update({ is_pinned: !message.is_pinned })
+    .update({ is_pinned: newPinned })
     .eq('id', messageId);
 
   if (error) return { success: false, error: error.message };
@@ -394,8 +415,10 @@ export async function pinMessage(messageId: string) {
     revalidatePath(`/chat/${message.conversation_id}`);
   }
 
-  return { success: true };
+  return { success: true, is_pinned: newPinned };
 }
+
+export const togglePinMessage = pinMessage;
 
 export async function toggleReaction(messageId: string, emoji: string) {
   const supabase = await createClient();
@@ -459,3 +482,4 @@ export async function updateReadCursor(destinationId: string, messageId: string)
 
   return { success: false, error: 'Invalid destination ID' };
 }
+

@@ -49,6 +49,14 @@ export function isDesktopChatRoute(pathname: string): boolean {
 }
 
 /**
+ * Determines whether the current route belongs to the dedicated Chat Workspace.
+ * When true, the global application sidebar and navigation are completely absent.
+ */
+export function isChatRoute(pathname: string): boolean {
+  return isDesktopChatRoute(pathname);
+}
+
+/**
  * Determines mobile header variant and navigation state.
  */
 export function getMobileHeaderInfo(pathname: string): {
@@ -82,6 +90,12 @@ export function getMobileHeaderInfo(pathname: string): {
   }
   if (pathname === '/announcements') {
     return { isRoot: true, title: 'Announcements', showBack: false, backHref: '/dashboard' };
+  }
+  if (pathname === '/people') {
+    return { isRoot: true, title: 'People', showBack: false, backHref: '/dashboard' };
+  }
+  if (pathname === '/moderation') {
+    return { isRoot: true, title: 'Moderation', showBack: false, backHref: '/dashboard' };
   }
   if (pathname === '/timetable') {
     return { isRoot: false, title: 'ECE Timetable', showBack: true, backHref: '/dashboard' };

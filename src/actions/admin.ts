@@ -147,9 +147,176 @@ export async function resolveReport(reportId: string, action: string, notes: str
   const { data: member } = await supabase.from('university_memberships').select('role').eq('university_id', report.university_id).eq('user_id', user.id).single();
   if (!member || member.role !== 'institute_head') return { success: false, error: 'Unauthorized' };
 
-  const { error } = await supabase.from('reports').update({ status: 'resolved', resolution_notes: `[${action}] ${notes}`, resolved_by: user.id, resolved_at: new Date().toISOString() }).eq('id', reportId);
+  const { error } = await supabase.from('reports').update({ 
+    status: 'resolved', 
+    resolution_notes: `[${action}] ${notes}`, 
+    resolved_by: user.id, 
+    resolved_at: new Date().toISOString() 
+  }).eq('id', reportId);
   
   if (error) return { success: false, error: error.message };
+  revalidatePath('/moderation');
   revalidatePath('/admin/reports');
   return { success: true };
 }
+
+export async function dismissReport(reportId: string, notes?: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: 'Not authenticated' };
+
+  const { data: report } = await supabase.from('reports').select('university_id').eq('id', reportId).single();
+  if (!report) return { success: false, error: 'Not found' };
+
+  const { data: member } = await supabase.from('university_memberships').select('role').eq('university_id', report.university_id).eq('user_id', user.id).single();
+  if (!member || member.role !== 'institute_head') return { success: false, error: 'Unauthorized' };
+
+  const { error } = await supabase.from('reports').update({ 
+    status: 'dismissed', 
+    resolution_notes: notes ? `[Dismissed] ${notes}` : '[Dismissed] No violation found', 
+    resolved_by: user.id, 
+    resolved_at: new Date().toISOString() 
+  }).eq('id', reportId);
+  
+  if (error) return { success: false, error: error.message };
+  revalidatePath('/moderation');
+  revalidatePath('/admin/reports');
+  return { success: true };
+}
+
+export async function assignSubjectTeacher(subjectId: string, teacherId: string, universityId: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: 'Not authenticated' };
+
+  // Verify institute head authorization
+  const { data: member } = await supabase
+    .from('university_memberships')
+    .select('role')
+    .eq('university_id', universityId)
+    .eq('user_id', user.id)
+    .single();
+
+  if (!member || member.role !== 'institute_head') return { success: false, error: 'Unauthorized' };
+
+  // Verify target user is actually a teacher in the university
+  const { data: targetTeacher } = await supabase
+    .from('university_memberships')
+    .select('role')
+    .eq('university_id', universityId)
+    .eq('user_id', teacherId)
+    .eq('role', 'teacher')
+    .single();
+
+  if (!targetTeacher) return { success: false, error: 'Selected user is not a teacher in this institution' };
+
+  // Verify subject belongs to this university
+  const { data: subject } = await supabase
+    .from('subjects')
+    .select('id, name, university_id')
+    .eq('id', subjectId)
+    .eq('university_id', universityId)
+    .single();
+
+  if (!subject) return { success: false, error: 'Subject not found in your institution' };
+
+  // Remove existing teachers for this subject to assign the new one (or add)
+  await supabase
+    .from('subject_members')
+    .delete()
+    .eq('subject_id', subjectId)
+    .eq('role', 'teacher');
+
+  const { error } = await supabase
+    .from('subject_members')
+    .insert({
+      subject_id: subjectId,
+      user_id: teacherId,
+      role: 'teacher',
+    });
+
+  if (error) return { success: false, error: error.message };
+
+  // Notify the teacher
+  await supabase.from('notifications').insert({
+    user_id: teacherId,
+    type: 'system',
+    title: 'Subject Assigned',
+    body: `You have been assigned as the faculty for ${subject.name}.`,
+    link: `/subjects/${subjectId}`,
+  });
+
+  revalidatePath('/people');
+  revalidatePath('/subjects');
+  revalidatePath(`/subjects/${subjectId}`);
+  return { success: true };
+}
+
+export async function enrollSubjectStudent(subjectId: string, studentId: string, universityId: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: 'Not authenticated' };
+
+  const { data: member } = await supabase
+    .from('university_memberships')
+    .select('role')
+    .eq('university_id', universityId)
+    .eq('user_id', user.id)
+    .single();
+
+  if (!member || member.role !== 'institute_head') return { success: false, error: 'Unauthorized' };
+
+  // Check if already enrolled
+  const { data: existing } = await supabase
+    .from('subject_members')
+    .select('id')
+    .eq('subject_id', subjectId)
+    .eq('user_id', studentId)
+    .maybeSingle();
+
+  if (existing) return { success: false, error: 'Student already enrolled in this subject' };
+
+  const { error } = await supabase
+    .from('subject_members')
+    .insert({
+      subject_id: subjectId,
+      user_id: studentId,
+      role: 'student',
+    });
+
+  if (error) return { success: false, error: error.message };
+
+  revalidatePath('/people');
+  revalidatePath('/subjects');
+  revalidatePath(`/subjects/${subjectId}`);
+  return { success: true };
+}
+
+export async function removeSubjectMember(subjectId: string, userId: string, universityId: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: 'Not authenticated' };
+
+  const { data: member } = await supabase
+    .from('university_memberships')
+    .select('role')
+    .eq('university_id', universityId)
+    .eq('user_id', user.id)
+    .single();
+
+  if (!member || member.role !== 'institute_head') return { success: false, error: 'Unauthorized' };
+
+  const { error } = await supabase
+    .from('subject_members')
+    .delete()
+    .eq('subject_id', subjectId)
+    .eq('user_id', userId);
+
+  if (error) return { success: false, error: error.message };
+
+  revalidatePath('/people');
+  revalidatePath('/subjects');
+  revalidatePath(`/subjects/${subjectId}`);
+  return { success: true };
+}
+

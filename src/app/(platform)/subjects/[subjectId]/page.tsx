@@ -31,7 +31,7 @@ export default async function SubjectOverviewPage({ params }: PageProps) {
     notFound();
   }
 
-  // Authorization check: Verify user is a member of this subject
+  // Authorization check: Verify user is a member of this subject OR institute head
   const { data: membership } = await supabase
     .from('subject_members')
     .select('id, role')
@@ -39,9 +39,34 @@ export default async function SubjectOverviewPage({ params }: PageProps) {
     .eq('user_id', user.id)
     .maybeSingle();
 
+  let isInstituteHead = false;
   if (!membership) {
-    notFound();
+    if (subject.universityId) {
+      const { data: uniMember } = await supabase
+        .from('university_memberships')
+        .select('role')
+        .eq('university_id', subject.universityId)
+        .eq('user_id', user.id)
+        .eq('role', 'institute_head')
+        .maybeSingle();
+
+      if (uniMember) {
+        isInstituteHead = true;
+      }
+    }
+    if (!isInstituteHead) {
+      notFound();
+    }
   }
+
+  const isTeacher = membership?.role === 'teacher' || isInstituteHead;
+
+  // Fetch real enrolled student count
+  const { count: studentCount } = await supabase
+    .from('subject_members')
+    .select('id', { count: 'exact', head: true })
+    .eq('subject_id', subject.uuid)
+    .eq('role', 'student');
 
   // Fetch real materials for this subject
   const { data: dbMaterials } = await supabase
@@ -60,7 +85,7 @@ export default async function SubjectOverviewPage({ params }: PageProps) {
   }));
 
   const tabs = [
-    { name: 'Chat', href: `/subjects/${subjectId}/chat`, icon: MessageSquare, primary: true },
+    { name: 'Chat', href: `/chat/${subject.id}`, icon: MessageSquare, primary: true },
     { name: 'Announcements', href: `/subjects/${subjectId}/announcements`, icon: Megaphone, primary: false },
     { name: 'Materials', href: `/subjects/${subjectId}/materials`, icon: FileText, primary: false },
     { name: 'Assignments', href: `/subjects/${subjectId}/assignments`, icon: ClipboardList, primary: false },
@@ -90,15 +115,20 @@ export default async function SubjectOverviewPage({ params }: PageProps) {
             <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight text-foreground truncate">
               {subject.name}
             </h1>
+            {isTeacher && (
+              <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20 shrink-0">
+                Instructor
+              </span>
+            )}
           </div>
           <p className="text-xs sm:text-sm text-muted-foreground">
-            {subject.facultyName} <span className="mx-1.5 opacity-40">•</span> {subject.academicContext}
+            {subject.facultyName} <span className="mx-1.5 opacity-40">•</span> {subject.academicContext} <span className="mx-1.5 opacity-40">•</span> {studentCount ?? 0} students enrolled
           </p>
         </div>
 
         <div className="flex items-center gap-2.5">
           <Link
-            href={`/subjects/${subjectId}/chat`}
+            href={`/chat/${subject.id}`}
             className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-primary text-primary-foreground font-semibold text-xs rounded-xl hover:bg-primary/90 active:scale-95 transition-all shadow-sm"
           >
             <MessageSquare className="w-4 h-4" />

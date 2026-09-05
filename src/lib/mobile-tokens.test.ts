@@ -4,6 +4,7 @@ import {
   MOBILE_BOTTOM_NAV_HEIGHT,
   PRIMARY_MOBILE_DESTINATIONS,
   isSubjectChatRoute,
+  isChatRoute,
   getMobileHeaderInfo,
 } from './mobile-tokens';
 
@@ -49,6 +50,23 @@ describe('studchat Mobile Web Design System Tokens & Navigation', () => {
     expect(isSubjectChatRoute('/dashboard')).toBe(false);
     expect(isSubjectChatRoute('/profile')).toBe(false);
     expect(isSubjectChatRoute('/notifications')).toBe(false);
+  });
+
+  it('correctly identifies all dedicated Chat Workspace routes for sidebar exclusion', () => {
+    // Both chat hub, conversations, and subject chats belong to dedicated Chat Workspace
+    expect(isChatRoute('/chat')).toBe(true);
+    expect(isChatRoute('/chat/ece-math-1')).toBe(true);
+    expect(isChatRoute('/chat/user-123')).toBe(true);
+    expect(isChatRoute('/subjects/chemistry/chat')).toBe(true);
+
+    // Normal application pages must NOT be identified as chat workspace
+    expect(isChatRoute('/dashboard')).toBe(false);
+    expect(isChatRoute('/subjects')).toBe(false);
+    expect(isChatRoute('/subjects/ece-math-1')).toBe(false);
+    expect(isChatRoute('/assignments')).toBe(false);
+    expect(isChatRoute('/announcements')).toBe(false);
+    expect(isChatRoute('/notifications')).toBe(false);
+    expect(isChatRoute('/profile')).toBe(false);
   });
 
   it('resolves root headers correctly without back button', () => {
