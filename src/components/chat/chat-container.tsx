@@ -174,7 +174,10 @@ export function ChatContainer({
   }, [messages, showPinnedOnly, searchQuery]);
 
   const pinnedMessage = useMemo(() => {
-    return messages.find((m) => m.is_pinned);
+    for (let i = messages.length - 1; i >= 0; i--) {
+      if (messages[i].is_pinned) return messages[i];
+    }
+    return undefined;
   }, [messages]);
 
   const handleClearOption = (option: 'chat_only' | 'media_only' | 'everything') => {

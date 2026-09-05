@@ -78,12 +78,17 @@ export function useRealtimeMessages(subjectId: string, subjectUuid?: string) {
       }
 
       if (formattedData.length > 0) {
+        // The oldest message in this batch is at the end of descending formattedData
         cursorRef.current = formattedData[formattedData.length - 1].created_at;
       }
 
+      // Convert batch from descending query to chronological order (oldest → newest)
+      const chronologicalBatch = [...formattedData].reverse();
+
       setHasMore(formattedData.length === MESSAGES_PER_PAGE);
       setMessages((prev) => {
-        const merged = isLoadMore ? [...prev, ...formattedData] : formattedData;
+        // When loading more older messages, prepend them before current history
+        const merged = isLoadMore ? [...chronologicalBatch, ...prev] : chronologicalBatch;
         const seen = new Set<string>();
         return merged.filter((m) => {
           if (seen.has(m.id)) return false;
@@ -149,7 +154,7 @@ export function useRealtimeMessages(subjectId: string, subjectUuid?: string) {
               const newMsg = data as unknown as MessageWithSender;
               setMessages((prev) => {
                 if (prev.some((m) => m.id === newMsg.id)) return prev;
-                return [newMsg, ...prev];
+                return [...prev, newMsg];
               });
             }
           } else if (payload.eventType === 'UPDATE') {
@@ -175,7 +180,7 @@ export function useRealtimeMessages(subjectId: string, subjectUuid?: string) {
         if (!payload || !payload.id) return;
         setMessages((prev) => {
           if (prev.some((m) => m.id === payload.id)) return prev;
-          return [payload as MessageWithSender, ...prev];
+          return [...prev, payload as MessageWithSender];
         });
       })
       .on('broadcast', { event: 'delete_message' }, ({ payload }) => {
@@ -202,7 +207,7 @@ export function useRealtimeMessages(subjectId: string, subjectUuid?: string) {
     (newMsg: MessageWithSender) => {
       setMessages((prev) => {
         if (prev.some((m) => m.id === newMsg.id)) return prev;
-        return [newMsg, ...prev];
+        return [...prev, newMsg];
       });
 
       if (broadcastChannelRef.current) {
