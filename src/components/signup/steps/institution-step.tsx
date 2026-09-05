@@ -1,6 +1,7 @@
-import { useState } from 'react';
-import { Search, MapPin, ArrowLeft, ArrowRight, Building, GraduationCap, Library } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Search, MapPin, ArrowLeft, ArrowRight, Building, GraduationCap, Library, Loader2 } from 'lucide-react';
 import { SignupState } from '../onboarding-wizard';
+import { getActiveInstitutions } from '@/actions/invite';
 
 interface InstitutionStepProps {
   data: SignupState;
@@ -8,23 +9,53 @@ interface InstitutionStepProps {
   onPrev: () => void;
 }
 
-const mockInstitutions = [
-  { id: '1', name: 'SAGE University', type: 'university', hasCampuses: true, hasDepartments: true, usesSemesters: true },
-  { id: '2', name: 'MIT College of Engineering', type: 'college', hasCampuses: false, hasDepartments: true, usesSemesters: true },
-  { id: '3', name: 'Delhi Public School', type: 'school', hasCampuses: false, hasDepartments: false, usesSemesters: false },
-];
+interface InstitutionItem {
+  id: string;
+  name: string;
+  type: string;
+  hasCampuses: boolean;
+  hasDepartments: boolean;
+  usesSemesters: boolean;
+}
 
 export function InstitutionStep({ data, onNext, onPrev }: InstitutionStepProps) {
   const [search, setSearch] = useState('');
   const [selectedType, setSelectedType] = useState<string | null>(null);
-  
-  const filtered = mockInstitutions.filter(inst => {
-    const matchesSearch = inst.name.toLowerCase().includes(search.toLowerCase());
+  const [institutions, setInstitutions] = useState<InstitutionItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    let isMounted = true;
+    async function loadData() {
+      setIsLoading(true);
+      try {
+        const list = await getActiveInstitutions(search);
+        if (isMounted) {
+          setInstitutions(list);
+        }
+      } catch {
+        if (isMounted) setInstitutions([]);
+      } finally {
+        if (isMounted) setIsLoading(false);
+      }
+    }
+
+    const timer = setTimeout(() => {
+      loadData();
+    }, 250);
+
+    return () => {
+      isMounted = false;
+      clearTimeout(timer);
+    };
+  }, [search]);
+
+  const filtered = institutions.filter(inst => {
     const matchesType = selectedType ? inst.type === selectedType : true;
-    return matchesSearch && matchesType;
+    return matchesType;
   });
 
-  const handleSelect = (inst: typeof mockInstitutions[0]) => {
+  const handleSelect = (inst: InstitutionItem) => {
     onNext({
       universityId: inst.id,
       universityName: inst.name,
@@ -85,25 +116,30 @@ export function InstitutionStep({ data, onNext, onPrev }: InstitutionStepProps) 
       </div>
 
       <div className="flex-1 overflow-y-auto space-y-2 pr-2 custom-scrollbar">
-        {filtered.map(inst => (
-          <button
-            key={inst.id}
-            onClick={() => handleSelect(inst)}
-            className="w-full flex items-center justify-between p-4 rounded-xl border border-white/5 hover:border-white/20 hover:bg-white/5 transition-all group text-left"
-          >
-            <div>
-              <h3 className="font-semibold text-white">{inst.name}</h3>
-              <p className="text-xs text-[#A8B2C2] capitalize flex items-center gap-1 mt-1">
-                <MapPin className="w-3 h-3" /> {inst.type}
-              </p>
-            </div>
-            <ArrowRight className="w-4 h-4 text-[#6F7B8E] opacity-0 group-hover:opacity-100 transition-opacity" />
-          </button>
-        ))}
-        {filtered.length === 0 && (
+        {isLoading ? (
+          <div className="flex items-center justify-center py-12 text-[#6F7B8E] text-sm">
+            <Loader2 className="w-5 h-5 animate-spin mr-2 text-[#168BFF]" /> Loading institutions...
+          </div>
+        ) : filtered.length === 0 ? (
           <div className="text-center py-8 text-[#6F7B8E] text-sm">
             No institutions found matching your criteria.
           </div>
+        ) : (
+          filtered.map(inst => (
+            <button
+              key={inst.id}
+              onClick={() => handleSelect(inst)}
+              className="w-full flex items-center justify-between p-4 rounded-xl border border-white/5 hover:border-white/20 hover:bg-white/5 transition-all group text-left cursor-pointer"
+            >
+              <div>
+                <h3 className="font-semibold text-white">{inst.name}</h3>
+                <p className="text-xs text-[#A8B2C2] capitalize flex items-center gap-1 mt-1">
+                  <MapPin className="w-3 h-3" /> {inst.type}
+                </p>
+              </div>
+              <ArrowRight className="w-4 h-4 text-[#6F7B8E] opacity-0 group-hover:opacity-100 transition-opacity" />
+            </button>
+          ))
         )}
       </div>
     </div>

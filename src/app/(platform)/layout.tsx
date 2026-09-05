@@ -40,7 +40,13 @@ export default async function PlatformLayout({ children }: { children: React.Rea
   const profile = dbProfile as any;
   const memberships = (membershipsRes.data as any[]) || [];
   const activeUniversity = memberships.length > 0 ? memberships[0].university : null;
-  const activeRole: UserRole = memberships.length > 0 ? memberships[0].role : 'student';
+  const rawRole = memberships.length > 0 ? memberships[0].role : 'student';
+  const activeRole: UserRole = 
+    rawRole === 'institute_head' || rawRole === 'teacher_admin' || rawRole === 'student_admin'
+      ? 'institute_head'
+      : rawRole === 'teacher'
+        ? 'teacher'
+        : 'student';
 
   return (
     <UserProvider 

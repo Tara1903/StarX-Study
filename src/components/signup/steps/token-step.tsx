@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { Building, ArrowLeft, ArrowRight, Loader2, CheckCircle2 } from 'lucide-react';
 import { SignupState } from '../onboarding-wizard';
 
+import { validateProvisioningToken } from '@/actions/invite';
+
 interface TokenStepProps {
   data: SignupState;
   onNext: (data: Partial<SignupState>) => void;
@@ -23,21 +25,19 @@ export function TokenStep({ data, onNext, onPrev }: TokenStepProps) {
     setIsValidating(true);
     setError('');
     
-    // Simulate server action validation of Provisioning Token
-    // In production, this would call a server action `verifyProvisioningToken(token)`
-    setTimeout(() => {
+    try {
+      const res = await validateProvisioningToken(token);
+      if (!res.success || !res.data) {
+        setError(res.error || 'Invalid or expired provisioning token');
+        return;
+      }
+
+      onNext(res.data);
+    } catch (err: any) {
+      setError(err?.message || 'Failed to validate token');
+    } finally {
       setIsValidating(false);
-      // For demonstration, we just mock the validation here.
-      // The actual auth/DB enforcement happens at the end.
-      onNext({ 
-        token, 
-        universityId: 'dummy-university-uuid', 
-        universityName: 'SAGE University',
-        hasCampuses: true,
-        hasDepartments: true,
-        usesSemesters: true,
-      });
-    }, 1000);
+    }
   };
 
   return (
