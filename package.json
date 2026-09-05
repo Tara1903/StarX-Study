@@ -12,7 +12,10 @@
     "test:unit": "vitest run",
     "test:unit:watch": "vitest",
     "test:e2e": "playwright test",
-    "test:e2e:ui": "playwright test --ui"
+    "test:e2e:ui": "playwright test --ui",
+    "db:push": "supabase db push --yes",
+    "db:status": "supabase migration list",
+    "db:new": "supabase migration new"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.9.1",
