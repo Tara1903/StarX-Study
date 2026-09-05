@@ -164,3 +164,33 @@ export async function updateUserPassword(newPassword: string) {
     return { error: err?.message || "Failed to update password." };
   }
 }
+
+export async function updateUserEmail(newEmail: string, redirectOrigin?: string) {
+  try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+      return { error: "Unauthorized" };
+    }
+
+    if (!newEmail || !newEmail.includes('@')) {
+      return { error: "Please enter a valid email address." };
+    }
+
+    const origin = redirectOrigin || (process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000');
+    const { error } = await supabase.auth.updateUser(
+      { email: newEmail.trim().toLowerCase() },
+      { emailRedirectTo: `${origin}/auth/confirm` }
+    );
+
+    if (error) {
+      return { error: error.message };
+    }
+
+    return { success: true };
+  } catch (err: any) {
+    return { error: err?.message || "Failed to initiate email change." };
+  }
+}
+

@@ -47,10 +47,13 @@ export async function updateSession(request: NextRequest) {
   const isAuthRoute =
     request.nextUrl.pathname.startsWith("/login") ||
     request.nextUrl.pathname.startsWith("/register") ||
-    request.nextUrl.pathname.startsWith("/forgot-password");
+    request.nextUrl.pathname.startsWith("/signup") ||
+    request.nextUrl.pathname.startsWith("/forgot-password") ||
+    request.nextUrl.pathname.startsWith("/verify-email");
 
   const isProtectedRoute =
     request.nextUrl.pathname.startsWith("/dashboard") ||
+    request.nextUrl.pathname.startsWith("/study-groups") ||
     request.nextUrl.pathname.startsWith("/timetable") ||
     request.nextUrl.pathname.startsWith("/subjects") ||
     request.nextUrl.pathname.startsWith("/chat") ||

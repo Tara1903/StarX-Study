@@ -9,26 +9,38 @@ interface CredentialsStepProps {
   onPrev: () => void;
 }
 
-const schema = z.object({
-  fullName: z.string().min(2, 'Name must be at least 2 characters').trim(),
-  email: z.string().email('Please enter a valid email address').toLowerCase(),
-  password: z.string().min(8, 'Password must be at least 8 characters'),
-});
+const schema = z
+  .object({
+    fullName: z.string().min(2, 'Name must be at least 2 characters').trim(),
+    email: z.string().email('Please enter a valid email address').toLowerCase(),
+    password: z.string().min(8, 'Password must be at least 8 characters'),
+    confirmPassword: z.string().min(1, 'Please confirm your password'),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: 'Passwords do not match',
+    path: ['confirmPassword'],
+  });
 
 export function CredentialsStep({ data, onNext, onPrev }: CredentialsStepProps) {
   const [formData, setFormData] = useState({
     fullName: data.fullName || '',
     email: data.email || '',
     password: data.password || '',
+    confirmPassword: '',
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     try {
       const validated = schema.parse(formData);
-      onNext(validated);
+      onNext({
+        fullName: validated.fullName,
+        email: validated.email,
+        password: validated.password,
+      });
     } catch (err) {
       if (err instanceof z.ZodError) {
         const newErrors: Record<string, string> = {};
@@ -123,6 +135,35 @@ export function CredentialsStep({ data, onNext, onPrev }: CredentialsStepProps) 
               <div className={`h-1 flex-1 rounded-full ${formData.password.length >= 8 ? 'bg-green-500' : 'bg-white/10'}`} />
             </div>
           )}
+        </div>
+
+        <div className="space-y-1">
+          <label className="text-sm font-medium text-[#F5F7FB]">Confirm password</label>
+          <div className="relative">
+            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+              <Lock className="h-5 w-5 text-[#6F7B8E]" />
+            </div>
+            <input
+              type={showConfirmPassword ? 'text' : 'password'}
+              value={formData.confirmPassword}
+              onChange={e => {
+                setFormData(p => ({ ...p, confirmPassword: e.target.value }));
+                if (errors.confirmPassword) setErrors(p => ({ ...p, confirmPassword: '' }));
+              }}
+              className={`block w-full h-11 rounded-lg border bg-[#111D31] text-white ${
+                errors.confirmPassword ? 'border-red-500/50 focus:border-red-500 focus:ring-red-500/20' : 'border-white/10 focus:border-[#168BFF] focus:ring-[#168BFF]/20'
+              } pl-10 pr-10 px-3 py-2 text-sm placeholder-[#6F7B8E] focus:outline-none focus:ring-2`}
+              placeholder="••••••••"
+            />
+            <button
+              type="button"
+              className="absolute inset-y-0 right-0 flex items-center pr-3 text-[#6F7B8E] hover:text-[#A8B2C2]"
+              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+            >
+              {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+            </button>
+          </div>
+          {errors.confirmPassword && <p className="text-sm text-red-400">{errors.confirmPassword}</p>}
         </div>
       </div>
 

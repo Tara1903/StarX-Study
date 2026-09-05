@@ -26,19 +26,22 @@ export function TermsStep({ data, onNext, onPrev }: TermsStepProps) {
         email: data.email!,
         password: data.password!,
         options: {
+          emailRedirectTo: `${window.location.origin}/auth/confirm`,
           data: {
             full_name: data.fullName,
             role: data.role,
-          }
-        }
+          },
+        },
       });
 
       if (authError) throw new Error(authError.message);
 
-      // In a real application, a secure webhook or database trigger would create the
-      // student_enrollments / teacher_profiles entries. 
-      // Because RLS prevents clients from creating these arbitrarily.
-      
+      // In Supabase, if an email already exists and email confirmation is enabled,
+      // identities array is empty rather than returning an error to prevent user enumeration.
+      if (authData.user && authData.user.identities && authData.user.identities.length === 0) {
+        throw new Error('An account with this email address already exists. Please sign in instead.');
+      }
+
       onNext();
     } catch (err: any) {
       setError(err.message || 'An unexpected error occurred during account creation.');

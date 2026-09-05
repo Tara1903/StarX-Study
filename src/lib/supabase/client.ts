@@ -7,6 +7,11 @@ export function createClient() {
     process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://build-placeholder.supabase.co',
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.buildplaceholder',
     {
+      auth: {
+        experimental: {
+          passkey: true,
+        },
+      },
       cookieOptions: {
         maxAge: ONE_YEAR,
         path: '/',

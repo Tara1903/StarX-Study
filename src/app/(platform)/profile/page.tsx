@@ -33,7 +33,10 @@ import {
   Check,
   AlertCircle,
   ArrowRight,
-  BookOpen
+  BookOpen,
+  Fingerprint,
+  Plus,
+  Edit2
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -42,9 +45,16 @@ import { UserAvatar } from '@/components/ui/user-avatar';
 import { AvatarSelectorDialog } from '@/components/profile/avatar-selector-dialog';
 import { EditProfileDialog } from '@/components/profile/edit-profile-dialog';
 import { getProfileStorageMedia, type StorageMediaItem } from '@/actions/storage';
-import { updateUserPassword } from '@/actions/profile';
+import { updateUserPassword, updateUserEmail } from '@/actions/profile';
 import { toast } from 'sonner';
 import type { Profile } from '@/types';
+
+interface PasskeyItem {
+  id: string;
+  friendly_name?: string;
+  created_at: string;
+  last_used_at?: string;
+}
 
 export default function ProfilePage() {
   const { activeRole, profile: initialProfile } = useUser();
@@ -89,6 +99,19 @@ export default function ProfilePage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [activeTab, setActiveTab] = useState<'overview' | 'storage' | 'notifications' | 'security'>('overview');
+
+  // Passkey & Email management states
+  const [passkeys, setPasskeys] = useState<PasskeyItem[]>([]);
+  const [loadingPasskeys, setLoadingPasskeys] = useState(false);
+  const [isPasskeySupported, setIsPasskeySupported] = useState(false);
+  const [isAddingPasskey, setIsAddingPasskey] = useState(false);
+  const [passkeyModalOpen, setPasskeyModalOpen] = useState(false);
+  const [passkeyNickName, setPasskeyNickName] = useState('');
+  const [editingPasskey, setEditingPasskey] = useState<PasskeyItem | null>(null);
+  const [renamingPasskeyName, setRenamingPasskeyName] = useState('');
+  const [deletingPasskey, setDeletingPasskey] = useState<PasskeyItem | null>(null);
+  const [newEmail, setNewEmail] = useState('');
+  const [isChangingEmail, setIsChangingEmail] = useState(false);
 
   useEffect(() => {
     async function loadData() {
@@ -209,6 +232,132 @@ export default function ProfilePage() {
       toast.error('Failed to change password.');
     } finally {
       setIsChangingPassword(false);
+    }
+  };
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.PublicKeyCredential) {
+      setIsPasskeySupported(true);
+    }
+  }, []);
+
+  const loadPasskeys = async () => {
+    try {
+      setLoadingPasskeys(true);
+      if (!supabase.auth.passkey) return;
+      const { data, error } = await supabase.auth.passkey.list();
+      if (!error && data) {
+        setPasskeys(data as PasskeyItem[]);
+      }
+    } catch (err) {
+      console.error('Error loading passkeys:', err);
+    } finally {
+      setLoadingPasskeys(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === 'security') {
+      loadPasskeys();
+    }
+  }, [activeTab]);
+
+  const handleAddPasskey = async () => {
+    setIsAddingPasskey(true);
+    try {
+      const { data, error } = await supabase.auth.registerPasskey();
+      if (error) {
+        if (
+          error.name === 'NotAllowedError' ||
+          error.message?.toLowerCase().includes('cancel') ||
+          error.message?.toLowerCase().includes('abort')
+        ) {
+          toast.info('Passkey registration was cancelled.');
+          return;
+        }
+        toast.error(error.message || "Couldn't add this passkey. Please try again or use another sign-in method.");
+        return;
+      }
+
+      if (data?.id && passkeyNickName.trim()) {
+        await supabase.auth.passkey.update({
+          passkeyId: data.id,
+          friendlyName: passkeyNickName.trim(),
+        });
+      }
+
+      toast.success('Passkey added successfully! You can now use it to sign in.');
+      setPasskeyModalOpen(false);
+      setPasskeyNickName('');
+      await loadPasskeys();
+    } catch (err: any) {
+      if (err?.name === 'NotAllowedError') {
+        toast.info('Passkey registration was cancelled.');
+      } else {
+        toast.error(err?.message || "Couldn't add this passkey. Please try again.");
+      }
+    } finally {
+      setIsAddingPasskey(false);
+    }
+  };
+
+  const handleRenamePasskey = async () => {
+    if (!editingPasskey || !renamingPasskeyName.trim()) return;
+    try {
+      const { error } = await supabase.auth.passkey.update({
+        passkeyId: editingPasskey.id,
+        friendlyName: renamingPasskeyName.trim(),
+      });
+      if (error) {
+        toast.error(error.message || 'Failed to rename passkey.');
+        return;
+      }
+      toast.success('Passkey renamed successfully.');
+      setEditingPasskey(null);
+      setRenamingPasskeyName('');
+      await loadPasskeys();
+    } catch {
+      toast.error('Failed to rename passkey.');
+    }
+  };
+
+  const handleDeletePasskey = async () => {
+    if (!deletingPasskey) return;
+    try {
+      const { error } = await supabase.auth.passkey.delete({
+        passkeyId: deletingPasskey.id,
+      });
+      if (error) {
+        toast.error(error.message || 'Failed to delete passkey.');
+        return;
+      }
+      toast.success('Passkey removed.');
+      setDeletingPasskey(null);
+      await loadPasskeys();
+    } catch {
+      toast.error('Failed to delete passkey.');
+    }
+  };
+
+  const handleChangeEmail = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newEmail || !newEmail.includes('@')) {
+      toast.error('Please enter a valid email address.');
+      return;
+    }
+    setIsChangingEmail(true);
+    try {
+      const res = await updateUserEmail(newEmail, window.location.origin);
+      if (res.error) {
+        toast.error(res.error);
+        return;
+      }
+      toast.success(`Confirmation link sent to ${newEmail}. Please verify your new address.`);
+      setNewEmail('');
+    } catch {
+      toast.error('Failed to update email address.');
+    } finally {
+      setIsChangingEmail(false);
     }
   };
 
@@ -753,14 +902,15 @@ export default function ProfilePage() {
       {/* ============================================ */}
       {activeTab === 'security' && (
       <>
+      {/* A. PASSWORD */}
       <div className="bg-card border border-border p-4 sm:p-6 rounded-2xl sm:rounded-3xl space-y-4 shadow-sm">
         <div className="border-b border-border pb-3">
           <h2 className="font-bold text-base text-foreground flex items-center gap-2">
-            <KeyRound className="w-4 h-4 text-primary" />
-            <span>Security & Authentication</span>
+            <Lock className="w-4 h-4 text-primary" />
+            <span>Password</span>
           </h2>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Manage your password and active security sessions via Supabase Auth
+            Update your account password via Supabase Auth
           </p>
         </div>
 
@@ -800,6 +950,261 @@ export default function ProfilePage() {
           </button>
         </form>
       </div>
+
+      {/* B. PASSKEYS */}
+      <div className="bg-card border border-border p-4 sm:p-6 rounded-2xl sm:rounded-3xl space-y-4 shadow-sm">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border pb-4">
+          <div>
+            <h2 className="font-bold text-base text-foreground flex items-center gap-2">
+              <Fingerprint className="w-4 h-4 text-primary" />
+              <span>Passkeys</span>
+            </h2>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Sign in faster with your device biometrics, Windows Hello, PIN, or security key.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => {
+              const defaultName =
+                typeof navigator !== 'undefined' && navigator.userAgent.includes('Windows')
+                  ? 'Windows PC'
+                  : typeof navigator !== 'undefined' && navigator.userAgent.includes('Mac')
+                  ? 'Mac'
+                  : typeof navigator !== 'undefined' && navigator.userAgent.includes('iPhone')
+                  ? 'iPhone'
+                  : typeof navigator !== 'undefined' && navigator.userAgent.includes('Android')
+                  ? 'Android Device'
+                  : 'My Passkey';
+              setPasskeyNickName(defaultName);
+              setPasskeyModalOpen(true);
+            }}
+            disabled={!isPasskeySupported}
+            className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 bg-primary text-primary-foreground text-xs font-semibold rounded-xl hover:bg-primary/90 transition-all cursor-pointer disabled:opacity-50 shadow-sm shrink-0"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Add Passkey</span>
+          </button>
+        </div>
+
+        {!isPasskeySupported ? (
+          <div className="rounded-xl border border-border bg-muted/20 p-4 text-xs text-muted-foreground flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 text-amber-400 shrink-0" />
+            <span>Passkeys are not supported by this browser or platform.</span>
+          </div>
+        ) : loadingPasskeys ? (
+          <div className="py-6 text-center text-xs text-muted-foreground">Loading passkeys...</div>
+        ) : passkeys.length === 0 ? (
+          <div className="py-8 text-center space-y-2 border border-dashed border-border rounded-2xl bg-muted/10">
+            <Fingerprint className="w-8 h-8 text-muted-foreground mx-auto opacity-50" />
+            <p className="text-xs font-semibold text-foreground">No passkeys registered yet</p>
+            <p className="text-[11px] text-muted-foreground max-w-xs mx-auto">
+              Add a passkey to sign in seamlessly without entering your password every time.
+            </p>
+          </div>
+        ) : (
+          <div className="divide-y divide-border">
+            {passkeys.map((pk) => (
+              <div key={pk.id} className="py-3.5 flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-9 h-9 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shrink-0">
+                    <Fingerprint className="w-4 h-4" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-xs font-semibold text-foreground truncate">
+                      {pk.friendly_name || 'Registered Passkey'}
+                    </p>
+                    <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+                      <span>Added {new Date(pk.created_at).toLocaleDateString()}</span>
+                      {pk.last_used_at && (
+                        <>
+                          <span>•</span>
+                          <span>Last used {new Date(pk.last_used_at).toLocaleDateString()}</span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditingPasskey(pk);
+                      setRenamingPasskeyName(pk.friendly_name || '');
+                    }}
+                    className="p-2 hover:bg-muted rounded-lg text-muted-foreground hover:text-foreground transition-colors cursor-pointer text-xs"
+                    title="Rename passkey"
+                  >
+                    <Edit2 className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setDeletingPasskey(pk)}
+                    className="p-2 hover:bg-destructive/10 rounded-lg text-destructive transition-colors cursor-pointer text-xs"
+                    title="Delete passkey"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* C. EMAIL CHANGE */}
+      <div className="bg-card border border-border p-4 sm:p-6 rounded-2xl sm:rounded-3xl space-y-4 shadow-sm">
+        <div className="border-b border-border pb-3">
+          <h2 className="font-bold text-base text-foreground flex items-center gap-2">
+            <Mail className="w-4 h-4 text-primary" />
+            <span>Email Address</span>
+          </h2>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Your current primary login email is <span className="font-medium text-foreground">{authUser?.email || userProfile?.email || 'N/A'}</span>
+          </p>
+        </div>
+
+        <form onSubmit={handleChangeEmail} className="space-y-4 max-w-md pt-1">
+          <div>
+            <label className="text-xs font-semibold text-foreground block mb-1.5">
+              New Email Address
+            </label>
+            <input
+              type="email"
+              value={newEmail}
+              onChange={(e) => setNewEmail(e.target.value)}
+              placeholder="new.email@example.com"
+              className="w-full bg-muted/40 border border-border focus:border-primary rounded-xl px-3.5 py-2 text-xs text-foreground outline-none transition-colors"
+            />
+            <p className="text-[11px] text-muted-foreground mt-1">
+              Supabase Auth will send a confirmation link to your new address to verify ownership.
+            </p>
+          </div>
+
+          <button
+            type="submit"
+            disabled={isChangingEmail || !newEmail}
+            className="inline-flex items-center gap-1.5 px-4 py-2 bg-muted hover:bg-muted/80 text-foreground text-xs font-semibold rounded-xl border border-border transition-all cursor-pointer disabled:opacity-50"
+          >
+            {isChangingEmail ? 'Sending...' : 'Change Email'}
+          </button>
+        </form>
+      </div>
+
+      {/* PASSKEY MODALS */}
+      {passkeyModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+          <div className="bg-[#0b1324] border border-white/10 rounded-2xl p-6 max-w-md w-full space-y-5 shadow-2xl animate-in fade-in zoom-in-95">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-[#168BFF]/15 border border-[#168BFF]/30 flex items-center justify-center text-[#168BFF]">
+                <Fingerprint className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-white">Create a passkey</h3>
+                <p className="text-xs text-[#A8B2C2]">Fast, passwordless authentication</p>
+              </div>
+            </div>
+
+            <p className="text-xs text-[#A8B2C2] leading-relaxed">
+              Use your device&apos;s biometrics (Fingerprint, Touch ID, Windows Hello), PIN, or hardware security key to sign in faster next time.
+            </p>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-white block">Passkey Name</label>
+              <input
+                type="text"
+                value={passkeyNickName}
+                onChange={(e) => setPasskeyNickName(e.target.value)}
+                placeholder="e.g. Windows PC, Mac, Work Laptop"
+                className="w-full bg-[#111D31] border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-[#168BFF]"
+              />
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setPasskeyModalOpen(false)}
+                disabled={isAddingPasskey}
+                className="px-4 py-2 rounded-xl text-xs font-medium text-[#A8B2C2] hover:text-white hover:bg-white/5 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleAddPasskey}
+                disabled={isAddingPasskey}
+                className="px-4 py-2 rounded-xl bg-[#168BFF] text-white text-xs font-semibold hover:bg-[#12CFEA] transition-colors disabled:opacity-50"
+              >
+                {isAddingPasskey ? 'Registering...' : 'Continue'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {editingPasskey && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+          <div className="bg-[#0b1324] border border-white/10 rounded-2xl p-6 max-w-sm w-full space-y-4 shadow-2xl">
+            <h3 className="text-sm font-bold text-white">Rename Passkey</h3>
+            <input
+              type="text"
+              value={renamingPasskeyName}
+              onChange={(e) => setRenamingPasskeyName(e.target.value)}
+              placeholder="Passkey name"
+              className="w-full bg-[#111D31] border border-white/10 rounded-xl px-3.5 py-2 text-xs text-white outline-none focus:border-[#168BFF]"
+              autoFocus
+            />
+            <div className="flex items-center justify-end gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setEditingPasskey(null)}
+                className="px-3 py-1.5 rounded-lg text-xs text-[#A8B2C2] hover:text-white"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleRenamePasskey}
+                className="px-3 py-1.5 rounded-lg bg-[#168BFF] text-white text-xs font-semibold hover:bg-[#12CFEA]"
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {deletingPasskey && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+          <div className="bg-[#0b1324] border border-red-500/20 rounded-2xl p-6 max-w-sm w-full space-y-4 shadow-2xl">
+            <div className="flex items-center gap-2 text-red-400 font-bold text-sm">
+              <AlertCircle className="w-5 h-5 shrink-0" />
+              <span>Remove this passkey?</span>
+            </div>
+            <p className="text-xs text-[#A8B2C2] leading-relaxed">
+              You won&apos;t be able to use <strong className="text-white">{deletingPasskey.friendly_name || 'this passkey'}</strong> to sign in to studchat from that device or authenticator.
+            </p>
+            <div className="flex items-center justify-end gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setDeletingPasskey(null)}
+                className="px-3 py-1.5 rounded-lg text-xs text-[#A8B2C2] hover:text-white"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleDeletePasskey}
+                className="px-3 py-1.5 rounded-lg bg-red-600 text-white text-xs font-semibold hover:bg-red-500"
+              >
+                Remove
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ============================================ */}
       {/* 7. DANGER ZONE */}

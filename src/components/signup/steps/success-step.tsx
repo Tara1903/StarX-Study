@@ -14,26 +14,33 @@ export function SuccessStep({ data }: SuccessStepProps) {
       </div>
       
       <div className="space-y-2">
-        <h2 className="text-3xl font-bold tracking-tight text-white">Account Created!</h2>
-        <p className="text-[#A8B2C2] max-w-[300px] mx-auto leading-relaxed">
-          Welcome to studchat, <br/>
-          <span className="font-semibold text-white">{data.fullName}</span>
+        <h2 className="text-3xl font-bold tracking-tight text-white">Check your email</h2>
+        <p className="text-[#A8B2C2] max-w-[320px] mx-auto leading-relaxed text-sm">
+          Welcome to studchat, <span className="font-semibold text-white">{data.fullName}</span>! We&apos;ve sent a verification link to <span className="font-medium text-white">{data.email}</span>.
         </p>
       </div>
 
-      <div className="p-4 rounded-xl border border-white/5 bg-white/5 w-full text-sm text-[#A8B2C2]">
-        <p>
-          Your academic placement at <strong>{data.universityName}</strong> is confirmed. You can now log in and start connecting.
-        </p>
+      <div className="p-4 rounded-xl border border-white/5 bg-white/5 w-full text-xs text-[#A8B2C2] space-y-1 text-left">
+        <p className="font-medium text-white">Next step:</p>
+        <p>Click the link in the email to verify your address, then sign in to access your classes and study groups.</p>
       </div>
 
-      <Link
-        href="/login"
-        className="group flex w-full items-center justify-center gap-2 rounded-lg bg-[#168BFF] px-4 py-3 text-sm font-medium text-white hover:bg-[#12CFEA] transition-all mt-4"
-      >
-        Continue to Login
-        <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-      </Link>
+      <div className="w-full space-y-3 pt-2">
+        <Link
+          href={`/verify-email?email=${encodeURIComponent(data.email || '')}`}
+          className="group flex w-full items-center justify-center gap-2 rounded-lg bg-[#168BFF] px-4 py-3 text-sm font-medium text-white hover:bg-[#12CFEA] transition-all shadow-sm"
+        >
+          View Verification Details
+          <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+        </Link>
+
+        <Link
+          href="/login"
+          className="flex w-full items-center justify-center rounded-lg border border-white/10 hover:bg-white/5 px-4 py-3 text-sm font-medium text-[#A8B2C2] hover:text-white transition-all"
+        >
+          Return to Login
+        </Link>
+      </div>
     </div>
   );
 }
