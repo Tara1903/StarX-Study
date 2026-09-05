@@ -29,7 +29,7 @@ export interface ChatConversation {
   role?: string;
 }
 
-export type ConversationFilterCategory = 'all' | 'unread' | 'subjects' | 'personal' | 'pinned';
+export type ConversationFilterCategory = 'all' | 'unread' | 'friends' | 'studmates' | 'subjects' | 'personal' | 'pinned';
 
 export function filterConversations(
   conversations: ChatConversation[],
@@ -42,7 +42,7 @@ export function filterConversations(
     list = list.filter((c) => (c.unreadCount || 0) > 0);
   } else if (category === 'subjects') {
     list = list.filter((c) => c.type === 'subject');
-  } else if (category === 'personal') {
+  } else if (category === 'personal' || category === 'friends' || category === 'studmates') {
     list = list.filter((c) => c.type === 'personal');
   } else if (category === 'pinned') {
     list = list.filter((c) => c.isPinned);

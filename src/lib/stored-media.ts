@@ -12,41 +12,7 @@ export interface StoredMediaItem {
 
 const STORAGE_KEY = 'studchat_stored_media';
 
-const DEFAULT_STORED_MEDIA: StoredMediaItem[] = [
-  {
-    id: 'stored-1',
-    url: 'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?auto=format&fit=crop&w=800&q=80',
-    name: 'Quantum_Mechanics_Wave_Function_Formulas.png',
-    type: 'image',
-    size: '1.4 MB',
-    subjectId: 'chemistry',
-    subjectName: 'Chemistry',
-    senderName: 'Prof. Garima Pawar [GP]',
-    savedAt: '2026-09-02T14:30:00Z',
-  },
-  {
-    id: 'stored-2',
-    url: 'https://images.unsplash.com/photo-1509228468518-180dd4864904?auto=format&fit=crop&w=800&q=80',
-    name: 'Matrix_Eigenvalues_Diagonalization_Summary.png',
-    type: 'image',
-    size: '2.1 MB',
-    subjectId: 'math-1',
-    subjectName: 'Mathematics-I',
-    senderName: 'Prof. Ruchi Shrivastava [RS]',
-    savedAt: '2026-09-01T10:15:00Z',
-  },
-  {
-    id: 'stored-3',
-    url: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=800&q=80',
-    name: 'Orthographic_Projection_Drawing_Sheet_Reference.jpg',
-    type: 'image',
-    size: '3.8 MB',
-    subjectId: 'engineering-graphics',
-    subjectName: 'Engineering Graphics',
-    senderName: 'Prof. Vikas Bakshi [VB]',
-    savedAt: '2026-08-30T16:45:00Z',
-  },
-];
+const DEFAULT_STORED_MEDIA: StoredMediaItem[] = [];
 
 export function getStoredMedia(): StoredMediaItem[] {
   if (typeof window === 'undefined') return DEFAULT_STORED_MEDIA;

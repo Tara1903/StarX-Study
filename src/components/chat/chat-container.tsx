@@ -380,6 +380,7 @@ export function ChatContainer({
                     <span>{showPinnedOnly ? 'Show All Messages' : 'Show Pinned Only'}</span>
                   </button>
 
+                  {/* 1. Turn Notifications Off / On */}
                   <button
                     type="button"
                     onClick={() => {
@@ -389,9 +390,10 @@ export function ChatContainer({
                     className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium text-foreground hover:bg-white/5 transition-colors cursor-pointer"
                   >
                     {isMuted ? <BellOff className="w-4 h-4 text-amber-400" /> : <Bell className="w-4 h-4 text-primary" />}
-                    <span>{isMuted ? 'Unmute Notifications' : 'Mute Notifications'}</span>
+                    <span>{isMuted ? 'Turn Notifications On' : 'Turn Notifications Off'}</span>
                   </button>
 
+                  {/* 2. Group / Contact Info */}
                   <button
                     type="button"
                     onClick={() => {
@@ -406,16 +408,56 @@ export function ChatContainer({
 
                   <div className="border-t border-white/10 my-1" />
 
+                  {/* 3. Delete Only Text */}
                   <button
                     type="button"
                     onClick={() => {
-                      setIsDeleteMenuOpen((prev) => !prev);
+                      handleClearOption('chat_only');
+                      setIsMobileActionsOpen(false);
+                    }}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium text-blue-400 hover:bg-blue-500/10 transition-colors cursor-pointer"
+                  >
+                    <MessageSquareText className="w-4 h-4 text-blue-400" />
+                    <span>Delete only text</span>
+                  </button>
+
+                  {/* 4. Delete Only Photos / PDF */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handleClearOption('media_only');
+                      setIsMobileActionsOpen(false);
+                    }}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium text-amber-400 hover:bg-amber-500/10 transition-colors cursor-pointer"
+                  >
+                    <FileImage className="w-4 h-4 text-amber-400" />
+                    <span>Delete only photos/PDF</span>
+                  </button>
+
+                  {/* 5. Delete All Chat (For Me) */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handleClearOption('everything');
                       setIsMobileActionsOpen(false);
                     }}
                     className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium text-destructive hover:bg-destructive/10 transition-colors cursor-pointer"
                   >
                     <Trash2 className="w-4 h-4 text-destructive" />
-                    <span>Clear Chat (for me only)...</span>
+                    <span>Delete all chat (for me)</span>
+                  </button>
+
+                  {/* 6. Delete for Everyone */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsMobileActionsOpen(false);
+                      toast.info('To delete a specific message for everyone, tap options on your message bubble and select "Delete for everyone".');
+                    }}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
+                  >
+                    <Trash2 className="w-4 h-4 text-red-400" />
+                    <span>Delete for everyone</span>
                   </button>
                 </div>
               )}
@@ -477,82 +519,153 @@ export function ChatContainer({
                 <Info className="w-4 h-4" />
               </Button>
 
-              {/* Clear Chat Menu */}
+              {/* More Chat Actions Menu (⋮) */}
               <div className="relative" ref={deleteMenuRef}>
                 <Button
                   variant="ghost"
                   size="icon"
                   onClick={() => setIsDeleteMenuOpen((prev) => !prev)}
-                  title="Clear Chat Options"
+                  title="More options"
                   className={`h-9 w-9 rounded-xl transition-colors cursor-pointer ${
                     isDeleteMenuOpen
-                      ? 'bg-destructive/15 text-destructive'
-                      : 'text-muted-foreground hover:text-destructive hover:bg-destructive/10'
+                      ? 'bg-primary/10 text-primary'
+                      : 'text-muted-foreground hover:text-foreground'
                   }`}
                 >
-                  <Trash2 className="w-4 h-4" />
+                  <MoreVertical className="w-4 h-4" />
                 </Button>
 
-                {/* Dropdown with 3 options */}
+                {/* Dropdown with all sketch actions */}
                 {isDeleteMenuOpen && (
                   <div className="absolute right-0 top-full mt-2 w-72 rounded-2xl bg-[#070E1B] backdrop-blur-xl border border-white/10 shadow-2xl p-2 z-50 animate-in fade-in zoom-in-95">
                     <div className="px-3 py-2 border-b border-white/10 mb-1">
-                      <p className="text-xs font-bold text-foreground">Clear Chat (Personal View)</p>
+                      <p className="text-xs font-bold text-foreground">{subjectName}</p>
                       <p className="text-[11px] text-muted-foreground">
-                        Clears messages on your device without deleting shared class records
+                        Chat options & management
                       </p>
                     </div>
 
+                    {/* 1. Turn notifications off / on */}
                     <button
                       type="button"
-                      onClick={() => handleClearOption('chat_only')}
-                      className="w-full flex items-start gap-3 p-2.5 rounded-xl text-left hover:bg-white/5 transition-colors cursor-pointer group"
+                      onClick={() => {
+                        handleToggleMute();
+                        setIsDeleteMenuOpen(false);
+                      }}
+                      className="w-full flex items-center gap-3 p-2.5 rounded-xl text-left hover:bg-white/5 transition-colors cursor-pointer group"
                     >
-                      <div className="p-2 rounded-lg bg-blue-500/10 text-blue-400 group-hover:bg-blue-500/20 shrink-0 mt-0.5">
-                        <MessageSquareText className="w-4 h-4" />
+                      <div className="p-1.5 rounded-lg bg-white/5 text-primary group-hover:bg-primary/20 shrink-0">
+                        {isMuted ? <BellOff className="w-4 h-4 text-amber-400" /> : <Bell className="w-4 h-4 text-primary" />}
                       </div>
                       <div className="min-w-0 flex-1">
                         <p className="text-xs font-semibold text-foreground group-hover:text-primary transition-colors">
-                          1. Clear text messages only
+                          {isMuted ? 'Turn notifications on' : 'Turn notifications off'}
                         </p>
-                        <p className="text-[11px] text-muted-foreground leading-tight mt-0.5">
-                          Removes text messages, keeps shared media & files
+                        <p className="text-[10px] text-muted-foreground leading-tight">
+                          {isMuted ? 'Unmute alerts for this conversation' : 'Mute alerts for this conversation'}
                         </p>
                       </div>
                     </button>
 
+                    {/* 2. Group / Contact Info */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsGroupInfoOpen(true);
+                        setIsDeleteMenuOpen(false);
+                      }}
+                      className="w-full flex items-center gap-3 p-2.5 rounded-xl text-left hover:bg-white/5 transition-colors cursor-pointer group"
+                    >
+                      <div className="p-1.5 rounded-lg bg-white/5 text-primary group-hover:bg-primary/20 shrink-0">
+                        <Info className="w-4 h-4 text-primary" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs font-semibold text-foreground group-hover:text-primary transition-colors">
+                          {isPersonal ? 'Contact Info' : 'Group Info'}
+                        </p>
+                        <p className="text-[10px] text-muted-foreground leading-tight">
+                          View media, docs, links & members
+                        </p>
+                      </div>
+                    </button>
+
+                    <div className="border-t border-white/10 my-1" />
+
+                    {/* 3. Delete Only Text */}
+                    <button
+                      type="button"
+                      onClick={() => handleClearOption('chat_only')}
+                      className="w-full flex items-center gap-3 p-2.5 rounded-xl text-left hover:bg-white/5 transition-colors cursor-pointer group"
+                    >
+                      <div className="p-1.5 rounded-lg bg-blue-500/10 text-blue-400 group-hover:bg-blue-500/20 shrink-0">
+                        <MessageSquareText className="w-4 h-4" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs font-semibold text-foreground group-hover:text-blue-400 transition-colors">
+                          Delete only text
+                        </p>
+                        <p className="text-[10px] text-muted-foreground leading-tight">
+                          Clears text messages, preserves shared media
+                        </p>
+                      </div>
+                    </button>
+
+                    {/* 4. Delete Only Photos / PDF */}
                     <button
                       type="button"
                       onClick={() => handleClearOption('media_only')}
-                      className="w-full flex items-start gap-3 p-2.5 rounded-xl text-left hover:bg-white/5 transition-colors cursor-pointer group"
+                      className="w-full flex items-center gap-3 p-2.5 rounded-xl text-left hover:bg-white/5 transition-colors cursor-pointer group"
                     >
-                      <div className="p-2 rounded-lg bg-amber-500/10 text-amber-400 group-hover:bg-amber-500/20 shrink-0 mt-0.5">
+                      <div className="p-1.5 rounded-lg bg-amber-500/10 text-amber-400 group-hover:bg-amber-500/20 shrink-0">
                         <FileImage className="w-4 h-4" />
                       </div>
                       <div className="min-w-0 flex-1">
                         <p className="text-xs font-semibold text-foreground group-hover:text-amber-400 transition-colors">
-                          2. Clear media files only
+                          Delete only photos/PDF
                         </p>
-                        <p className="text-[11px] text-muted-foreground leading-tight mt-0.5">
-                          Removes photos & attachments, keeps text messages
+                        <p className="text-[10px] text-muted-foreground leading-tight">
+                          Clears shared photos & PDFs, preserves text
                         </p>
                       </div>
                     </button>
 
+                    {/* 5. Delete All Chat (For Me) */}
                     <button
                       type="button"
                       onClick={() => handleClearOption('everything')}
-                      className="w-full flex items-start gap-3 p-2.5 rounded-xl text-left hover:bg-red-500/10 transition-colors cursor-pointer group border-t border-white/10 mt-1 pt-2"
+                      className="w-full flex items-center gap-3 p-2.5 rounded-xl text-left hover:bg-destructive/10 transition-colors cursor-pointer group"
                     >
-                      <div className="p-2 rounded-lg bg-red-500/10 text-red-400 group-hover:bg-red-500/20 shrink-0 mt-0.5">
+                      <div className="p-1.5 rounded-lg bg-destructive/10 text-destructive group-hover:bg-destructive/20 shrink-0">
+                        <Trash2 className="w-4 h-4 text-destructive" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs font-semibold text-destructive transition-colors">
+                          Delete all chat (for me)
+                        </p>
+                        <p className="text-[10px] text-muted-foreground leading-tight">
+                          Clears all messages & media from your view
+                        </p>
+                      </div>
+                    </button>
+
+                    {/* 6. Delete for Everyone */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsDeleteMenuOpen(false);
+                        toast.info('To delete a specific message for everyone, click options (⋯) on any message you sent and select "Delete for everyone".');
+                      }}
+                      className="w-full flex items-center gap-3 p-2.5 rounded-xl text-left hover:bg-red-500/10 transition-colors cursor-pointer group border-t border-white/10 mt-1 pt-2"
+                    >
+                      <div className="p-1.5 rounded-lg bg-red-500/10 text-red-400 group-hover:bg-red-500/20 shrink-0">
                         <Trash2 className="w-4 h-4 text-red-400" />
                       </div>
                       <div className="min-w-0 flex-1">
                         <p className="text-xs font-semibold text-red-400 group-hover:text-red-300 transition-colors">
-                          3. Clear everything (for me)
+                          Delete for everyone
                         </p>
-                        <p className="text-[11px] text-muted-foreground leading-tight mt-0.5">
-                          Clears all messages & media from your personal view
+                        <p className="text-[10px] text-muted-foreground leading-tight">
+                          Permanently delete your sent messages
                         </p>
                       </div>
                     </button>

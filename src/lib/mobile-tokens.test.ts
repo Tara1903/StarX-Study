@@ -14,17 +14,15 @@ describe('studchat Mobile Web Design System Tokens & Navigation', () => {
     expect(MOBILE_BOTTOM_NAV_HEIGHT).toBe(64);
   });
 
-  it('provides the 5 required primary bottom navigation destinations', () => {
-    expect(PRIMARY_MOBILE_DESTINATIONS).toHaveLength(5);
+  it('provides the 3 required primary bottom navigation destinations (Friend Chat, Study Group, Profile)', () => {
+    expect(PRIMARY_MOBILE_DESTINATIONS).toHaveLength(3);
     const ids = PRIMARY_MOBILE_DESTINATIONS.map((d) => d.id);
-    expect(ids).toEqual(['home', 'chat', 'subjects', 'tasks', 'me']);
+    expect(ids).toEqual(['chat', 'study-groups', 'profile']);
 
     const hrefs = PRIMARY_MOBILE_DESTINATIONS.map((d) => d.href);
     expect(hrefs).toEqual([
-      '/dashboard',
       '/chat',
-      '/subjects',
-      '/assignments',
+      '/study-groups',
       '/profile',
     ]);
   });

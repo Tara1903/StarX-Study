@@ -15,11 +15,9 @@ export interface MobileNavDestination {
 }
 
 export const PRIMARY_MOBILE_DESTINATIONS: MobileNavDestination[] = [
-  { id: 'home', name: 'Home', href: '/dashboard' },
-  { id: 'chat', name: 'Chat', href: '/chat' },
-  { id: 'subjects', name: 'Subjects', href: '/subjects' },
-  { id: 'tasks', name: 'Assignments', href: '/assignments' },
-  { id: 'me', name: 'Profile', href: '/profile' },
+  { id: 'chat', name: 'Friend Chat', href: '/chat' },
+  { id: 'study-groups', name: 'Study Group', href: '/study-groups' },
+  { id: 'profile', name: 'Profile', href: '/profile' },
 ];
 
 /**
@@ -76,8 +74,11 @@ export function getMobileHeaderInfo(pathname: string): {
   if (pathname === '/chat') {
     return { isRoot: true, title: 'Chats', showBack: false, backHref: '/dashboard' };
   }
+  if (pathname === '/study-groups') {
+    return { isRoot: true, title: 'Study Groups', showBack: false, backHref: '/chat' };
+  }
   if (pathname === '/subjects') {
-    return { isRoot: true, title: 'My Subjects', showBack: false, backHref: '/dashboard' };
+    return { isRoot: true, title: 'My Subjects', showBack: false, backHref: '/study-groups' };
   }
   if (pathname === '/assignments') {
     return { isRoot: true, title: 'Assignments', showBack: false, backHref: '/dashboard' };

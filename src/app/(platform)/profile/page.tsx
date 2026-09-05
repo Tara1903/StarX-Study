@@ -41,7 +41,7 @@ import { useUser } from '@/components/providers/user-provider';
 import { UserAvatar } from '@/components/ui/user-avatar';
 import { AvatarSelectorDialog } from '@/components/profile/avatar-selector-dialog';
 import { EditProfileDialog } from '@/components/profile/edit-profile-dialog';
-import { getStoredMedia, removeStoredMediaItem, StoredMediaItem } from '@/lib/stored-media';
+import { getProfileStorageMedia, type StorageMediaItem } from '@/actions/storage';
 import { updateUserPassword } from '@/actions/profile';
 import { toast } from 'sonner';
 import type { Profile } from '@/types';
@@ -65,12 +65,14 @@ export default function ProfilePage() {
   const [isAvatarSelectorOpen, setIsAvatarSelectorOpen] = useState(false);
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
 
-  // Stored Media state
-  const [storedMedia, setStoredMedia] = useState<StoredMediaItem[]>([]);
+  // Storage state: Friends Storage and Studmates Storage
+  const [friendsMedia, setFriendsMedia] = useState<StorageMediaItem[]>([]);
+  const [studmatesMedia, setStudmatesMedia] = useState<StorageMediaItem[]>([]);
+  const [storageScope, setStorageScope] = useState<'friends' | 'studmates'>('friends');
+  const [loadingStorage, setLoadingStorage] = useState(false);
   const [mediaFilter, setMediaFilter] = useState<'all' | 'image' | 'document'>('all');
-  const [subjectFilter, setSubjectFilter] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const [previewImage, setPreviewImage] = useState<StoredMediaItem | null>(null);
+  const [previewStorageItem, setPreviewStorageItem] = useState<StorageMediaItem | null>(null);
 
   // Notification Preferences state
   const [notifPrefs, setNotifPrefs] = useState({
@@ -86,7 +88,7 @@ export default function ProfilePage() {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isChangingPassword, setIsChangingPassword] = useState(false);
-  const [activeTab, setActiveTab] = useState<'overview' | 'media' | 'notifications' | 'security'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'storage' | 'notifications' | 'security'>('overview');
 
   useEffect(() => {
     async function loadData() {
@@ -145,20 +147,22 @@ export default function ProfilePage() {
       }
 
       setLoading(false);
+
+      // Load real storage media (Friends & Studmates)
+      setLoadingStorage(true);
+      try {
+        const res = await getProfileStorageMedia();
+        if (res.success) {
+          setFriendsMedia(res.friendsMedia);
+          setStudmatesMedia(res.studmatesMedia);
+        }
+      } catch (err) {
+        console.error('Error fetching storage media:', err);
+      } finally {
+        setLoadingStorage(false);
+      }
     }
     loadData();
-
-    // Load initial stored media
-    setStoredMedia(getStoredMedia());
-
-    // Listen to stored media updates
-    const handleMediaUpdated = (e: any) => {
-      setStoredMedia(e.detail || getStoredMedia());
-    };
-    window.addEventListener('studchat_media_updated', handleMediaUpdated);
-    return () => {
-      window.removeEventListener('studchat_media_updated', handleMediaUpdated);
-    };
   }, [supabase]);
 
   const handleSignOut = async () => {
@@ -208,47 +212,24 @@ export default function ProfilePage() {
     }
   };
 
-  const handleDeleteStoredMedia = (id: string, name: string) => {
-    removeStoredMediaItem(id);
-    setStoredMedia((prev) => prev.filter((item) => item.id !== id));
-    toast.success(`Removed "${name}" from stored media.`);
-    if (previewImage?.id === id) {
-      setPreviewImage(null);
-    }
-  };
+  const activeScopeMedia = storageScope === 'friends' ? friendsMedia : studmatesMedia;
 
-  const handleDownload = (item: StoredMediaItem) => {
-    window.open(item.url, '_blank');
-    toast.success(`Opening ${item.name}`);
-  };
-
-  // Distinct subjects from stored media
-  const availableSubjects = useMemo(() => {
-    const subjects = new Set<string>();
-    storedMedia.forEach((item) => {
-      if (item.subjectName) subjects.add(item.subjectName);
-    });
-    return Array.from(subjects);
-  }, [storedMedia]);
-
-  // Filtered stored media
-  const filteredMedia = useMemo(() => {
-    return storedMedia.filter((item) => {
-      if (mediaFilter === 'image' && item.type !== 'image') return false;
-      if (mediaFilter === 'document' && item.type === 'image') return false;
-      if (subjectFilter !== 'all' && item.subjectName !== subjectFilter) return false;
+  const filteredStorageMedia = useMemo(() => {
+    return activeScopeMedia.filter((item) => {
+      if (mediaFilter === 'image' && item.category !== 'image') return false;
+      if (mediaFilter === 'document' && item.category === 'image') return false;
 
       if (searchQuery.trim()) {
-        const q = searchQuery.toLowerCase();
-        const matchesName = item.name.toLowerCase().includes(q);
-        const matchesSubject = item.subjectName?.toLowerCase().includes(q) || false;
+        const q = searchQuery.toLowerCase().trim();
+        const matchesName = item.fileName.toLowerCase().includes(q);
         const matchesSender = item.senderName?.toLowerCase().includes(q) || false;
-        if (!matchesName && !matchesSubject && !matchesSender) return false;
+        const matchesSource = item.sourceTitle?.toLowerCase().includes(q) || false;
+        if (!matchesName && !matchesSender && !matchesSource) return false;
       }
 
       return true;
     });
-  }, [storedMedia, mediaFilter, subjectFilter, searchQuery]);
+  }, [activeScopeMedia, mediaFilter, searchQuery]);
 
   if (loading) {
     return (
@@ -382,9 +363,9 @@ export default function ProfilePage() {
       <div className="flex items-center gap-1 border-b border-white/10 sm:border-border pb-px overflow-x-auto scrollbar-none -mx-4 px-4 sm:mx-0 sm:px-0">
         {[
           { id: 'overview', label: 'Profile', icon: User },
-          { id: 'media', label: `Stored Media (${storedMedia.length})`, icon: FolderArchive },
-          { id: 'notifications', label: 'Preferences', icon: BellRing },
+          { id: 'storage', label: `Storage (${friendsMedia.length + studmatesMedia.length})`, icon: FolderArchive },
           { id: 'security', label: 'Security', icon: KeyRound },
+          { id: 'notifications', label: 'Preferences', icon: BellRing },
         ].map((tab) => (
           <button
             key={tab.id}
@@ -551,23 +532,23 @@ export default function ProfilePage() {
       )}
 
       {/* ============================================ */}
-      {/* 4. STORED MEDIA & FILES GALLERY */}
+      {/* 4. COMMUNICATION STORAGE: FRIENDS & STUDMATES */}
       {/* ============================================ */}
-      {activeTab === 'media' && (
+      {activeTab === 'storage' && (
       <div className="bg-card border border-border p-4 sm:p-6 rounded-2xl sm:rounded-3xl space-y-5 shadow-sm">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border pb-4">
           <div>
             <div className="flex items-center gap-2">
               <h2 className="font-bold text-base text-foreground flex items-center gap-2">
                 <FolderArchive className="w-4 h-4 text-primary" />
-                <span>Stored Media & Files</span>
+                <span>Chat Storage</span>
               </h2>
               <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-primary/15 text-primary">
-                {storedMedia.length}
+                {activeScopeMedia.length}
               </span>
             </div>
             <p className="text-xs text-muted-foreground mt-0.5">
-              Resources, photos, and study documents you stored from your subject chats
+              Shared photos, PDFs, and documents from your personal friends and academic studmates
             </p>
           </div>
 
@@ -584,63 +565,84 @@ export default function ProfilePage() {
                     : 'bg-muted/60 text-muted-foreground hover:text-foreground hover:bg-muted'
                 }`}
               >
-                {t === 'all' ? 'All Files' : t === 'image' ? 'Images' : 'Documents'}
+                {t === 'all' ? 'All Files' : t === 'image' ? 'Photos' : 'PDFs & Docs'}
               </button>
             ))}
           </div>
         </div>
 
-        {/* Search & Subject Bar */}
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-          <div className="relative flex-1">
-            <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search stored files by name or teacher..."
-              className="w-full pl-8 pr-3 py-1.5 bg-muted/40 border border-border rounded-xl text-xs text-foreground placeholder:text-muted-foreground outline-none"
-            />
-          </div>
-
-          {availableSubjects.length > 0 && (
-            <select
-              value={subjectFilter}
-              onChange={(e) => setSubjectFilter(e.target.value)}
-              className="bg-muted/40 border border-border rounded-xl px-3 py-1.5 text-xs text-foreground outline-none cursor-pointer"
-            >
-              <option value="all">All Subjects</option>
-              {availableSubjects.map((s) => (
-                <option key={s} value={s}>{s}</option>
-              ))}
-            </select>
-          )}
+        {/* Storage Scope Switcher: Friends Storage vs Studmates Storage */}
+        <div className="flex items-center gap-2 p-1 bg-muted/40 rounded-2xl border border-border w-fit">
+          <button
+            type="button"
+            onClick={() => setStorageScope('friends')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              storageScope === 'friends'
+                ? 'bg-primary text-primary-foreground shadow-sm'
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <User className="w-3.5 h-3.5" />
+            <span>Friends Storage ({friendsMedia.length})</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setStorageScope('studmates')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              storageScope === 'studmates'
+                ? 'bg-primary text-primary-foreground shadow-sm'
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <GraduationCap className="w-3.5 h-3.5" />
+            <span>Studmates Storage ({studmatesMedia.length})</span>
+          </button>
         </div>
 
-        {/* Gallery Grid */}
-        {filteredMedia.length === 0 ? (
+        {/* Search Bar */}
+        <div className="relative">
+          <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder={`Search ${storageScope === 'friends' ? 'friends' : 'studmates'} shared files...`}
+            className="w-full pl-8 pr-3 py-2 bg-muted/40 border border-border rounded-xl text-xs text-foreground placeholder:text-muted-foreground outline-none"
+          />
+        </div>
+
+        {/* Storage Gallery Grid */}
+        {loadingStorage ? (
+          <div className="p-12 text-center text-xs text-muted-foreground">
+            Loading storage items...
+          </div>
+        ) : filteredStorageMedia.length === 0 ? (
           <div className="p-8 text-center border border-dashed rounded-2xl bg-muted/10 flex flex-col items-center justify-center gap-2">
             <FolderArchive className="w-8 h-8 text-muted-foreground" />
-            <p className="text-xs font-semibold text-foreground">No media stored yet</p>
+            <p className="text-xs font-semibold text-foreground">
+              {storageScope === 'friends' ? 'No shared files in Friends storage yet' : 'No shared files in Studmates storage yet'}
+            </p>
             <p className="text-[11px] text-muted-foreground max-w-sm">
-              Click the "Store Media" button on any image or handout in chat to save it here for quick access anytime.
+              {storageScope === 'friends'
+                ? 'Photos, PDFs, and documents shared in your direct personal conversations with friends will automatically appear here.'
+                : 'Photos, PDFs, and documents shared in your subject and study group conversations will automatically appear here.'}
             </p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredMedia.map((item) => (
+            {filteredStorageMedia.map((item) => (
               <div
                 key={item.id}
                 className="bg-muted/20 border border-border rounded-2xl overflow-hidden hover:border-primary/50 transition-all flex flex-col group shadow-sm"
               >
-                {item.type === 'image' ? (
-                  <div 
+                {item.category === 'image' ? (
+                  <div
                     className="h-36 w-full relative bg-muted cursor-pointer overflow-hidden group/img"
-                    onClick={() => setPreviewImage(item)}
+                    onClick={() => setPreviewStorageItem(item)}
                   >
                     <img
-                      src={item.url}
-                      alt={item.name}
+                      src={item.publicUrl}
+                      alt={item.fileName}
                       className="w-full h-full object-cover group-hover/img:scale-105 transition-transform duration-300"
                     />
                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center gap-1.5 text-white text-xs font-semibold">
@@ -652,7 +654,7 @@ export default function ProfilePage() {
                   <div className="h-36 w-full bg-muted/40 flex flex-col items-center justify-center gap-1 p-3 border-b border-border/60">
                     <FileText className="w-8 h-8 text-primary" />
                     <span className="text-[10px] font-mono uppercase font-bold text-muted-foreground">
-                      {item.name.split('.').pop() || 'DOCUMENT'}
+                      {item.fileName.split('.').pop() || 'DOCUMENT'}
                     </span>
                   </div>
                 )}
@@ -661,36 +663,26 @@ export default function ProfilePage() {
                   <div>
                     <div className="flex items-center justify-between gap-1 mb-1">
                       <span className="text-[10px] font-bold text-primary truncate">
-                        {item.subjectName || 'ECE Core'}
+                        {item.sourceTitle}
                       </span>
-                      {item.size && (
-                        <span className="text-[10px] text-muted-foreground">{item.size}</span>
-                      )}
+                      <span className="text-[10px] text-muted-foreground">{item.fileSizeFormatted}</span>
                     </div>
                     <p className="font-semibold text-xs text-foreground truncate group-hover:text-primary transition-colors">
-                      {item.name}
+                      {item.fileName}
                     </p>
                     <p className="text-[11px] text-muted-foreground mt-0.5 truncate">
-                      From {item.senderName || 'Class'}
+                      From {item.senderName}
                     </p>
                   </div>
 
                   <div className="flex items-center gap-2 pt-2 border-t border-border/60">
                     <button
                       type="button"
-                      onClick={() => handleDownload(item)}
+                      onClick={() => window.open(item.publicUrl, '_blank')}
                       className="flex-1 flex items-center justify-center gap-1 py-1 px-2 rounded-lg bg-primary/10 hover:bg-primary text-primary hover:text-primary-foreground text-xs font-semibold transition-colors cursor-pointer"
                     >
                       <Download className="w-3 h-3" />
-                      <span>Download</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleDeleteStoredMedia(item.id, item.name)}
-                      className="p-1 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors cursor-pointer"
-                      title="Remove"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
+                      <span>Open / Download</span>
                     </button>
                   </div>
                 </div>
@@ -865,10 +857,10 @@ export default function ProfilePage() {
       />
 
       {/* Fullscreen Image Preview Lightbox */}
-      {previewImage && (
+      {previewStorageItem && (
         <div 
           className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 sm:p-8 animate-in fade-in"
-          onClick={() => setPreviewImage(null)}
+          onClick={() => setPreviewStorageItem(null)}
         >
           <div 
             className="relative max-w-4xl w-full bg-card rounded-3xl overflow-hidden border border-border shadow-2xl flex flex-col max-h-[90vh]"
@@ -876,16 +868,16 @@ export default function ProfilePage() {
           >
             <div className="p-4 border-b border-border flex items-center justify-between gap-4 bg-muted/30">
               <div className="min-w-0">
-                <h3 className="font-bold text-sm text-foreground truncate">{previewImage.name}</h3>
+                <h3 className="font-bold text-sm text-foreground truncate">{previewStorageItem.fileName}</h3>
                 <p className="text-xs text-muted-foreground">
-                  {previewImage.subjectName} • Saved {new Date(previewImage.savedAt).toLocaleDateString()}
+                  {previewStorageItem.sourceTitle} • From {previewStorageItem.senderName} • {new Date(previewStorageItem.createdAt).toLocaleDateString()}
                 </p>
               </div>
 
               <div className="flex items-center gap-2 shrink-0">
                 <button
                   type="button"
-                  onClick={() => handleDownload(previewImage)}
+                  onClick={() => window.open(previewStorageItem.publicUrl, '_blank')}
                   className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-primary text-primary-foreground text-xs font-semibold hover:bg-primary/90 transition-all cursor-pointer"
                 >
                   <Download className="w-3.5 h-3.5" />
@@ -893,7 +885,7 @@ export default function ProfilePage() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setPreviewImage(null)}
+                  onClick={() => setPreviewStorageItem(null)}
                   className="p-1.5 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
                 >
                   <X className="w-5 h-5" />
@@ -903,8 +895,8 @@ export default function ProfilePage() {
 
             <div className="flex-1 overflow-auto p-4 flex items-center justify-center bg-black/40">
               <img
-                src={previewImage.url}
-                alt={previewImage.name}
+                src={previewStorageItem.publicUrl}
+                alt={previewStorageItem.fileName}
                 className="max-h-[65vh] w-auto max-w-full object-contain rounded-xl shadow-lg"
               />
             </div>

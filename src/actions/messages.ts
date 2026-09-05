@@ -483,3 +483,38 @@ export async function updateReadCursor(destinationId: string, messageId: string)
   return { success: false, error: 'Invalid destination ID' };
 }
 
+export async function deleteMessageForEveryone(messageId: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: 'Not authenticated' };
+
+  // Fetch message to verify ownership
+  const { data: message } = await supabase
+    .from('messages')
+    .select('id, sender_id, subject_id, conversation_id')
+    .eq('id', messageId)
+    .single();
+
+  if (!message) return { success: false, error: 'Message not found' };
+
+  if (message.sender_id !== user.id) {
+    return { success: false, error: 'You can only delete your own messages for everyone' };
+  }
+
+  const { error } = await supabase
+    .from('messages')
+    .delete()
+    .eq('id', messageId);
+
+  if (error) return { success: false, error: error.message };
+
+  if (message.subject_id) {
+    revalidatePath(`/subjects/${message.subject_id}/chat`);
+  }
+  if (message.conversation_id) {
+    revalidatePath(`/chat/${message.conversation_id}`);
+  }
+
+  return { success: true };
+}
+

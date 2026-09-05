@@ -51,6 +51,7 @@ export function Sidebar() {
   const navItems = [
     { name: 'Home', href: ROUTES.DASHBOARD, icon: LayoutDashboard },
     { name: 'Chat', href: ROUTES.CHAT, icon: MessageSquare },
+    { name: 'Study Groups', href: '/study-groups', icon: Users },
     { name: 'Subjects', href: ROUTES.SUBJECTS, icon: BookOpen },
     { name: 'Assignments', href: ROUTES.ASSIGNMENTS, icon: ClipboardList },
     { name: 'Announcements', href: ROUTES.ANNOUNCEMENTS, icon: Megaphone },

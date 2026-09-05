@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, MessageSquare, BookOpen, ClipboardList, User } from 'lucide-react';
+import { MessageSquare, Users, User } from 'lucide-react';
 import { isSubjectChatRoute } from '@/lib/mobile-tokens';
 import { useUser } from '@/components/providers/user-provider';
 import { UserAvatar } from '@/components/ui/user-avatar';
@@ -25,42 +25,36 @@ export function MobileNav() {
     matchPrefix?: boolean;
     useAvatar?: boolean;
     badge?: number;
+    matchCustom?: (path: string) => boolean;
   }
 
   const items: MobileNavItem[] = [
     {
-      id: 'home',
-      name: 'Home',
-      href: '/dashboard',
-      icon: LayoutDashboard,
-    },
-    {
       id: 'chat',
-      name: 'Chat',
+      name: 'Friend Chat',
       href: '/chat',
       icon: MessageSquare,
       matchPrefix: true,
     },
     {
-      id: 'subjects',
-      name: 'Subjects',
-      href: '/subjects',
-      icon: BookOpen,
+      id: 'study-groups',
+      name: 'Study Group',
+      href: '/study-groups',
+      icon: Users,
       matchPrefix: true,
+      matchCustom: (path: string) =>
+        path === '/study-groups' ||
+        path.startsWith('/study-groups/') ||
+        path === '/subjects' ||
+        path.startsWith('/subjects/'),
     },
     {
-      id: 'tasks',
-      name: 'Assignments',
-      href: '/assignments',
-      icon: ClipboardList,
-      matchPrefix: true,
-    },
-    {
-      id: 'me',
+      id: 'profile',
       name: 'Profile',
       href: '/profile',
       icon: User,
       useAvatar: true,
+      matchPrefix: true,
     },
   ];
 
@@ -69,9 +63,11 @@ export function MobileNav() {
       aria-label="Mobile Bottom Navigation"
       className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#050B16]/95 backdrop-blur-md border-t border-white/10 pb-safe shadow-2xl"
     >
-      <div className="flex items-center justify-around h-16 px-1 max-w-lg mx-auto">
+      <div className="flex items-center justify-around h-16 px-2 max-w-lg mx-auto">
         {items.map((item) => {
-          const isActive = item.matchPrefix
+          const isActive = item.matchCustom
+            ? item.matchCustom(pathname) && !isSubjectChatRoute(pathname)
+            : item.matchPrefix
             ? pathname === item.href || (pathname.startsWith(item.href + '/') && !isSubjectChatRoute(pathname))
             : pathname === item.href;
 
