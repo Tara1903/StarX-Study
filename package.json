@@ -15,7 +15,8 @@
     "test:e2e:ui": "playwright test --ui",
     "db:push": "supabase db push --yes",
     "db:status": "supabase migration list",
-    "db:new": "supabase migration new"
+    "db:new": "supabase migration new",
+    "auth:sync-templates": "node scripts/sync-email-templates.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.9.1",
