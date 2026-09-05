@@ -10,6 +10,8 @@ import { useUser } from '@/components/providers/user-provider';
 import { TypingIndicator } from './typing-indicator';
 import { useTypingIndicator } from '@/hooks/use-typing-indicator';
 
+import { sanitizeFileName, validateAttachment } from '@/lib/security';
+
 interface MessageInputProps {
   subjectId: string;
   replyTo: MessageWithSender | null;
@@ -40,21 +42,31 @@ export function MessageInput({ subjectId, replyTo, onCancelReply, onMessageSent 
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Check size limit (10MB)
-    if (file.size > 10 * 1024 * 1024) {
-      toast.error('File size exceeds 10 MB limit');
+    // Validate size and file extension / type using security utility
+    const validation = validateAttachment({
+      name: file.name,
+      size: file.size,
+      type: file.type,
+      maxSizeBytes: 15 * 1024 * 1024, // 15 MB limit
+    });
+
+    if (!validation.valid) {
+      toast.error(validation.error || 'Invalid file format or size');
+      e.target.value = '';
       return;
     }
+
+    const safeName = sanitizeFileName(file.name);
 
     const reader = new FileReader();
     reader.onload = (event) => {
       setSelectedFile({
-        name: file.name,
+        name: safeName,
         url: event.target?.result as string,
         type: file.type || 'application/octet-stream',
         size: file.size,
       });
-      toast.success(`Attached: ${file.name}`);
+      toast.success(`Attached: ${safeName}`);
     };
     reader.readAsDataURL(file);
     e.target.value = '';

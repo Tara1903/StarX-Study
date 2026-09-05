@@ -34,7 +34,13 @@ export function TermsStep({ data, onNext, onPrev }: TermsStepProps) {
         },
       });
 
-      if (authError) throw new Error(authError.message);
+      if (authError) {
+        const msg = authError.message.toLowerCase();
+        if (authError.status === 429 || msg.includes('rate limit') || msg.includes('too many requests')) {
+          throw new Error('Too many attempts right now. Please wait a moment and try again.');
+        }
+        throw new Error(authError.message);
+      }
 
       // In Supabase, if an email already exists and email confirmation is enabled,
       // identities array is empty rather than returning an error to prevent user enumeration.

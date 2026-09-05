@@ -34,6 +34,10 @@ export default function ForgotPasswordPage() {
       );
 
       if (resetError) {
+        const msg = resetError.message.toLowerCase();
+        if (resetError.status === 429 || msg.includes('rate limit') || msg.includes('too many requests')) {
+          throw new Error('Too many attempts right now. Please wait a moment and try again.');
+        }
         throw new Error(resetError.message);
       }
 
@@ -58,7 +62,7 @@ export default function ForgotPasswordPage() {
         <div>
           <h2 className="text-2xl font-bold text-white">Check your email</h2>
           <p className="mt-2 text-[#A8B2C2]">
-            We&apos;ve sent a password reset link to <span className="font-medium text-white">{email}</span>.
+            If an account exists for <span className="font-medium text-white">{email}</span>, we&apos;ve sent a password reset link to your inbox.
           </p>
         </div>
         <Link

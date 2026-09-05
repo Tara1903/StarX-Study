@@ -414,6 +414,10 @@ export async function addGroupMemberAction(conversationId: string, memberId: str
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { success: false, error: 'Not authenticated' };
 
+  if (!memberId || !isUuid(memberId)) {
+    return { success: false, error: 'Invalid member ID' };
+  }
+
   const subject = await resolveSubject(conversationId, supabase);
   if (subject) {
     const { data: member } = await supabase
@@ -437,6 +441,32 @@ export async function addGroupMemberAction(conversationId: string, memberId: str
 
     if (!isAuthorized) {
       return { success: false, error: 'Unauthorized: Only faculty and institute heads can add participants.' };
+    }
+
+    // Verify institution isolation: target member must belong to this university
+    if (subject.universityId) {
+      const { data: targetUniMember } = await supabase
+        .from('university_memberships')
+        .select('id')
+        .eq('university_id', subject.universityId)
+        .eq('user_id', memberId)
+        .maybeSingle();
+
+      if (!targetUniMember) {
+        return { success: false, error: 'Target user does not belong to this institution' };
+      }
+    }
+
+    // Check if already enrolled
+    const { data: existingSubMember } = await supabase
+      .from('subject_members')
+      .select('id')
+      .eq('subject_id', subject.uuid)
+      .eq('user_id', memberId)
+      .maybeSingle();
+
+    if (existingSubMember) {
+      return { success: false, error: 'User is already enrolled in this subject' };
     }
 
     const { error: insertError } = await supabase

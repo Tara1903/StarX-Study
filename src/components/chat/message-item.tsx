@@ -24,6 +24,7 @@ import { toggleReaction, pinMessage, deleteMessage } from '@/actions/messages';
 import { saveMediaItem, isMediaStored, removeStoredMediaItem } from '@/lib/stored-media';
 import { toast } from 'sonner';
 import { MessageActionSheet } from './message-action-sheet';
+import { isSafeUrl } from '@/lib/security';
 
 interface MessageItemProps {
   message: MessageWithSender;
@@ -132,7 +133,8 @@ export const MessageItem = memo(function MessageItem({
   };
 
   // Helper to extract image URL from content if sent as link
-  const detectedImageUrl = message.content.match(/https?:\/\/\S+\.(?:png|jpg|jpeg|gif|webp)/i)?.[0];
+  const rawImageUrl = message.content.match(/https?:\/\/\S+\.(?:png|jpg|jpeg|gif|webp)/i)?.[0];
+  const detectedImageUrl = rawImageUrl && isSafeUrl(rawImageUrl) ? rawImageUrl : null;
 
   const handleStoreDirectContent = () => {
     const url = detectedImageUrl || 'https://images.unsplash.com/photo-1509228468518-180dd4864904?auto=format&fit=crop&w=800&q=80';

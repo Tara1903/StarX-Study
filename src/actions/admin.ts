@@ -9,7 +9,24 @@ export async function createUniversity(formData: FormData) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { success: false, error: 'Not authenticated' };
 
-  const name = formData.get('name') as string;
+  // Verify platform super admin authorization
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role, is_super_admin')
+    .eq('id', user.id)
+    .single();
+
+  const isSuperAdmin = profile?.is_super_admin === true || profile?.role === 'super_admin';
+  if (!isSuperAdmin) {
+    return { success: false, error: 'Unauthorized: Only platform administrators can create institutions' };
+  }
+
+  const rawName = (formData.get('name') as string) || '';
+  const name = rawName.trim();
+  if (!name || name.length < 2 || name.length > 100) {
+    return { success: false, error: 'Institution name must be between 2 and 100 characters' };
+  }
+
   const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
   const { data: university, error } = await supabase.from('universities').insert({ name, slug }).select().single();
   

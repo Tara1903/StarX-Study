@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { getOrCreatePersonalConversation } from '@/actions/conversations';
 import { revalidatePath } from 'next/cache';
+import { isUuid } from '@/lib/subject-resolver';
 
 export interface FriendItem {
   id: string; // user profile id
@@ -153,11 +154,26 @@ export async function addFriend(friendUserId: string): Promise<{
     return { success: false, error: 'Not authenticated' };
   }
 
+  if (!friendUserId || !isUuid(friendUserId)) {
+    return { success: false, error: 'Invalid user ID' };
+  }
+
   if (user.id === friendUserId) {
     return { success: false, error: 'Cannot add yourself as a friend' };
   }
 
   try {
+    // Verify target user actually exists
+    const { data: targetProfile } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('id', friendUserId)
+      .maybeSingle();
+
+    if (!targetProfile) {
+      return { success: false, error: 'User not found' };
+    }
+
     // Check if already friends
     const { data: existing } = await supabase
       .from('user_friends')
@@ -205,6 +221,10 @@ export async function removeFriend(friendUserId: string): Promise<{
     return { success: false, error: 'Not authenticated' };
   }
 
+  if (!friendUserId || !isUuid(friendUserId)) {
+    return { success: false, error: 'Invalid user ID' };
+  }
+
   try {
     const { error } = await supabase
       .from('user_friends')
@@ -220,6 +240,7 @@ export async function removeFriend(friendUserId: string): Promise<{
     revalidatePath('/profile');
     return { success: true };
   } catch (err: any) {
+    console.error('Error in removeFriend:', err);
     return { success: false, error: err.message };
   }
 }

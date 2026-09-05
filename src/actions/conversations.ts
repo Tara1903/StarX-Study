@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import type { ChatConversation } from '@/lib/conversations';
 import { formatRelativeTime } from '@/lib/utils';
 import { revalidatePath } from 'next/cache';
+import { isUuid } from '@/lib/subject-resolver';
 
 export async function getUserConversations(): Promise<{
   success: boolean;
@@ -306,11 +307,26 @@ export async function getOrCreatePersonalConversation(targetUserId: string): Pro
     return { success: false, error: 'Not authenticated' };
   }
 
+  if (!targetUserId || !isUuid(targetUserId)) {
+    return { success: false, error: 'Invalid user ID' };
+  }
+
   if (user.id === targetUserId) {
     return { success: false, error: 'Cannot create conversation with yourself' };
   }
 
   try {
+    // Verify target user actually exists
+    const { data: targetProfile } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('id', targetUserId)
+      .maybeSingle();
+
+    if (!targetProfile) {
+      return { success: false, error: 'User not found' };
+    }
+
     // 1. Check if a personal conversation already exists between user.id and targetUserId
     const { data: myConvs } = await supabase
       .from('conversation_participants')

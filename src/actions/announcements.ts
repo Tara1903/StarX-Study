@@ -23,7 +23,52 @@ export async function createAnnouncement(formData: FormData) {
     .single();
 
   if (!member || (member.role !== 'institute_head' && member.role !== 'teacher')) {
-    return { success: false, error: 'Unauthorized' };
+    return { success: false, error: 'Unauthorized: Only faculty and institute heads can create announcements' };
+  }
+
+  // Server-side validation of target_type and target_id (Requirement 79)
+  if (target_type === 'subject') {
+    const { data: subject } = await supabase
+      .from('subjects')
+      .select('id, university_id')
+      .eq('id', target_id)
+      .eq('university_id', university_id)
+      .maybeSingle();
+
+    if (!subject) {
+      return { success: false, error: 'Invalid target: Subject not found in this institution' };
+    }
+
+    if (member.role === 'teacher') {
+      const { data: subMember } = await supabase
+        .from('subject_members')
+        .select('id')
+        .eq('subject_id', target_id)
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (!subMember) {
+        return { success: false, error: 'Unauthorized: You are not assigned to this target subject' };
+      }
+    }
+  } else if (target_type === 'department') {
+    const { data: dept } = await supabase
+      .from('departments')
+      .select('id')
+      .eq('id', target_id)
+      .eq('university_id', university_id)
+      .maybeSingle();
+
+    if (!dept) {
+      return { success: false, error: 'Invalid target: Department not found in this institution' };
+    }
+  } else if (target_type === 'university') {
+    if (target_id !== university_id) {
+      return { success: false, error: 'Invalid target: Target ID must match institution ID' };
+    }
+    if (member.role !== 'institute_head') {
+      return { success: false, error: 'Only institute heads can publish institution-wide announcements' };
+    }
   }
 
   const { data: announcement, error } = await supabase.from('announcements').insert({

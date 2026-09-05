@@ -34,18 +34,18 @@ const FORBIDDEN_FIELDS = [
 
 export async function updateProfile(data: Record<string, unknown>) {
   try {
+    // 1. Strict Security Check: Reject forbidden privilege escalation fields immediately
+    for (const key of Object.keys(data)) {
+      if (FORBIDDEN_FIELDS.includes(key)) {
+        return { error: `Security violation: Field '${key}' cannot be modified by user.` };
+      }
+    }
+
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) {
       return { error: "Unauthorized. Please sign in again." };
-    }
-
-    // 1. Strict Security Check: Reject forbidden privilege escalation fields
-    for (const key of Object.keys(data)) {
-      if (FORBIDDEN_FIELDS.includes(key)) {
-        return { error: `Security violation: Field '${key}' cannot be modified by user.` };
-      }
     }
 
     // 2. Filter input to strictly allowed whitelist

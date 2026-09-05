@@ -56,6 +56,10 @@ function VerifyEmailContent() {
       });
 
       if (error) {
+        const msg = error.message.toLowerCase();
+        if (error.status === 429 || msg.includes('rate limit') || msg.includes('too many requests')) {
+          throw new Error('Too many attempts right now. Please wait a moment and try again.');
+        }
         throw new Error(error.message);
       }
 

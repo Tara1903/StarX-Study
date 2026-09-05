@@ -64,7 +64,9 @@ function LoginContent() {
 
       if (error) {
         const msg = error.message.toLowerCase();
-        if (msg.includes('email not confirmed')) {
+        if (error.status === 429 || msg.includes('rate limit') || msg.includes('too many requests')) {
+          throw new Error('Too many attempts right now. Please wait a moment and try again.');
+        } else if (msg.includes('email not confirmed')) {
           setUnconfirmedEmail(validatedData.email);
           throw new Error('Please verify your email address before signing in.');
         } else if (msg.includes('invalid login credentials') || msg.includes('invalid credentials')) {
