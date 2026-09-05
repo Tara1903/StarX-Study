@@ -30,44 +30,64 @@ export default async function SubjectsPage() {
     // 1. INSTITUTE HEAD: ALL UNIVERSITY SUBJECTS
     // ==============================================
     if (userRole === 'institute_head' && universityId) {
-      const { data: dbSubjects } = await supabase
-        .from('subjects')
-        .select(`
-          id,
-          name,
-          color,
-          icon,
-          description,
-          semester:semesters(
+      // Parallelize fetching subjects, teachers, and semesters
+      const [subjectsRes, teachersRes, semestersRes] = await Promise.all([
+        supabase
+          .from('subjects')
+          .select(`
+            id,
+            name,
+            color,
+            icon,
+            description,
+            semester:semesters(
+              id,
+              name,
+              department:departments(name, code)
+            ),
+            teachers:subject_members(
+              id,
+              role,
+              user_id,
+              profile:profiles(id, full_name)
+            )
+          `)
+          .eq('university_id', universityId)
+          .order('name', { ascending: true }),
+        supabase
+          .from('university_memberships')
+          .select(`
+            user_id,
+            profile:profiles(id, full_name)
+          `)
+          .eq('university_id', universityId)
+          .eq('role', 'teacher'),
+        supabase
+          .from('semesters')
+          .select(`
             id,
             name,
             department:departments(name, code)
-          ),
-          teachers:subject_members(
-            id,
-            role,
-            user_id,
-            profile:profiles(id, full_name)
-          )
-        `)
-        .eq('university_id', universityId)
-        .order('name', { ascending: true });
+          `)
+          .eq('university_id', universityId),
+      ]);
+
+      const dbSubjects = subjectsRes.data;
 
       if (dbSubjects && dbSubjects.length > 0) {
         const subjectIds = dbSubjects.map((s: any) => s.id);
 
-        // Count students per subject
-        const countPromises = subjectIds.map(async (subId: string) => {
-          const { count } = await supabase
-            .from('subject_members')
-            .select('id', { count: 'exact', head: true })
-            .eq('subject_id', subId)
-            .eq('role', 'student');
-          return { subId, count: count || 0 };
-        });
+        // Batched count of students per subject in 1 single query instead of N+1
+        const { data: studentMembers } = await supabase
+          .from('subject_members')
+          .select('subject_id')
+          .in('subject_id', subjectIds)
+          .eq('role', 'student');
 
-        const counts = await Promise.all(countPromises);
-        const countMap = new Map(counts.map((c) => [c.subId, c.count]));
+        const countMap = new Map<string, number>();
+        studentMembers?.forEach((m: any) => {
+          countMap.set(m.subject_id, (countMap.get(m.subject_id) || 0) + 1);
+        });
 
         subjectsData = dbSubjects.map((s: any) => {
           const teacherMember = Array.isArray(s.teachers)
@@ -102,35 +122,15 @@ export default async function SubjectsPage() {
         });
       }
 
-      // Fetch teachers for assignment modal
-      const { data: dbTeachers } = await supabase
-        .from('university_memberships')
-        .select(`
-          user_id,
-          profile:profiles(id, full_name)
-        `)
-        .eq('university_id', universityId)
-        .eq('role', 'teacher');
-
-      if (dbTeachers) {
-        availableTeachers = dbTeachers.map((t: any) => ({
+      if (teachersRes.data) {
+        availableTeachers = teachersRes.data.map((t: any) => ({
           id: t.user_id,
           name: t.profile?.full_name || 'Faculty Member',
         }));
       }
 
-      // Fetch semesters for subject creation
-      const { data: dbSemesters } = await supabase
-        .from('semesters')
-        .select(`
-          id,
-          name,
-          department:departments(name, code)
-        `)
-        .eq('university_id', universityId);
-
-      if (dbSemesters) {
-        availableSemesters = dbSemesters.map((sem: any) => ({
+      if (semestersRes.data) {
+        availableSemesters = semestersRes.data.map((sem: any) => ({
           id: sem.id,
           name: sem.name,
           deptName: sem.department?.name || 'Academic Dept',
@@ -164,54 +164,45 @@ export default async function SubjectsPage() {
       if (dbMemberships && dbMemberships.length > 0) {
         const subjectIds = dbMemberships.map((m: any) => m.subject.id);
 
-        // Get unread counts
-        const { data: cursors } = await supabase
-          .from('message_read_cursors')
-          .select('subject_id, last_read_at')
-          .eq('user_id', user.id)
-          .in('subject_id', subjectIds);
+        // Fetch cursors, student counts, and recent messages in parallel single batched queries
+        const [cursorsRes, studentMembersRes, recentMsgsRes] = await Promise.all([
+          supabase
+            .from('message_read_cursors')
+            .select('subject_id, last_read_at')
+            .eq('user_id', user.id)
+            .in('subject_id', subjectIds),
+          supabase
+            .from('subject_members')
+            .select('subject_id')
+            .in('subject_id', subjectIds)
+            .eq('role', 'student'),
+          supabase
+            .from('messages')
+            .select('id, subject_id, created_at')
+            .in('subject_id', subjectIds)
+            .eq('status', 'published')
+            .order('created_at', { ascending: false })
+            .limit(subjectIds.length * 10),
+        ]);
 
         const cursorMap = new Map<string, string>();
-        cursors?.forEach((c: any) => {
+        cursorsRes.data?.forEach((c: any) => {
           cursorMap.set(c.subject_id, c.last_read_at);
         });
 
-        const unreadPromises = subjectIds.map(async (subId: string) => {
-          const lastReadAt = cursorMap.get(subId);
-          let countQuery = supabase
-            .from('messages')
-            .select('id', { count: 'exact', head: true })
-            .eq('subject_id', subId)
-            .eq('status', 'published');
-
-          if (lastReadAt) {
-            countQuery = countQuery.gt('created_at', lastReadAt);
-          }
-
-          const { count } = await countQuery;
-          return { subId, count: count || 0 };
+        const studentCountMap = new Map<string, number>();
+        studentMembersRes.data?.forEach((m: any) => {
+          studentCountMap.set(m.subject_id, (studentCountMap.get(m.subject_id) || 0) + 1);
         });
-
-        // Get student counts
-        const studentCountPromises = subjectIds.map(async (subId: string) => {
-          const { count } = await supabase
-            .from('subject_members')
-            .select('id', { count: 'exact', head: true })
-            .eq('subject_id', subId)
-            .eq('role', 'student');
-          return { subId, count: count || 0 };
-        });
-
-        const [unreadResults, studentCountResults] = await Promise.all([
-          Promise.all(unreadPromises),
-          Promise.all(studentCountPromises),
-        ]);
 
         const unreadCountMap = new Map<string, number>();
-        unreadResults.forEach((r) => unreadCountMap.set(r.subId, r.count));
-
-        const studentCountMap = new Map<string, number>();
-        studentCountResults.forEach((r) => studentCountMap.set(r.subId, r.count));
+        recentMsgsRes.data?.forEach((m: any) => {
+          if (!m.subject_id) return;
+          const lastRead = cursorMap.get(m.subject_id);
+          if (!lastRead || new Date(m.created_at) > new Date(lastRead)) {
+            unreadCountMap.set(m.subject_id, (unreadCountMap.get(m.subject_id) || 0) + 1);
+          }
+        });
 
         subjectsData = dbMemberships.map((m: any) => {
           const s = m.subject;
@@ -266,36 +257,35 @@ export default async function SubjectsPage() {
       if (!error && dbMemberships && dbMemberships.length > 0) {
         const subjectIds = dbMemberships.map((m: any) => m.subject.id);
         
-        const { data: cursors } = await supabase
-          .from('message_read_cursors')
-          .select('subject_id, last_read_at')
-          .eq('user_id', user.id)
-          .in('subject_id', subjectIds);
+        // Parallelize read cursors and recent messages batch queries
+        const [cursorsRes, recentMsgsRes] = await Promise.all([
+          supabase
+            .from('message_read_cursors')
+            .select('subject_id, last_read_at')
+            .eq('user_id', user.id)
+            .in('subject_id', subjectIds),
+          supabase
+            .from('messages')
+            .select('id, subject_id, created_at')
+            .in('subject_id', subjectIds)
+            .eq('status', 'published')
+            .order('created_at', { ascending: false })
+            .limit(subjectIds.length * 10),
+        ]);
 
         const cursorMap = new Map<string, string>();
-        cursors?.forEach((c: any) => {
+        cursorsRes.data?.forEach((c: any) => {
           cursorMap.set(c.subject_id, c.last_read_at);
         });
 
-        const unreadPromises = subjectIds.map(async (subId: string) => {
-          const lastReadAt = cursorMap.get(subId);
-          let countQuery = supabase
-            .from('messages')
-            .select('id', { count: 'exact', head: true })
-            .eq('subject_id', subId)
-            .eq('status', 'published');
-
-          if (lastReadAt) {
-            countQuery = countQuery.gt('created_at', lastReadAt);
-          }
-
-          const { count } = await countQuery;
-          return { subId, count: count || 0 };
-        });
-
-        const unreadResults = await Promise.all(unreadPromises);
         const unreadCountMap = new Map<string, number>();
-        unreadResults.forEach((r) => unreadCountMap.set(r.subId, r.count));
+        recentMsgsRes.data?.forEach((m: any) => {
+          if (!m.subject_id) return;
+          const lastRead = cursorMap.get(m.subject_id);
+          if (!lastRead || new Date(m.created_at) > new Date(lastRead)) {
+            unreadCountMap.set(m.subject_id, (unreadCountMap.get(m.subject_id) || 0) + 1);
+          }
+        });
 
         subjectsData = dbMemberships.map((m: any) => {
           const s = m.subject;

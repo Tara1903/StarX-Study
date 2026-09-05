@@ -56,32 +56,32 @@ export default async function SubjectAssignmentsPage({ params }: PageProps) {
   let assignments: AssignmentListItem[] = [];
 
   try {
-    const { data: dbAssignments } = await supabase
-      .from('assignments')
-      .select(`
-        id,
-        subject_id,
-        title,
-        description,
-        due_date,
-        max_marks,
-        submissions:assignment_submissions(
+    const [{ data: dbAssignments }, { count: studentCount }] = await Promise.all([
+      supabase
+        .from('assignments')
+        .select(`
           id,
-          student_id,
-          status,
-          marks,
-          submitted_at
-        )
-      `)
-      .eq('subject_id', subject.uuid)
-      .order('due_date', { ascending: true });
-
-    // Total enrolled students in this subject
-    const { count: studentCount } = await supabase
-      .from('subject_members')
-      .select('id', { count: 'exact', head: true })
-      .eq('subject_id', subject.uuid)
-      .eq('role', 'student');
+          subject_id,
+          title,
+          description,
+          due_date,
+          max_marks,
+          submissions:assignment_submissions(
+            id,
+            student_id,
+            status,
+            marks,
+            submitted_at
+          )
+        `)
+        .eq('subject_id', subject.uuid)
+        .order('due_date', { ascending: true }),
+      supabase
+        .from('subject_members')
+        .select('id', { count: 'exact', head: true })
+        .eq('subject_id', subject.uuid)
+        .eq('role', 'student'),
+    ]);
 
     const totalStudents = studentCount || 0;
 

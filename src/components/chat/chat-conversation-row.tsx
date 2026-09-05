@@ -1,5 +1,4 @@
-'use client';
-
+import { memo } from 'react';
 import Link from 'next/link';
 import { Pin, BellOff, CheckCheck, Users } from 'lucide-react';
 import { UserAvatar } from '@/components/ui/user-avatar';
@@ -13,7 +12,7 @@ interface ChatConversationRowProps {
   href?: string;
 }
 
-export function ChatConversationRow({
+export const ChatConversationRow = memo(function ChatConversationRow({
   conversation,
   isActive = false,
   onClick,
@@ -148,4 +147,4 @@ export function ChatConversationRow({
   );
 
   return <Link href={targetHref} className="block">{content}</Link>;
-}
+});

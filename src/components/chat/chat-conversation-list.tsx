@@ -356,10 +356,12 @@ export function ChatConversationList({
       </div>
 
       {/* New Chat Dialog */}
-      <NewChatDialog
-        isOpen={isNewChatOpen}
-        onClose={() => setIsNewChatOpen(false)}
-      />
+      {isNewChatOpen && (
+        <NewChatDialog
+          isOpen={isNewChatOpen}
+          onClose={() => setIsNewChatOpen(false)}
+        />
+      )}
     </div>
   );
 }

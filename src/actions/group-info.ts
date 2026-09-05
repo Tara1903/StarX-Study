@@ -42,28 +42,62 @@ export async function getRealGroupInfo(targetId: string): Promise<GroupInfoData 
 
     if (!isAuthorized) return null;
 
-    // Fetch members
-    const { data: dbMembers } = await supabase
-      .from('subject_members')
-      .select(`
-        user_id,
-        role,
-        joined_at,
-        profile:profiles(
-          id,
-          full_name,
-          avatar_url,
-          avatar_type,
-          avatar_preset_id,
-          avatar_emoji,
-          display_name,
-          bio
-        )
-      `)
-      .eq('subject_id', subject.uuid)
-      .order('joined_at', { ascending: true });
+    // Parallel fetch: members, recent media, and pinned messages
+    const [dbMembersRes, attachmentsRes, pinnedRes] = await Promise.all([
+      supabase
+        .from('subject_members')
+        .select(`
+          user_id,
+          role,
+          joined_at,
+          profile:profiles(
+            id,
+            full_name,
+            avatar_url,
+            avatar_type,
+            avatar_preset_id,
+            avatar_emoji,
+            display_name,
+            bio
+          )
+        `)
+        .eq('subject_id', subject.uuid)
+        .order('joined_at', { ascending: true }),
 
-    const members: GroupMember[] = (dbMembers || []).map((m: any) => {
+      supabase
+        .from('message_attachments')
+        .select(`
+          id,
+          file_name,
+          file_type,
+          file_size,
+          storage_path,
+          created_at,
+          message:messages!inner(
+            id,
+            subject_id,
+            sender:profiles(full_name)
+          )
+        `)
+        .eq('message.subject_id', subject.uuid)
+        .order('created_at', { ascending: false })
+        .limit(16),
+
+      supabase
+        .from('messages')
+        .select(`
+          id,
+          content,
+          created_at,
+          sender:profiles(full_name)
+        `)
+        .eq('subject_id', subject.uuid)
+        .eq('is_pinned', true)
+        .order('created_at', { ascending: false })
+    ]);
+
+    const dbMembers = dbMembersRes.data || [];
+    const members: GroupMember[] = dbMembers.map((m: any) => {
       const prof = m.profile;
       return {
         id: m.user_id,
@@ -82,28 +116,8 @@ export async function getRealGroupInfo(targetId: string): Promise<GroupInfoData 
     });
 
     const teacherCount = members.filter((m) => m.role === 'teacher').length;
-
-    // Fetch real media / attachments belonging strictly to this subject
-    const { data: attachments } = await supabase
-      .from('message_attachments')
-      .select(`
-        id,
-        file_name,
-        file_type,
-        file_size,
-        storage_path,
-        created_at,
-        message:messages!inner(
-          id,
-          subject_id,
-          sender:profiles(full_name)
-        )
-      `)
-      .eq('message.subject_id', subject.uuid)
-      .order('created_at', { ascending: false })
-      .limit(50);
-
-    const media: SharedMediaItem[] = (attachments || []).map((att: any) => ({
+    const attachments = attachmentsRes.data || [];
+    const media: SharedMediaItem[] = attachments.map((att: any) => ({
       id: att.id,
       conversationId: targetId,
       type: att.file_type?.startsWith('image/') ? 'image' : 'document',
@@ -114,20 +128,8 @@ export async function getRealGroupInfo(targetId: string): Promise<GroupInfoData 
       sharedAt: new Date(att.created_at).toLocaleDateString(),
     }));
 
-    // Fetch pinned messages
-    const { data: pinned } = await supabase
-      .from('messages')
-      .select(`
-        id,
-        content,
-        created_at,
-        sender:profiles(full_name)
-      `)
-      .eq('subject_id', subject.uuid)
-      .eq('is_pinned', true)
-      .order('created_at', { ascending: false });
-
-    const pinnedMessages = (pinned || []).map((p: any) => ({
+    const pinned = pinnedRes.data || [];
+    const pinnedMessages = pinned.map((p: any) => ({
       id: p.id,
       content: p.content,
       senderName: p.sender?.full_name || 'Member',
@@ -171,26 +173,60 @@ export async function getRealGroupInfo(targetId: string): Promise<GroupInfoData 
 
       if (!participant) return null;
 
-      // Fetch participants
-      const { data: allParticipants } = await supabase
-        .from('conversation_participants')
-        .select(`
-          user_id,
-          role,
-          joined_at,
-          profile:profiles(
-            id,
-            full_name,
-            avatar_url,
-            avatar_type,
-            avatar_preset_id,
-            avatar_emoji,
-            bio
-          )
-        `)
-        .eq('conversation_id', targetId);
+      // Parallel fetch: participants, recent media attachments, and pinned messages
+      const [allParticipantsRes, attachmentsRes, pinnedRes] = await Promise.all([
+        supabase
+          .from('conversation_participants')
+          .select(`
+            user_id,
+            role,
+            joined_at,
+            profile:profiles(
+              id,
+              full_name,
+              avatar_url,
+              avatar_type,
+              avatar_preset_id,
+              avatar_emoji,
+              bio
+            )
+          `)
+          .eq('conversation_id', targetId),
 
-      const members: GroupMember[] = (allParticipants || []).map((p: any) => {
+        supabase
+          .from('message_attachments')
+          .select(`
+            id,
+            file_name,
+            file_type,
+            file_size,
+            storage_path,
+            created_at,
+            message:messages!inner(
+              id,
+              conversation_id,
+              sender:profiles(full_name)
+            )
+          `)
+          .eq('message.conversation_id', targetId)
+          .order('created_at', { ascending: false })
+          .limit(16),
+
+        supabase
+          .from('messages')
+          .select(`
+            id,
+            content,
+            created_at,
+            sender:profiles(full_name)
+          `)
+          .eq('conversation_id', targetId)
+          .eq('is_pinned', true)
+          .order('created_at', { ascending: false })
+      ]);
+
+      const allParticipants = allParticipantsRes.data || [];
+      const members: GroupMember[] = allParticipants.map((p: any) => {
         const prof = p.profile;
         return {
           id: p.user_id,
@@ -208,30 +244,11 @@ export async function getRealGroupInfo(targetId: string): Promise<GroupInfoData 
         };
       });
 
-      const rawOther = allParticipants?.find((p: any) => p.user_id !== user.id)?.profile;
+      const rawOther = allParticipants.find((p: any) => p.user_id !== user.id)?.profile;
       const otherParticipant: any = Array.isArray(rawOther) ? rawOther[0] : rawOther;
 
-      // Fetch attachments
-      const { data: attachments } = await supabase
-        .from('message_attachments')
-        .select(`
-          id,
-          file_name,
-          file_type,
-          file_size,
-          storage_path,
-          created_at,
-          message:messages!inner(
-            id,
-            conversation_id,
-            sender:profiles(full_name)
-          )
-        `)
-        .eq('message.conversation_id', targetId)
-        .order('created_at', { ascending: false })
-        .limit(50);
-
-      const media: SharedMediaItem[] = (attachments || []).map((att: any) => ({
+      const attachments = attachmentsRes.data || [];
+      const media: SharedMediaItem[] = attachments.map((att: any) => ({
         id: att.id,
         conversationId: targetId,
         type: att.file_type?.startsWith('image/') ? 'image' : 'document',
@@ -242,20 +259,8 @@ export async function getRealGroupInfo(targetId: string): Promise<GroupInfoData 
         sharedAt: new Date(att.created_at).toLocaleDateString(),
       }));
 
-      // Fetch pinned messages
-      const { data: pinned } = await supabase
-        .from('messages')
-        .select(`
-          id,
-          content,
-          created_at,
-          sender:profiles(full_name)
-        `)
-        .eq('conversation_id', targetId)
-        .eq('is_pinned', true)
-        .order('created_at', { ascending: false });
-
-      const pinnedMessages = (pinned || []).map((p: any) => ({
+      const pinned = pinnedRes.data || [];
+      const pinnedMessages = pinned.map((p: any) => ({
         id: p.id,
         content: p.content,
         senderName: p.sender?.full_name || 'Member',

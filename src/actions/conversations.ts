@@ -20,225 +20,264 @@ export async function getUserConversations(): Promise<{
   const result: ChatConversation[] = [];
 
   try {
-    // 1. Fetch Authorized Subject Chats
-    const { data: dbMemberships, error: memberError } = await supabase
-      .from('subject_members')
-      .select(`
-        subject_id,
-        role,
-        subject:subjects!inner(
-          id,
-          name,
-          color,
-          icon,
-          description,
-          semester:semesters(
-            name,
-            department:departments(name, code)
-          ),
-          teachers:subject_members(
-            role,
-            profile:profiles(id, full_name, avatar_url)
-          )
-        )
-      `)
-      .eq('user_id', user.id);
-
-    if (!memberError && dbMemberships) {
-      for (const sm of (dbMemberships as any[])) {
-        const s: any = Array.isArray(sm.subject) ? sm.subject[0] : sm.subject;
-        if (!s) continue;
-        const teacherMember = Array.isArray(s.teachers)
-          ? s.teachers.find((t: any) => t.role === 'teacher')
-          : null;
-        const facultyName = teacherMember?.profile?.full_name || 'Course Faculty';
-        const facultyAbb = facultyName
-          .split(' ')
-          .map((n: string) => n[0])
-          .join('')
-          .substring(0, 3)
-          .toUpperCase() || 'CF';
-
-        // Latest message in this subject
-        const { data: latestMsgs } = await supabase
-          .from('messages')
-          .select(`
+    // 1. In parallel: Fetch both subject memberships and personal participations in 1 round trip!
+    const [dbMembershipsRes, myParticipationsRes] = await Promise.all([
+      supabase
+        .from('subject_members')
+        .select(`
+          subject_id,
+          role,
+          subject:subjects!inner(
             id,
-            content,
+            name,
+            color,
+            icon,
+            description,
             created_at,
-            sender:profiles(full_name)
-          `)
-          .eq('subject_id', s.id)
-          .eq('status', 'published')
-          .order('created_at', { ascending: false })
-          .limit(1);
+            semester:semesters(
+              name,
+              department:departments(name, code)
+            ),
+            teachers:subject_members(
+              role,
+              profile:profiles(id, full_name, avatar_url)
+            )
+          )
+        `)
+        .eq('user_id', user.id),
+      supabase
+        .from('conversation_participants')
+        .select(`
+          conversation_id,
+          last_read_at,
+          conversation:conversations!inner(
+            id,
+            type,
+            created_at,
+            updated_at
+          )
+        `)
+        .eq('user_id', user.id),
+    ]);
 
-        const latestMsg = latestMsgs?.[0] as any;
-        const lastMessageText = latestMsg?.content || 'Subject room open';
-        const senderObj = Array.isArray(latestMsg?.sender) ? latestMsg.sender[0] : latestMsg?.sender;
-        const lastSenderName = senderObj?.full_name
-          ? senderObj.full_name.split(' ')[0]
-          : undefined;
-        const lastMsgTime = latestMsg?.created_at
-          ? formatRelativeTime(new Date(latestMsg.created_at))
-          : undefined;
-        const lastActivity = latestMsg?.created_at || s.created_at || new Date().toISOString();
+    const dbMemberships = dbMembershipsRes.data || [];
+    const myParticipations = myParticipationsRes.data || [];
 
-        // Unread count
-        const { data: cursor } = await supabase
-          .from('message_read_cursors')
-          .select('last_read_at')
-          .eq('user_id', user.id)
-          .eq('subject_id', s.id)
-          .maybeSingle();
+    const subjectIds = dbMemberships.map((sm: any) => sm.subject_id).filter(Boolean);
+    const personalConvList = myParticipations.filter((p: any) => {
+      const conv = Array.isArray(p.conversation) ? p.conversation[0] : p.conversation;
+      return conv && conv.type === 'personal';
+    });
+    const personalConvIds = personalConvList.map((p: any) => p.conversation_id);
 
-        let unreadCount = 0;
-        if (cursor?.last_read_at) {
-          const { count } = await supabase
+    // 2. Batch fetch metadata in parallel for both subjects and personal chats!
+    const [
+      subjectLatestMsgsRes,
+      subjectCursorsRes,
+      personalOthersRes,
+      personalLatestMsgsRes,
+    ] = await Promise.all([
+      subjectIds.length > 0
+        ? supabase
             .from('messages')
-            .select('id', { count: 'exact', head: true })
-            .eq('subject_id', s.id)
+            .select(`
+              id,
+              subject_id,
+              content,
+              created_at,
+              sender:profiles(full_name)
+            `)
+            .in('subject_id', subjectIds)
             .eq('status', 'published')
-            .gt('created_at', cursor.last_read_at);
-          unreadCount = count || 0;
-        } else if (latestMsg) {
-          const { count } = await supabase
+            .order('created_at', { ascending: false })
+            .limit(subjectIds.length * 5)
+        : Promise.resolve({ data: [] }),
+      subjectIds.length > 0
+        ? supabase
+            .from('message_read_cursors')
+            .select('subject_id, last_read_at')
+            .eq('user_id', user.id)
+            .in('subject_id', subjectIds)
+        : Promise.resolve({ data: [] }),
+      personalConvIds.length > 0
+        ? supabase
+            .from('conversation_participants')
+            .select(`
+              conversation_id,
+              role,
+              profile:profiles!inner(
+                id,
+                full_name,
+                avatar_url,
+                avatar_type,
+                avatar_preset_id,
+                avatar_emoji,
+                bio
+              )
+            `)
+            .in('conversation_id', personalConvIds)
+            .neq('user_id', user.id)
+        : Promise.resolve({ data: [] }),
+      personalConvIds.length > 0
+        ? supabase
             .from('messages')
-            .select('id', { count: 'exact', head: true })
-            .eq('subject_id', s.id)
-            .eq('status', 'published');
-          unreadCount = count || 0;
-        }
+            .select(`
+              id,
+              conversation_id,
+              content,
+              created_at,
+              sender_id,
+              sender:profiles(full_name)
+            `)
+            .in('conversation_id', personalConvIds)
+            .eq('status', 'published')
+            .order('created_at', { ascending: false })
+            .limit(personalConvIds.length * 5)
+        : Promise.resolve({ data: [] }),
+    ]);
 
-        const deptCode = s.semester?.department?.code || 'SUB';
+    // Build lookup maps
+    // A. Subject latest messages & unread counts
+    const subjectLatestMap = new Map<string, any>();
+    const subjectUnreadCountMap = new Map<string, number>();
+    const subjectCursorMap = new Map<string, string>();
 
-        result.push({
-          id: s.id,
-          type: 'subject',
-          name: s.name,
-          subtitle: `${facultyAbb} • ${facultyName}`,
-          color: s.color || '#3B82F6',
-          avatarType: 'initials',
-          lastMessage: lastMessageText,
-          lastMessageSender: lastSenderName,
-          lastMessageTime: lastMsgTime,
-          lastActivityTimestamp: lastActivity,
-          unreadCount,
-          isPinned: false,
-          onlineStatus: 'online',
-          facultyName,
-          facultyAbb,
-          subjectUuid: s.id,
-          room: 'Room No. 03',
-          code: `${deptCode}-${s.name.substring(0, 3).toUpperCase()}`,
-        });
+    (subjectCursorsRes.data || []).forEach((c: any) => {
+      if (c.subject_id && c.last_read_at) {
+        subjectCursorMap.set(c.subject_id, c.last_read_at);
       }
+    });
+
+    (subjectLatestMsgsRes.data || []).forEach((m: any) => {
+      if (!m.subject_id) return;
+      if (!subjectLatestMap.has(m.subject_id)) {
+        subjectLatestMap.set(m.subject_id, m);
+      }
+      const lastRead = subjectCursorMap.get(m.subject_id);
+      if (lastRead && new Date(m.created_at) > new Date(lastRead)) {
+        subjectUnreadCountMap.set(m.subject_id, (subjectUnreadCountMap.get(m.subject_id) || 0) + 1);
+      }
+    });
+
+    // Process Subject Conversations
+    for (const sm of (dbMemberships as any[])) {
+      const s: any = Array.isArray(sm.subject) ? sm.subject[0] : sm.subject;
+      if (!s) continue;
+      const teacherMember = Array.isArray(s.teachers)
+        ? s.teachers.find((t: any) => t.role === 'teacher')
+        : null;
+      const facultyName = teacherMember?.profile?.full_name || 'Course Faculty';
+      const facultyAbb = facultyName
+        .split(' ')
+        .map((n: string) => n[0])
+        .join('')
+        .substring(0, 3)
+        .toUpperCase() || 'CF';
+
+      const latestMsg = subjectLatestMap.get(s.id);
+      const lastMessageText = latestMsg?.content || 'Subject room open';
+      const senderObj = Array.isArray(latestMsg?.sender) ? latestMsg.sender[0] : latestMsg?.sender;
+      const lastSenderName = senderObj?.full_name
+        ? senderObj.full_name.split(' ')[0]
+        : undefined;
+      const lastMsgTime = latestMsg?.created_at
+        ? formatRelativeTime(new Date(latestMsg.created_at))
+        : undefined;
+      const lastActivity = latestMsg?.created_at || s.created_at || new Date().toISOString();
+      const unreadCount = subjectUnreadCountMap.get(s.id) || 0;
+      const deptCode = s.semester?.department?.code || 'SUB';
+
+      result.push({
+        id: s.id,
+        type: 'subject',
+        name: s.name,
+        subtitle: `${facultyAbb} • ${facultyName}`,
+        color: s.color || '#3B82F6',
+        avatarType: 'initials',
+        lastMessage: lastMessageText,
+        lastMessageSender: lastSenderName,
+        lastMessageTime: lastMsgTime,
+        lastActivityTimestamp: lastActivity,
+        unreadCount,
+        isPinned: false,
+        onlineStatus: 'online',
+        facultyName,
+        facultyAbb,
+        subjectUuid: s.id,
+        room: 'Room No. 03',
+        code: `${deptCode}-${s.name.substring(0, 3).toUpperCase()}`,
+      });
     }
 
-    // 2. Fetch Authorized Personal Conversations
-    const { data: myParticipations } = await supabase
-      .from('conversation_participants')
-      .select(`
-        conversation_id,
-        last_read_at,
-        conversation:conversations!inner(
-          id,
-          type,
-          created_at,
-          updated_at
-        )
-      `)
-      .eq('user_id', user.id);
-
-    if (myParticipations) {
-      for (const p of (myParticipations as any[])) {
-        const conv = Array.isArray(p.conversation) ? p.conversation[0] : p.conversation;
-        if (!conv || conv.type !== 'personal') continue;
-
-        const convId = p.conversation_id;
-
-        // Query OTHER participant
-        const { data: otherParticipants } = await supabase
-          .from('conversation_participants')
-          .select(`
-            user_id,
-            role,
-            profile:profiles!inner(
-              id,
-              full_name,
-              avatar_url,
-              avatar_type,
-              avatar_preset_id,
-              avatar_emoji,
-              bio
-            )
-          `)
-          .eq('conversation_id', convId)
-          .neq('user_id', user.id)
-          .limit(1);
-
-        const otherRaw = otherParticipants?.[0]?.profile as any;
-        const other = Array.isArray(otherRaw) ? otherRaw[0] : otherRaw;
-        if (!other) continue;
-
-        // Query latest message in this conversation
-        const { data: latestMsgs } = await supabase
-          .from('messages')
-          .select(`
-            id,
-            content,
-            created_at,
-            sender:profiles(full_name)
-          `)
-          .eq('conversation_id', convId)
-          .eq('status', 'published')
-          .order('created_at', { ascending: false })
-          .limit(1);
-
-        const latestMsg = latestMsgs?.[0] as any;
-        const lastMessageText = latestMsg?.content || 'Direct conversation started';
-        const senderObj = Array.isArray(latestMsg?.sender) ? latestMsg.sender[0] : latestMsg?.sender;
-        const lastSenderName = senderObj?.full_name
-          ? senderObj.full_name.split(' ')[0]
-          : undefined;
-        const lastMsgTime = latestMsg?.created_at
-          ? formatRelativeTime(new Date(latestMsg.created_at))
-          : undefined;
-        const lastActivity = latestMsg?.created_at || conv.created_at;
-
-        // Calculate unread count
-        let unreadCount = 0;
-        if (p.last_read_at) {
-          const { count } = await supabase
-            .from('messages')
-            .select('id', { count: 'exact', head: true })
-            .eq('conversation_id', convId)
-            .eq('status', 'published')
-            .gt('created_at', p.last_read_at)
-            .neq('sender_id', user.id);
-          unreadCount = count || 0;
-        }
-
-        result.push({
-          id: convId,
-          type: 'personal',
-          name: other.full_name,
-          subtitle: 'Direct Message',
-          bio: other.bio || undefined,
-          role: (otherParticipants?.[0] as any)?.role || 'student',
-          avatarUrl: other.avatar_url,
-          avatarType: (other.avatar_type as any) || 'initials',
-          avatarPresetId: other.avatar_preset_id,
-          avatarEmoji: other.avatar_emoji,
-          lastMessage: lastMessageText,
-          lastMessageSender: lastSenderName,
-          lastMessageTime: lastMsgTime,
-          lastActivityTimestamp: lastActivity,
-          unreadCount,
-          onlineStatus: 'online',
-          isPinned: false,
-        });
+    // B. Personal latest messages & other participants
+    const personalOtherMap = new Map<string, any>();
+    (personalOthersRes.data || []).forEach((item: any) => {
+      if (item.conversation_id && !personalOtherMap.has(item.conversation_id)) {
+        personalOtherMap.set(item.conversation_id, item);
       }
+    });
+
+    const personalLatestMap = new Map<string, any>();
+    const personalUnreadMap = new Map<string, number>();
+
+    const personalLastReadMap = new Map<string, string | null>();
+    personalConvList.forEach((p: any) => {
+      personalLastReadMap.set(p.conversation_id, p.last_read_at);
+    });
+
+    (personalLatestMsgsRes.data || []).forEach((m: any) => {
+      if (!m.conversation_id) return;
+      if (!personalLatestMap.has(m.conversation_id)) {
+        personalLatestMap.set(m.conversation_id, m);
+      }
+      const lastRead = personalLastReadMap.get(m.conversation_id);
+      if (m.sender_id !== user.id) {
+        if (!lastRead || new Date(m.created_at) > new Date(lastRead)) {
+          personalUnreadMap.set(m.conversation_id, (personalUnreadMap.get(m.conversation_id) || 0) + 1);
+        }
+      }
+    });
+
+    // Process Personal Conversations
+    for (const p of personalConvList) {
+      const conv = Array.isArray(p.conversation) ? p.conversation[0] : p.conversation;
+      const convId = p.conversation_id;
+      const otherItem = personalOtherMap.get(convId);
+      const otherRaw = otherItem?.profile;
+      const other = Array.isArray(otherRaw) ? otherRaw[0] : otherRaw;
+      if (!other) continue;
+
+      const latestMsg = personalLatestMap.get(convId);
+      const lastMessageText = latestMsg?.content || 'Direct conversation started';
+      const senderObj = Array.isArray(latestMsg?.sender) ? latestMsg.sender[0] : latestMsg?.sender;
+      const lastSenderName = senderObj?.full_name
+        ? senderObj.full_name.split(' ')[0]
+        : undefined;
+      const lastMsgTime = latestMsg?.created_at
+        ? formatRelativeTime(new Date(latestMsg.created_at))
+        : undefined;
+      const lastActivity = latestMsg?.created_at || conv?.created_at || new Date().toISOString();
+      const unreadCount = personalUnreadMap.get(convId) || 0;
+
+      result.push({
+        id: convId,
+        type: 'personal',
+        name: other.full_name,
+        subtitle: 'Direct Message',
+        bio: other.bio || undefined,
+        role: otherItem?.role || 'student',
+        avatarUrl: other.avatar_url,
+        avatarType: other.avatar_type || 'initials',
+        avatarPresetId: other.avatar_preset_id,
+        avatarEmoji: other.avatar_emoji,
+        lastMessage: lastMessageText,
+        lastMessageSender: lastSenderName,
+        lastMessageTime: lastMsgTime,
+        lastActivityTimestamp: lastActivity,
+        unreadCount,
+        onlineStatus: 'online',
+        isPinned: false,
+      });
     }
 
     // Sort: pinned first, then by last activity timestamp descending

@@ -13,27 +13,32 @@ export default async function PlatformLayout({ children }: { children: React.Rea
     redirect('/login');
   }
 
-  const { data: dbProfile } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', user.id)
-    .single();
+  const [profileRes, membershipsRes] = await Promise.all([
+    supabase
+      .from('profiles')
+      .select('id, full_name, email, avatar_url, avatar_type, avatar_preset_id, avatar_emoji, avatar_style, display_name, bio, phone, created_at')
+      .eq('id', user.id)
+      .single(),
+    supabase
+      .from('university_memberships')
+      .select(`
+        id,
+        user_id,
+        university_id,
+        role,
+        joined_at,
+        university:universities(id, name, slug, logo_url)
+      `)
+      .eq('user_id', user.id)
+  ]);
 
+  const dbProfile = profileRes.data;
   if (!dbProfile) {
     redirect('/login');
   }
 
-  const profile = dbProfile;
-
-  const { data: membershipsData } = await supabase
-    .from('university_memberships')
-    .select(`
-      *,
-      university:universities(*)
-    `)
-    .eq('user_id', user.id);
-    
-  const memberships = membershipsData || [];
+  const profile = dbProfile as any;
+  const memberships = (membershipsRes.data as any[]) || [];
   const activeUniversity = memberships.length > 0 ? memberships[0].university : null;
   const activeRole: UserRole = memberships.length > 0 ? memberships[0].role : 'student';
 

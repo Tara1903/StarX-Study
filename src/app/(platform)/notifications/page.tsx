@@ -20,10 +20,10 @@ export default function NotificationsPage() {
         if (user) {
           const { data, error } = await supabase
             .from('notifications')
-            .select('*')
+            .select('id, user_id, title, body, type, link_url, is_read, created_at')
             .eq('user_id', user.id)
             .order('created_at', { ascending: false })
-            .limit(50);
+            .limit(30);
             
           if (!error && data) {
             setNotifications(data);

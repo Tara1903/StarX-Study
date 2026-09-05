@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from 'react';
+import { useState, useRef, memo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@/components/providers/user-provider';
 import type { MessageWithSender } from '@/types';
@@ -41,7 +41,7 @@ function formatMessageTime(dateString: string): string {
   }
 }
 
-export function MessageItem({ 
+export const MessageItem = memo(function MessageItem({ 
   message, 
   onReply, 
   subjectName = 'Subject',
@@ -408,23 +408,25 @@ export function MessageItem({
         <MoreHorizontal className="w-4 h-4" />
       </button>
 
-      {/* Mobile Touch Action Sheet */}
-      <MessageActionSheet
-        isOpen={isSheetOpen}
-        onClose={() => setIsSheetOpen(false)}
-        messageContent={message.content}
-        senderName={message.sender?.full_name || 'User'}
-        isSaved={message.attachments?.some((att) => storedMap[att.id])}
-        canPin={isTeacher}
-        isPinned={!!message.is_pinned}
-        canDelete={isOwn || isTeacher}
-        isOwn={isOwn}
-        onReact={handleReaction}
-        onReply={onReply}
-        onSaveMedia={handleStoreDirectContent}
-        onPin={isTeacher ? handlePin : undefined}
-        onDelete={handleDelete}
-      />
+      {/* Mobile Touch Action Sheet (only rendered when open) */}
+      {isSheetOpen && (
+        <MessageActionSheet
+          isOpen={isSheetOpen}
+          onClose={() => setIsSheetOpen(false)}
+          messageContent={message.content}
+          senderName={message.sender?.full_name || 'User'}
+          isSaved={message.attachments?.some((att) => storedMap[att.id])}
+          canPin={isTeacher}
+          isPinned={!!message.is_pinned}
+          canDelete={isOwn || isTeacher}
+          isOwn={isOwn}
+          onReact={handleReaction}
+          onReply={onReply}
+          onSaveMedia={handleStoreDirectContent}
+          onPin={isTeacher ? handlePin : undefined}
+          onDelete={handleDelete}
+        />
+      )}
     </div>
   );
-}
+});

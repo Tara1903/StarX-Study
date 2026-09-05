@@ -31,24 +31,27 @@ export default async function PeoplePage() {
   let availableSubjects: { id: string; name: string }[] = [];
 
   try {
-    // 2. Fetch all members of this university
-    const { data: members } = await supabase
-      .from('university_memberships')
-      .select(`
-        id,
-        user_id,
-        role,
-        joined_at,
-        profile:profiles(id, full_name, email, avatar_url)
-      `)
-      .eq('university_id', universityId);
+    // 2. Fetch all members and subjects of this university in parallel
+    const [membersRes, subjectsRes] = await Promise.all([
+      supabase
+        .from('university_memberships')
+        .select(`
+          id,
+          user_id,
+          role,
+          joined_at,
+          profile:profiles(id, full_name, email, avatar_url)
+        `)
+        .eq('university_id', universityId),
+      supabase
+        .from('subjects')
+        .select('id, name')
+        .eq('university_id', universityId)
+        .order('name', { ascending: true }),
+    ]);
 
-    // 3. Fetch all subjects of this university
-    const { data: dbSubjects } = await supabase
-      .from('subjects')
-      .select('id, name')
-      .eq('university_id', universityId)
-      .order('name', { ascending: true });
+    const members = membersRes.data;
+    const dbSubjects = subjectsRes.data;
 
     availableSubjects = (dbSubjects || []).map((s: any) => ({
       id: s.id,

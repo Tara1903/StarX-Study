@@ -16,14 +16,14 @@ export function useNotifications() {
     try {
       const { data, error } = await supabase
         .from('notifications')
-        .select('*')
+        .select('id, user_id, title, body, type, link_url, is_read, created_at')
         .eq('user_id', profile.id)
         .order('created_at', { ascending: false })
-        .limit(50);
+        .limit(25);
         
       if (error) throw error;
-      setNotifications(data as Notification[]);
-      setUnreadCount(data.filter((n) => !n.is_read).length);
+      setNotifications((data || []) as unknown as Notification[]);
+      setUnreadCount((data || []).filter((n: any) => !n.is_read).length);
     } catch (error) {
       console.error('Error fetching notifications:', error);
     }

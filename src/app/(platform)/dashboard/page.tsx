@@ -118,21 +118,52 @@ export default function DashboardPage() {
           const teacherSubjectIds = (teacherMemberships || []).map((m: any) => m.subject.id);
 
           let mappedSubjects: SubjectCard[] = [];
-          if (teacherMemberships && teacherMemberships.length > 0) {
-            // Get student counts for each subject
-            const countPromises = teacherSubjectIds.map(async (sid: string) => {
-              const { count } = await supabase
+          if (teacherSubjectIds.length > 0) {
+            // Batch parallel fetch: student counts, pending reviews, and announcements in 1 round trip!
+            const [studentMembersRes, dbSubmissionsRes, dbAnnouncementsRes] = await Promise.all([
+              supabase
                 .from('subject_members')
-                .select('id', { count: 'exact', head: true })
-                .eq('subject_id', sid)
-                .eq('role', 'student');
-              return { sid, count: count || 0 };
+                .select('subject_id')
+                .in('subject_id', teacherSubjectIds)
+                .eq('role', 'student'),
+              supabase
+                .from('assignment_submissions')
+                .select(`
+                  id,
+                  status,
+                  marks,
+                  submitted_at,
+                  student:profiles!student_id(full_name),
+                  assignment:assignments!inner(
+                    id,
+                    title,
+                    subject_id,
+                    subject:subjects(name)
+                  )
+                `)
+                .in('assignment.subject_id', teacherSubjectIds)
+                .eq('status', 'submitted')
+                .order('submitted_at', { ascending: false })
+                .limit(5),
+              supabase
+                .from('announcements')
+                .select(`
+                  id,
+                  title,
+                  created_at,
+                  author:profiles!author_id(full_name)
+                `)
+                .or(`target_type.eq.university,and(target_type.eq.subject,target_id.in.(${teacherSubjectIds.join(',')}))`)
+                .order('created_at', { ascending: false })
+                .limit(5),
+            ]);
+
+            const countMap = new Map<string, number>();
+            (studentMembersRes.data || []).forEach((m: any) => {
+              countMap.set(m.subject_id, (countMap.get(m.subject_id) || 0) + 1);
             });
 
-            const counts = await Promise.all(countPromises);
-            const countMap = new Map(counts.map(c => [c.sid, c.count]));
-
-            mappedSubjects = teacherMemberships.map((m: any) => {
+            mappedSubjects = (teacherMemberships || []).map((m: any) => {
               const s = m.subject;
               const deptCode = s.semester?.department?.code || 'SUB';
               const semName = s.semester?.name || 'Term';
@@ -146,33 +177,10 @@ export default function DashboardPage() {
                 studentCount: countMap.get(s.id) || 0,
               };
             });
-          }
-          setSubjects(mappedSubjects);
+            setSubjects(mappedSubjects);
 
-          // Query pending submissions for teacher's subjects
-          if (teacherSubjectIds.length > 0) {
-            const { data: dbSubmissions } = await supabase
-              .from('assignment_submissions')
-              .select(`
-                id,
-                status,
-                marks,
-                submitted_at,
-                student:profiles!student_id(full_name),
-                assignment:assignments!inner(
-                  id,
-                  title,
-                  subject_id,
-                  subject:subjects(name)
-                )
-              `)
-              .in('assignment.subject_id', teacherSubjectIds)
-              .eq('status', 'submitted')
-              .order('submitted_at', { ascending: false })
-              .limit(5);
-
-            if (dbSubmissions) {
-              const mappedSubmissions: TaskItem[] = dbSubmissions.map((sub: any) => ({
+            if (dbSubmissionsRes.data) {
+              const mappedSubmissions: TaskItem[] = dbSubmissionsRes.data.map((sub: any) => ({
                 id: sub.id,
                 subjectId: sub.assignment?.subject_id,
                 subject: sub.assignment?.subject?.name || 'Subject',
@@ -186,21 +194,8 @@ export default function DashboardPage() {
               setTasks(mappedSubmissions);
             }
 
-            // Query announcements for teacher's subjects
-            const { data: dbAnnouncements } = await supabase
-              .from('announcements')
-              .select(`
-                id,
-                title,
-                created_at,
-                author:profiles!author_id(full_name)
-              `)
-              .or(`target_type.eq.university,and(target_type.eq.subject,target_id.in.(${teacherSubjectIds.join(',')}))`)
-              .order('created_at', { ascending: false })
-              .limit(5);
-
-            if (dbAnnouncements) {
-              setUpdates(dbAnnouncements.map((a: any) => ({
+            if (dbAnnouncementsRes.data) {
+              setUpdates(dbAnnouncementsRes.data.map((a: any) => ({
                 id: a.id,
                 source: a.author?.full_name || 'Academic Notice',
                 title: a.title,
@@ -217,12 +212,15 @@ export default function DashboardPage() {
           const uniId = activeUniversity?.id;
 
           if (uniId) {
-            // Real counts from database
+            // In parallel: Fetch all 4 counts + subjects + pending reports + announcements in 1 round trip!
             const [
               { count: studentCount },
               { count: teacherCount },
               { count: subjectCount },
               { count: reportCount },
+              uniSubjectsRes,
+              dbReportsRes,
+              dbAnnouncementsRes,
             ] = await Promise.all([
               supabase
                 .from('university_memberships')
@@ -243,6 +241,49 @@ export default function DashboardPage() {
                 .select('id', { count: 'exact', head: true })
                 .eq('university_id', uniId)
                 .eq('status', 'pending'),
+              supabase
+                .from('subjects')
+                .select(`
+                  id,
+                  name,
+                  color,
+                  semester:semesters(
+                    name,
+                    department:departments(name, code)
+                  ),
+                  teachers:subject_members(
+                    role,
+                    profile:profiles(id, full_name)
+                  )
+                `)
+                .eq('university_id', uniId)
+                .order('name', { ascending: true })
+                .limit(6),
+              supabase
+                .from('reports')
+                .select(`
+                  id,
+                  category,
+                  description,
+                  status,
+                  created_at,
+                  reporter:profiles!reporter_id(full_name)
+                `)
+                .eq('university_id', uniId)
+                .eq('status', 'pending')
+                .order('created_at', { ascending: false })
+                .limit(4),
+              supabase
+                .from('announcements')
+                .select(`
+                  id,
+                  title,
+                  created_at,
+                  author:profiles!author_id(full_name)
+                `)
+                .eq('university_id', uniId)
+                .order('created_at', { ascending: false })
+                .limit(4),
             ]);
 
             setInstStats({
@@ -252,28 +293,8 @@ export default function DashboardPage() {
               pendingReports: reportCount || 0,
             });
 
-            // Fetch institution subjects overview
-            const { data: uniSubjects } = await supabase
-              .from('subjects')
-              .select(`
-                id,
-                name,
-                color,
-                semester:semesters(
-                  name,
-                  department:departments(name, code)
-                ),
-                teachers:subject_members(
-                  role,
-                  profile:profiles(id, full_name)
-                )
-              `)
-              .eq('university_id', uniId)
-              .order('name', { ascending: true })
-              .limit(6);
-
-            if (uniSubjects) {
-              const mapped = uniSubjects.map((s: any) => {
+            if (uniSubjectsRes.data) {
+              const mapped = uniSubjectsRes.data.map((s: any) => {
                 const teacherMember = Array.isArray(s.teachers)
                   ? s.teachers.find((t: any) => t.role === 'teacher')
                   : null;
@@ -293,41 +314,12 @@ export default function DashboardPage() {
               setSubjects(mapped);
             }
 
-            // Fetch pending moderation reports
-            const { data: dbReports } = await supabase
-              .from('reports')
-              .select(`
-                id,
-                category,
-                description,
-                status,
-                created_at,
-                reporter:profiles!reporter_id(full_name)
-              `)
-              .eq('university_id', uniId)
-              .eq('status', 'pending')
-              .order('created_at', { ascending: false })
-              .limit(4);
-
-            if (dbReports) {
-              setRecentReports(dbReports);
+            if (dbReportsRes.data) {
+              setRecentReports(dbReportsRes.data);
             }
 
-            // Fetch recent announcements
-            const { data: dbAnnouncements } = await supabase
-              .from('announcements')
-              .select(`
-                id,
-                title,
-                created_at,
-                author:profiles!author_id(full_name)
-              `)
-              .eq('university_id', uniId)
-              .order('created_at', { ascending: false })
-              .limit(4);
-
-            if (dbAnnouncements) {
-              setUpdates(dbAnnouncements.map((a: any) => ({
+            if (dbAnnouncementsRes.data) {
+              setUpdates(dbAnnouncementsRes.data.map((a: any) => ({
                 id: a.id,
                 source: a.author?.full_name || 'Institutional Notice',
                 title: a.title,
@@ -386,22 +378,36 @@ export default function DashboardPage() {
             const subjectIds = dbMemberships.map((m: any) => m.subject.id);
 
             if (subjectIds.length > 0) {
-              const { data: dbAssignments } = await supabase
-                .from('assignments')
-                .select(`
-                  id,
-                  subject_id,
-                  title,
-                  due_date,
-                  subject:subjects(name),
-                  submission:assignment_submissions(status)
-                `)
-                .in('subject_id', subjectIds)
-                .order('due_date', { ascending: true })
-                .limit(5);
+              // Parallel fetch: assignments and announcements in 1 round trip
+              const [dbAssignmentsRes, dbAnnouncementsRes] = await Promise.all([
+                supabase
+                  .from('assignments')
+                  .select(`
+                    id,
+                    subject_id,
+                    title,
+                    due_date,
+                    subject:subjects(name),
+                    submission:assignment_submissions(status)
+                  `)
+                  .in('subject_id', subjectIds)
+                  .order('due_date', { ascending: true })
+                  .limit(5),
+                supabase
+                  .from('announcements')
+                  .select(`
+                    id,
+                    title,
+                    created_at,
+                    author:profiles!author_id(full_name)
+                  `)
+                  .or(`target_type.eq.university,and(target_type.eq.subject,target_id.in.(${subjectIds.join(',')}))`)
+                  .order('created_at', { ascending: false })
+                  .limit(5)
+              ]);
 
-              if (dbAssignments) {
-                const mappedTasks = dbAssignments.map((a: any) => {
+              if (dbAssignmentsRes.data) {
+                const mappedTasks = dbAssignmentsRes.data.map((a: any) => {
                   const sub = Array.isArray(a.submission) && a.submission.length > 0 ? a.submission[0] : null;
                   const dueDateObj = a.due_date ? new Date(a.due_date) : null;
                   const isUrgent = dueDateObj
@@ -421,20 +427,8 @@ export default function DashboardPage() {
                 setTasks(mappedTasks);
               }
 
-              const { data: dbAnnouncements } = await supabase
-                .from('announcements')
-                .select(`
-                  id,
-                  title,
-                  created_at,
-                  author:profiles!author_id(full_name)
-                `)
-                .or(`target_type.eq.university,and(target_type.eq.subject,target_id.in.(${subjectIds.join(',')}))`)
-                .order('created_at', { ascending: false })
-                .limit(5);
-
-              if (dbAnnouncements) {
-                setUpdates(dbAnnouncements.map((a: any) => ({
+              if (dbAnnouncementsRes.data) {
+                setUpdates(dbAnnouncementsRes.data.map((a: any) => ({
                   id: a.id,
                   source: a.author?.full_name || 'Academic Notice',
                   title: a.title,

@@ -45,34 +45,34 @@ export default async function GlobalAssignmentsPage() {
       }));
 
       if (taughtSubjectIds.length > 0) {
-        const { data: dbAssignments } = await supabase
-          .from('assignments')
-          .select(`
-            id,
-            subject_id,
-            title,
-            description,
-            due_date,
-            max_marks,
-            subject:subjects(id, name, color),
-            submissions:assignment_submissions(id, status, marks)
-          `)
-          .in('subject_id', taughtSubjectIds)
-          .order('due_date', { ascending: true });
+        // Fetch assignments and student enrollments in parallel in 1 round trip
+        const [{ data: dbAssignments }, { data: studentMembers }] = await Promise.all([
+          supabase
+            .from('assignments')
+            .select(`
+              id,
+              subject_id,
+              title,
+              description,
+              due_date,
+              max_marks,
+              subject:subjects(id, name, color),
+              submissions:assignment_submissions(id, status, marks)
+            `)
+            .in('subject_id', taughtSubjectIds)
+            .order('due_date', { ascending: true }),
+          supabase
+            .from('subject_members')
+            .select('subject_id')
+            .in('subject_id', taughtSubjectIds)
+            .eq('role', 'student'),
+        ]);
 
         if (dbAssignments) {
-          // Count total students enrolled in each subject
-          const countPromises = taughtSubjectIds.map(async (sid: string) => {
-            const { count } = await supabase
-              .from('subject_members')
-              .select('id', { count: 'exact', head: true })
-              .eq('subject_id', sid)
-              .eq('role', 'student');
-            return { sid, count: count || 0 };
+          const studentCountMap = new Map<string, number>();
+          studentMembers?.forEach((m: any) => {
+            studentCountMap.set(m.subject_id, (studentCountMap.get(m.subject_id) || 0) + 1);
           });
-
-          const counts = await Promise.all(countPromises);
-          const studentCountMap = new Map(counts.map(c => [c.sid, c.count]));
 
           displayAssignments = dbAssignments.map((a: any) => {
             const totalStudents = studentCountMap.get(a.subject_id) || 0;
@@ -118,33 +118,33 @@ export default async function GlobalAssignmentsPage() {
       const uniSubjectIds = availableSubjects.map((s) => s.id);
 
       if (uniSubjectIds.length > 0) {
-        const { data: dbAssignments } = await supabase
-          .from('assignments')
-          .select(`
-            id,
-            subject_id,
-            title,
-            description,
-            due_date,
-            max_marks,
-            subject:subjects(id, name, color),
-            submissions:assignment_submissions(id, status, marks)
-          `)
-          .in('subject_id', uniSubjectIds)
-          .order('due_date', { ascending: true });
+        const [{ data: dbAssignments }, { data: studentMembers }] = await Promise.all([
+          supabase
+            .from('assignments')
+            .select(`
+              id,
+              subject_id,
+              title,
+              description,
+              due_date,
+              max_marks,
+              subject:subjects(id, name, color),
+              submissions:assignment_submissions(id, status, marks)
+            `)
+            .in('subject_id', uniSubjectIds)
+            .order('due_date', { ascending: true }),
+          supabase
+            .from('subject_members')
+            .select('subject_id')
+            .in('subject_id', uniSubjectIds)
+            .eq('role', 'student'),
+        ]);
 
         if (dbAssignments) {
-          const countPromises = uniSubjectIds.map(async (sid: string) => {
-            const { count } = await supabase
-              .from('subject_members')
-              .select('id', { count: 'exact', head: true })
-              .eq('subject_id', sid)
-              .eq('role', 'student');
-            return { sid, count: count || 0 };
+          const studentCountMap = new Map<string, number>();
+          studentMembers?.forEach((m: any) => {
+            studentCountMap.set(m.subject_id, (studentCountMap.get(m.subject_id) || 0) + 1);
           });
-
-          const counts = await Promise.all(countPromises);
-          const studentCountMap = new Map(counts.map(c => [c.sid, c.count]));
 
           displayAssignments = dbAssignments.map((a: any) => {
             const totalStudents = studentCountMap.get(a.subject_id) || 0;

@@ -30,40 +30,26 @@ export default async function GlobalAnnouncementsPage() {
     const rawUni = memberships?.[0]?.university;
     const universityName = (Array.isArray(rawUni) ? rawUni[0]?.name : (rawUni as any)?.name) || 'Academic Institution';
 
-    // Fetch subjects for announcement creation
+    // In parallel: fetch authorized subjects (if teacher/head), user's enrolled subjects, and announcements
+    let subjectsPromise: PromiseLike<any> = Promise.resolve({ data: [] });
     if (userRole === 'teacher') {
-      const { data: taughtSubjects } = await supabase
+      subjectsPromise = supabase
         .from('subject_members')
         .select('subject_id, subject:subjects(id, name)')
         .eq('user_id', user.id)
         .eq('role', 'teacher');
-
-      authorizedSubjects = (taughtSubjects || [])
-        .map((ts: any) => ({
-          id: ts.subject?.id || ts.subject_id,
-          name: ts.subject?.name || 'Subject',
-        }))
-        .filter((s) => Boolean(s.id));
     } else if (userRole === 'institute_head' && primaryUniversityId) {
-      const { data: uniSubjects } = await supabase
+      subjectsPromise = supabase
         .from('subjects')
         .select('id, name')
         .eq('university_id', primaryUniversityId);
-
-      authorizedSubjects = (uniSubjects || []).map((s: any) => ({
-        id: s.id,
-        name: s.name,
-      }));
     }
 
-    const { data: subjectMembers } = await supabase
+    const subjectMembersPromise = supabase
       .from('subject_members')
       .select('subject_id')
       .eq('user_id', user.id);
 
-    const userSubjectIds = (subjectMembers || []).map((sm: any) => sm.subject_id);
-
-    // 2. Query announcements visible to user's authorized scopes
     let query = supabase
       .from('announcements')
       .select(`
@@ -78,13 +64,35 @@ export default async function GlobalAnnouncementsPage() {
         author:profiles!author_id(full_name)
       `)
       .order('created_at', { ascending: false })
-      .limit(50);
+      .limit(30);
 
     if (universityIds.length > 0) {
       query = query.in('university_id', universityIds);
     }
 
-    const { data, error } = await query;
+    const [subjectsRes, subjectMembersRes, announcementsRes] = await Promise.all([
+      subjectsPromise,
+      subjectMembersPromise,
+      query,
+    ]);
+
+    if (userRole === 'teacher') {
+      authorizedSubjects = (subjectsRes.data || [])
+        .map((ts: any) => ({
+          id: ts.subject?.id || ts.subject_id,
+          name: ts.subject?.name || 'Subject',
+        }))
+        .filter((s: any) => Boolean(s.id));
+    } else if (userRole === 'institute_head') {
+      authorizedSubjects = (subjectsRes.data || []).map((s: any) => ({
+        id: s.id,
+        name: s.name,
+      }));
+    }
+
+    const userSubjectIds = (subjectMembersRes.data || []).map((sm: any) => sm.subject_id);
+    const data = announcementsRes.data;
+    const error = announcementsRes.error;
 
     if (!error && data) {
       // Filter by target scope: institution-wide OR user's enrolled subjects

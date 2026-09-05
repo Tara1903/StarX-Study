@@ -507,35 +507,43 @@ export function GroupInfoPanel({
         </div>
       </div>
 
-      {/* Sub-Dialogs & Viewers */}
-      <ImageViewerModal
-        item={selectedImage}
-        onClose={() => setSelectedImage(null)}
-      />
+      {/* Sub-Dialogs & Viewers (Rendered only on-demand) */}
+      {selectedImage && (
+        <ImageViewerModal
+          item={selectedImage}
+          onClose={() => setSelectedImage(null)}
+        />
+      )}
 
-      <MediaBrowserDialog
-        isOpen={isMediaBrowserOpen}
-        onClose={() => setIsMediaBrowserOpen(false)}
-        media={data.media}
-        groupName={data.name}
-        onSelectImage={(item) => {
-          setIsMediaBrowserOpen(false);
-          setSelectedImage(item);
-        }}
-      />
+      {isMediaBrowserOpen && (
+        <MediaBrowserDialog
+          isOpen={isMediaBrowserOpen}
+          onClose={() => setIsMediaBrowserOpen(false)}
+          media={data.media}
+          groupName={data.name}
+          onSelectImage={(item) => {
+            setIsMediaBrowserOpen(false);
+            setSelectedImage(item);
+          }}
+        />
+      )}
 
-      <MemberProfileDialog
-        member={selectedMember}
-        onClose={() => setSelectedMember(null)}
-      />
+      {selectedMember && (
+        <MemberProfileDialog
+          member={selectedMember}
+          onClose={() => setSelectedMember(null)}
+        />
+      )}
 
-      <AddMemberDialog
-        isOpen={isAddMemberOpen}
-        onClose={() => setIsAddMemberOpen(false)}
-        conversationId={data.id}
-        currentMemberIds={membersList.map((m) => m.id)}
-        onMemberAdded={handleMemberAdded}
-      />
+      {isAddMemberOpen && (
+        <AddMemberDialog
+          isOpen={isAddMemberOpen}
+          onClose={() => setIsAddMemberOpen(false)}
+          conversationId={data.id}
+          currentMemberIds={membersList.map((m) => m.id)}
+          onMemberAdded={handleMemberAdded}
+        />
+      )}
 
       {/* Clear Chat Selection Modal */}
       {isClearChatConfirmOpen && (

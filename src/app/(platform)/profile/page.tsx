@@ -93,32 +93,33 @@ export default function ProfilePage() {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         setAuthUser(user);
-        const { data: dbProfile } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', user.id)
-          .maybeSingle();
+        const [profileRes, membersRes] = await Promise.all([
+          supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', user.id)
+            .maybeSingle(),
+          supabase
+            .from('subject_members')
+            .select(`
+              role,
+              subject:subjects(
+                id,
+                name,
+                color,
+                icon,
+                code
+              )
+            `)
+            .eq('user_id', user.id),
+        ]);
 
-        if (dbProfile) {
-          setUserProfile((prev) => ({ ...prev, ...dbProfile }));
+        if (profileRes.data) {
+          setUserProfile((prev) => ({ ...prev, ...profileRes.data }));
         }
 
-        const { data: dbMembers } = await supabase
-          .from('subject_members')
-          .select(`
-            role,
-            subject:subjects(
-              id,
-              name,
-              color,
-              icon,
-              code
-            )
-          `)
-          .eq('user_id', user.id);
-
-        if (dbMembers) {
-          const subs = dbMembers
+        if (membersRes.data) {
+          const subs = membersRes.data
             .map((m: any) => ({
               id: m.subject?.id,
               name: m.subject?.name,

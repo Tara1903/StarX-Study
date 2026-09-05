@@ -61,20 +61,20 @@ export default async function SubjectOverviewPage({ params }: PageProps) {
 
   const isTeacher = membership?.role === 'teacher' || isInstituteHead;
 
-  // Fetch real enrolled student count
-  const { count: studentCount } = await supabase
-    .from('subject_members')
-    .select('id', { count: 'exact', head: true })
-    .eq('subject_id', subject.uuid)
-    .eq('role', 'student');
-
-  // Fetch real materials for this subject
-  const { data: dbMaterials } = await supabase
-    .from('materials')
-    .select('id, title, file_name, file_type, file_size, storage_path, created_at')
-    .eq('subject_id', subject.uuid)
-    .order('created_at', { ascending: false })
-    .limit(3);
+  // Fetch real enrolled student count and real materials in parallel
+  const [{ count: studentCount }, { data: dbMaterials }] = await Promise.all([
+    supabase
+      .from('subject_members')
+      .select('id', { count: 'exact', head: true })
+      .eq('subject_id', subject.uuid)
+      .eq('role', 'student'),
+    supabase
+      .from('materials')
+      .select('id, title, file_name, file_type, file_size, storage_path, created_at')
+      .eq('subject_id', subject.uuid)
+      .order('created_at', { ascending: false })
+      .limit(3),
+  ]);
 
   const materials = (dbMaterials || []).map((m: any) => ({
     id: m.id,

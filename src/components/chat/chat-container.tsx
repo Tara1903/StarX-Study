@@ -99,7 +99,9 @@ export function ChatContainer({
 
   const [groupInfoData, setGroupInfoData] = useState<GroupInfoData | null>(null);
 
+  // Lazy-load Group Info data ONLY when the panel is opened
   useEffect(() => {
+    if (!isGroupInfoOpen) return;
     let isMounted = true;
     getRealGroupInfo(subjectId).then((data) => {
       if (isMounted) {
@@ -109,7 +111,7 @@ export function ChatContainer({
     return () => {
       isMounted = false;
     };
-  }, [subjectId]);
+  }, [subjectId, isGroupInfoOpen]);
 
   useEffect(() => {
     if (defaultGroupInfoOpen !== undefined) {
