@@ -7,6 +7,7 @@ import { useUser } from '@/components/providers/user-provider';
 import { ROUTES } from '@/lib/constants';
 import { createClient } from '@/lib/supabase/client';
 import { UserAvatar } from '@/components/ui/user-avatar';
+import { StarXEmblem } from '@/components/ui/starx-logo';
 import { cn } from '@/lib/utils';
 import {
   MessageSquare,
@@ -106,20 +107,16 @@ export function LeftNavRail() {
   return (
     <aside
       aria-label="Desktop App Rail"
-      className="hidden lg:flex flex-col items-center justify-between w-16 xl:w-[68px] h-full bg-[#070E1B] border-r border-white/10 select-none py-3.5 shrink-0 z-30"
+      className="hidden lg:flex flex-col items-center justify-between w-16 xl:w-[68px] h-full bg-[#08110B] border-r border-[#193022] select-none py-3.5 shrink-0 z-30"
     >
-      {/* Top: StudChat Brand Icon */}
+      {/* Top: StarX Brand Icon */}
       <div className="flex flex-col items-center gap-5 w-full">
         <Link
           href={ROUTES.DASHBOARD}
-          title="studchat Home"
+          title="StarX Study Home"
           className="relative group p-1.5 rounded-2xl hover:bg-white/5 active:scale-95 transition-all"
         >
-          <img
-            src="/logo.jpg"
-            alt="studchat logo"
-            className="w-9 h-9 rounded-xl object-cover ring-1 ring-white/15 group-hover:ring-primary/50 transition-all shadow-md shadow-primary/10"
-          />
+          <StarXEmblem size={36} />
         </Link>
 
         {/* Navigation Rail Items */}
@@ -197,7 +194,7 @@ export function LeftNavRail() {
           type="button"
           onClick={handleLogout}
           disabled={isLoggingOut}
-          title="Sign out of studchat"
+          title="Sign out of StarX Study"
           className="w-10 h-10 rounded-xl flex items-center justify-center text-muted-foreground/70 hover:text-destructive hover:bg-destructive/10 active:scale-95 transition-all cursor-pointer"
         >
           {isLoggingOut ? (

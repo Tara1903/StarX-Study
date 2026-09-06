@@ -68,7 +68,7 @@ export function Header() {
       if (parts[3] === 'assignments') return `${subName} • Assignments`;
     }
 
-    return 'studchat';
+    return 'StarX Study';
   };
 
   // When viewing chat conversations or chat hub on desktop, hide the generic header

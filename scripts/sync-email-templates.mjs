@@ -73,7 +73,7 @@ function getAccessToken() {
 }
 
 async function syncEmailTemplates() {
-  console.log(`\n=== StudChat Email Templates Sync ===`);
+  console.log(`\n=== StarX Study Email Templates Sync ===`);
   console.log(`Target Project Ref: ${projectRef}`);
 
   const token = getAccessToken();
@@ -119,21 +119,22 @@ async function syncEmailTemplates() {
     {
       name: 'Email Confirmation (verify-email.html)',
       payload: {
-        mailer_subjects_confirmation: 'Verify your studchat email',
+        mailer_subjects_confirmation: 'Confirm your StarX Study account',
         mailer_templates_confirmation_content: verifyHtml,
+        smtp_sender_name: 'StarX Study',
       },
     },
     {
       name: 'Password Reset (reset-password.html)',
       payload: {
-        mailer_subjects_recovery: 'Reset your studchat password',
+        mailer_subjects_recovery: 'Reset your StarX Study password',
         mailer_templates_recovery_content: resetHtml,
       },
     },
     {
       name: 'Email Change (change-email.html)',
       payload: {
-        mailer_subjects_email_change: 'Confirm your new studchat email',
+        mailer_subjects_email_change: 'Confirm your new StarX Study email',
         mailer_templates_email_change_content: changeHtml,
       },
     },

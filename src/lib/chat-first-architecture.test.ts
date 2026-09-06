@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { PRIMARY_MOBILE_DESTINATIONS, isSubjectChatRoute, isChatRoute } from '@/lib/mobile-tokens';
 import { filterConversations, type ChatConversation, type ConversationFilterCategory } from '@/lib/conversations';
 
-describe('STUDCHAT — Chat-First Architecture & Product Restructure', () => {
+describe('STARX STUDY — Chat-First Architecture & Product Restructure', () => {
   describe('1. Mobile Primary Navigation (Handwritten Sketch 3-Pillar Model)', () => {
     it('has exactly 3 bottom navigation destinations: Friend Chat, Study Group, Profile', () => {
       expect(PRIMARY_MOBILE_DESTINATIONS).toHaveLength(3);

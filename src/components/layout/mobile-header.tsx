@@ -7,6 +7,7 @@ import { ArrowLeft, Bell, Search } from 'lucide-react';
 import { useUser } from '@/components/providers/user-provider';
 import { UserAvatar } from '@/components/ui/user-avatar';
 import { getMobileHeaderInfo, isSubjectChatRoute } from '@/lib/mobile-tokens';
+import { StarXLogo } from '@/components/ui/starx-logo';
 import { MobileSearchSheet } from '@/components/layout/mobile-search-sheet';
 
 export function MobileHeader() {
@@ -32,7 +33,7 @@ export function MobileHeader() {
 
   return (
     <>
-      <header className="lg:hidden sticky top-0 z-30 w-full bg-[#050B16]/95 backdrop-blur-md border-b border-white/10 pt-safe">
+      <header className="lg:hidden sticky top-0 z-30 w-full bg-[#050805]/95 backdrop-blur-md border-b border-[#193022] pt-safe">
         <div className="h-14 px-3.5 flex items-center justify-between gap-2">
           {/* LEFT SECTION */}
           <div className="flex items-center gap-1.5 min-w-0">
@@ -46,17 +47,7 @@ export function MobileHeader() {
                 <ArrowLeft className="w-5 h-5" />
               </button>
             ) : (
-              <Link
-                href="/dashboard"
-                className="flex items-center gap-2 shrink-0 hover:opacity-90 active:scale-95 transition-all"
-              >
-                <img
-                  src="/logo.jpg"
-                  alt="studchat logo"
-                  className="w-7 h-7 rounded-lg object-cover border border-white/10 shadow-sm"
-                />
-                <span className="font-bold text-base tracking-tight text-white">studchat</span>
-              </Link>
+              <StarXLogo variant="header" size="sm" href="/dashboard" />
             )}
 
             {headerInfo.showBack && (
@@ -94,7 +85,7 @@ export function MobileHeader() {
               className="relative w-10 h-10 flex items-center justify-center text-muted-foreground hover:text-foreground rounded-full active:scale-95 transition-all"
             >
               <Bell className="w-4 h-4" />
-              <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-destructive rounded-full ring-2 ring-[#050B16] animate-pulse" />
+              <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-destructive rounded-full ring-2 ring-background animate-pulse" />
             </Link>
 
             {/* Profile Avatar */}

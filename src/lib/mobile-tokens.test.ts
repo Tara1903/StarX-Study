@@ -8,7 +8,7 @@ import {
   getMobileHeaderInfo,
 } from './mobile-tokens';
 
-describe('studchat Mobile Web Design System Tokens & Navigation', () => {
+describe('StarX Study Mobile Web Design System Tokens & Navigation', () => {
   it('defines the shared mobile header and bottom navigation dimensions', () => {
     expect(MOBILE_HEADER_HEIGHT).toBe(56);
     expect(MOBILE_BOTTOM_NAV_HEIGHT).toBe(64);

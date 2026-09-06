@@ -87,7 +87,7 @@ export function InviteManager({ universityId, initialInvites }: { universityId: 
           <button 
             type="submit" 
             disabled={loading}
-            className="w-full bg-primary hover:bg-[#12CFEA] text-primary-foreground h-10 rounded-md font-medium transition-colors flex items-center justify-center gap-2"
+            className="w-full bg-primary hover:bg-[#22C55E] text-primary-foreground h-10 rounded-md font-medium transition-colors flex items-center justify-center gap-2"
           >
             <Plus className="h-4 w-4" />
             <span>Generate</span>

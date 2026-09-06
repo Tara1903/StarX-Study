@@ -1,5 +1,5 @@
 /**
- * StudChat Production Security Utilities
+ * StarX Study Production Security Utilities
  * Balanced, production-grade security safeguards for input, URLs, files, and uploads.
  */
 

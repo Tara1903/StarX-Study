@@ -18,39 +18,39 @@ export function AcademicReviewStep({ data, onNext, onPrev }: AcademicReviewStepP
       </div>
 
       <div className="space-y-4">
-        <div className="p-4 rounded-xl border border-white/10 bg-white/5 space-y-3">
-          <div className="flex justify-between items-center border-b border-white/5 pb-3">
-            <span className="text-[#A8B2C2] text-sm">Account Type</span>
+        <div className="p-4 rounded-xl border border-border bg-card space-y-3">
+          <div className="flex justify-between items-center border-b border-border/50 pb-3">
+            <span className="text-muted-foreground text-sm">Account Type</span>
             <span className="text-white font-medium capitalize">{data.role?.replace('_', ' ')}</span>
           </div>
           
-          <div className="flex justify-between items-center border-b border-white/5 pb-3">
-            <span className="text-[#A8B2C2] text-sm">Full Name</span>
+          <div className="flex justify-between items-center border-b border-border/50 pb-3">
+            <span className="text-muted-foreground text-sm">Full Name</span>
             <span className="text-white font-medium">{data.fullName}</span>
           </div>
 
-          <div className="flex justify-between items-center border-b border-white/5 pb-3">
-            <span className="text-[#A8B2C2] text-sm">Institution</span>
+          <div className="flex justify-between items-center border-b border-border/50 pb-3">
+            <span className="text-muted-foreground text-sm">Institution</span>
             <span className="text-white font-medium">{data.universityName}</span>
           </div>
 
           {data.campusId && (
-            <div className="flex justify-between items-center border-b border-white/5 pb-3">
-              <span className="text-[#A8B2C2] text-sm">Campus</span>
+            <div className="flex justify-between items-center border-b border-border/50 pb-3">
+              <span className="text-muted-foreground text-sm">Campus</span>
               <span className="text-white font-medium capitalize">{data.campusId}</span>
             </div>
           )}
 
           {data.departmentId && (
-            <div className="flex justify-between items-center border-b border-white/5 pb-3">
-              <span className="text-[#A8B2C2] text-sm">Department</span>
+            <div className="flex justify-between items-center border-b border-border/50 pb-3">
+              <span className="text-muted-foreground text-sm">Department</span>
               <span className="text-white font-medium uppercase">{data.departmentId}</span>
             </div>
           )}
 
           {data.role === 'teacher' && data.designation && (
-            <div className="flex justify-between items-center border-b border-white/5 pb-3">
-              <span className="text-[#A8B2C2] text-sm">Designation</span>
+            <div className="flex justify-between items-center border-b border-border/50 pb-3">
+              <span className="text-muted-foreground text-sm">Designation</span>
               <span className="text-white font-medium">{data.designation}</span>
             </div>
           )}
@@ -60,7 +60,7 @@ export function AcademicReviewStep({ data, onNext, onPrev }: AcademicReviewStepP
       <button
         type="button"
         onClick={onNext}
-        className="flex w-full items-center justify-center gap-2 h-11 rounded-lg bg-[#168BFF] px-4 py-2 text-sm font-medium text-white hover:bg-[#12CFEA] transition-all group"
+        className="flex w-full items-center justify-center gap-2 h-11 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-[#22C55E] transition-all group shadow-sm"
       >
         Confirm & Continue
         <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />

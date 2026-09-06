@@ -9,7 +9,7 @@ import {
 } from './study-groups-client';
 
 export const metadata: Metadata = {
-  title: 'Study Groups | studchat',
+  title: 'Study Groups | StarX Study',
   description: 'Navigate your academic program, semester, and subject communication spaces.',
 };
 

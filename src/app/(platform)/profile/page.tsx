@@ -159,7 +159,7 @@ export default function ProfilePage() {
 
       // Load notification preferences from localStorage if exists
       if (typeof window !== 'undefined') {
-        const savedPrefs = localStorage.getItem('studchat_notif_preferences');
+        const savedPrefs = localStorage.getItem('starx_notif_preferences') ?? localStorage.getItem('studchat_notif_preferences');
         if (savedPrefs) {
           try {
             setNotifPrefs(JSON.parse(savedPrefs));
@@ -189,7 +189,7 @@ export default function ProfilePage() {
   }, [supabase]);
 
   const handleSignOut = async () => {
-    if (confirm('Are you sure you want to sign out of StudChat?')) {
+    if (confirm('Are you sure you want to sign out of StarX Study?')) {
       await supabase.auth.signOut();
       router.push('/login');
       router.refresh();
@@ -200,7 +200,7 @@ export default function ProfilePage() {
     setNotifPrefs((prev) => {
       const updated = { ...prev, [key]: !prev[key] };
       if (typeof window !== 'undefined') {
-        localStorage.setItem('studchat_notif_preferences', JSON.stringify(updated));
+        localStorage.setItem('starx_notif_preferences', JSON.stringify(updated));
       }
       return updated;
     });
@@ -384,7 +384,7 @@ export default function ProfilePage() {
     return (
       <div className="p-12 flex flex-col items-center justify-center gap-3 min-h-[50vh]">
         <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
-        <p className="text-xs text-muted-foreground font-medium">Loading your StudChat identity...</p>
+        <p className="text-xs text-muted-foreground font-medium">Loading your StarX Study identity...</p>
       </div>
     );
   }
@@ -853,7 +853,7 @@ export default function ProfilePage() {
             <span>Notification Preferences</span>
           </h2>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Configure how and when you receive academic notifications on StudChat
+            Configure how and when you receive academic notifications on StarX Study
           </p>
         </div>
 
@@ -1096,18 +1096,18 @@ export default function ProfilePage() {
       {/* PASSKEY MODALS */}
       {passkeyModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-          <div className="bg-[#0b1324] border border-white/10 rounded-2xl p-6 max-w-md w-full space-y-5 shadow-2xl animate-in fade-in zoom-in-95">
+          <div className="bg-card border border-border rounded-2xl p-6 max-w-md w-full space-y-5 shadow-2xl animate-in fade-in zoom-in-95">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-[#168BFF]/15 border border-[#168BFF]/30 flex items-center justify-center text-[#168BFF]">
+              <div className="w-10 h-10 rounded-xl bg-primary/15 border border-primary/30 flex items-center justify-center text-primary">
                 <Fingerprint className="w-6 h-6" />
               </div>
               <div>
                 <h3 className="text-base font-bold text-white">Create a passkey</h3>
-                <p className="text-xs text-[#A8B2C2]">Fast, passwordless authentication</p>
+                <p className="text-xs text-muted-foreground">Fast, passwordless authentication</p>
               </div>
             </div>
 
-            <p className="text-xs text-[#A8B2C2] leading-relaxed">
+            <p className="text-xs text-muted-foreground leading-relaxed">
               Use your device&apos;s biometrics (Fingerprint, Touch ID, Windows Hello), PIN, or hardware security key to sign in faster next time.
             </p>
 
@@ -1118,7 +1118,7 @@ export default function ProfilePage() {
                 value={passkeyNickName}
                 onChange={(e) => setPasskeyNickName(e.target.value)}
                 placeholder="e.g. Windows PC, Mac, Work Laptop"
-                className="w-full bg-[#111D31] border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-[#168BFF]"
+                className="w-full bg-background border border-border rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-primary focus:ring-1 focus:ring-primary/20"
               />
             </div>
 
@@ -1127,7 +1127,7 @@ export default function ProfilePage() {
                 type="button"
                 onClick={() => setPasskeyModalOpen(false)}
                 disabled={isAddingPasskey}
-                className="px-4 py-2 rounded-xl text-xs font-medium text-[#A8B2C2] hover:text-white hover:bg-white/5 transition-colors"
+                className="px-4 py-2 rounded-xl text-xs font-medium text-muted-foreground hover:text-white hover:bg-white/5 transition-colors"
               >
                 Cancel
               </button>
@@ -1135,7 +1135,7 @@ export default function ProfilePage() {
                 type="button"
                 onClick={handleAddPasskey}
                 disabled={isAddingPasskey}
-                className="px-4 py-2 rounded-xl bg-[#168BFF] text-white text-xs font-semibold hover:bg-[#12CFEA] transition-colors disabled:opacity-50"
+                className="px-4 py-2 rounded-xl bg-primary text-white text-xs font-semibold hover:bg-[#22C55E] transition-colors disabled:opacity-50 shadow-sm"
               >
                 {isAddingPasskey ? 'Registering...' : 'Continue'}
               </button>
@@ -1146,28 +1146,28 @@ export default function ProfilePage() {
 
       {editingPasskey && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-          <div className="bg-[#0b1324] border border-white/10 rounded-2xl p-6 max-w-sm w-full space-y-4 shadow-2xl">
+          <div className="bg-card border border-border rounded-2xl p-6 max-w-sm w-full space-y-4 shadow-2xl">
             <h3 className="text-sm font-bold text-white">Rename Passkey</h3>
             <input
               type="text"
               value={renamingPasskeyName}
               onChange={(e) => setRenamingPasskeyName(e.target.value)}
               placeholder="Passkey name"
-              className="w-full bg-[#111D31] border border-white/10 rounded-xl px-3.5 py-2 text-xs text-white outline-none focus:border-[#168BFF]"
+              className="w-full bg-background border border-border rounded-xl px-3.5 py-2 text-xs text-white outline-none focus:border-primary focus:ring-1 focus:ring-primary/20"
               autoFocus
             />
             <div className="flex items-center justify-end gap-2 pt-2">
               <button
                 type="button"
                 onClick={() => setEditingPasskey(null)}
-                className="px-3 py-1.5 rounded-lg text-xs text-[#A8B2C2] hover:text-white"
+                className="px-3 py-1.5 rounded-lg text-xs text-muted-foreground hover:text-white"
               >
                 Cancel
               </button>
               <button
                 type="button"
                 onClick={handleRenamePasskey}
-                className="px-3 py-1.5 rounded-lg bg-[#168BFF] text-white text-xs font-semibold hover:bg-[#12CFEA]"
+                className="px-3 py-1.5 rounded-lg bg-primary text-white text-xs font-semibold hover:bg-[#22C55E] shadow-sm"
               >
                 Save
               </button>
@@ -1178,13 +1178,13 @@ export default function ProfilePage() {
 
       {deletingPasskey && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-          <div className="bg-[#0b1324] border border-red-500/20 rounded-2xl p-6 max-w-sm w-full space-y-4 shadow-2xl">
-            <div className="flex items-center gap-2 text-red-400 font-bold text-sm">
+          <div className="bg-card border border-destructive/30 rounded-2xl p-6 max-w-sm w-full space-y-4 shadow-2xl">
+            <div className="flex items-center gap-2 text-destructive font-bold text-sm">
               <AlertCircle className="w-5 h-5 shrink-0" />
               <span>Remove this passkey?</span>
             </div>
-            <p className="text-xs text-[#A8B2C2] leading-relaxed">
-              You won&apos;t be able to use <strong className="text-white">{deletingPasskey.friendly_name || 'this passkey'}</strong> to sign in to studchat from that device or authenticator.
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              You won&apos;t be able to use <strong className="text-white">{deletingPasskey.friendly_name || 'this passkey'}</strong> to sign in to StarX Study from that device or authenticator.
             </p>
             <div className="flex items-center justify-end gap-2 pt-2">
               <button
@@ -1222,7 +1222,7 @@ export default function ProfilePage() {
 
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-1">
           <div>
-            <p className="text-xs font-semibold text-foreground">Sign Out of StudChat</p>
+            <p className="text-xs font-semibold text-foreground">Sign Out of StarX Study</p>
             <p className="text-[11px] text-muted-foreground">
               Terminates your active authentication session on this device.
             </p>

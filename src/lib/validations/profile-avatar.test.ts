@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { updateProfileSchema, updateAvatarSchema } from "./schemas";
-import { isValidPresetId, isValidEmoji, STUDCHAT_PRESETS, APPROVED_EMOJIS } from "@/lib/avatar-presets";
+import { isValidPresetId, isValidEmoji, STARX_PRESETS, APPROVED_EMOJIS } from "@/lib/avatar-presets";
 
 describe("Profile & Avatar Validation System", () => {
   describe("updateProfileSchema", () => {
@@ -42,9 +42,9 @@ describe("Profile & Avatar Validation System", () => {
   });
 
   describe("Avatar Personalization & Security Whitelist", () => {
-    it("validates all built-in StudChat studio presets", () => {
-      expect(STUDCHAT_PRESETS.length).toBeGreaterThanOrEqual(10);
-      for (const preset of STUDCHAT_PRESETS) {
+    it("validates all built-in StarX Study studio presets", () => {
+      expect(STARX_PRESETS.length).toBeGreaterThanOrEqual(10);
+      for (const preset of STARX_PRESETS) {
         expect(isValidPresetId(preset.id)).toBe(true);
       }
     });

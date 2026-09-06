@@ -70,7 +70,7 @@ export function EditProfileDialog({
               <span>Edit Personal Information</span>
             </h2>
             <p className="text-[11px] sm:text-xs text-muted-foreground mt-0.5">
-              Update your display identity and bio on StudChat
+              Update your display identity and bio on StarX Study
             </p>
           </div>
           <button

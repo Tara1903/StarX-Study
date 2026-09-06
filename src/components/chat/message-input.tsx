@@ -171,12 +171,12 @@ export function MessageInput({ subjectId, replyTo, onCancelReply, onMessageSent 
   };
 
   return (
-    <div className="p-2.5 sm:p-4 border-t border-white/10 bg-[#050B16]/95 backdrop-blur-md pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))] sticky bottom-0 z-20">
+    <div className="p-2.5 sm:p-4 border-t border-border bg-[#050805]/95 backdrop-blur-md pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))] sticky bottom-0 z-20">
       {/* Reply Banner */}
       {replyTo && (
-        <div className="flex items-center justify-between bg-[#070E1B] border border-white/10 px-3 py-1.5 rounded-xl border-l-3 border-l-[#168BFF] text-xs mb-2 shadow-sm">
+        <div className="flex items-center justify-between bg-[#08110B] border border-border px-3 py-1.5 rounded-xl border-l-3 border-l-primary text-xs mb-2 shadow-sm">
           <div className="min-w-0 pr-2">
-            <span className="text-[11px] font-semibold text-[#168BFF] block truncate">
+            <span className="text-[11px] font-semibold text-primary block truncate">
               Replying to {replyTo.sender?.full_name || 'User'}
             </span>
             <p className="text-xs text-muted-foreground truncate">

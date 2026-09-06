@@ -61,7 +61,7 @@ export function MobileNav() {
   return (
     <nav 
       aria-label="Mobile Bottom Navigation"
-      className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#050B16]/95 backdrop-blur-md border-t border-white/10 pb-safe shadow-2xl"
+      className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#050805]/95 backdrop-blur-md border-t border-[#193022] pb-safe shadow-2xl"
     >
       <div className="flex items-center justify-around h-16 px-2 max-w-lg mx-auto">
         {items.map((item) => {
@@ -80,19 +80,19 @@ export function MobileNav() {
               aria-current={isActive ? 'page' : undefined}
               className={`flex-1 flex flex-col items-center justify-center h-full py-1.5 px-1 relative transition-all active:scale-95 ${
                 isActive
-                  ? 'text-[#168BFF]'
+                  ? 'text-primary'
                   : 'text-muted-foreground hover:text-foreground'
               }`}
             >
               {/* Active Indicator Top Glow */}
               {isActive && (
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-[#168BFF] rounded-full shadow-[0_0_8px_#168BFF]" />
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-primary rounded-full shadow-[0_0_8px_rgba(34,197,94,0.4)]" />
               )}
 
               {/* Icon Container with Badge */}
               <div className="relative flex items-center justify-center w-6 h-6">
                 {item.useAvatar && profile ? (
-                  <div className={`rounded-full p-0.5 transition-all ${isActive ? 'ring-2 ring-[#168BFF]' : ''}`}>
+                  <div className={`rounded-full p-0.5 transition-all ${isActive ? 'ring-2 ring-primary' : ''}`}>
                     <UserAvatar profile={profile} size="xs" className="w-5 h-5" />
                   </div>
                 ) : (
@@ -103,7 +103,7 @@ export function MobileNav() {
                 {item.badge && item.badge > 0 && (
                   <span 
                     aria-label={`${item.badge} unread notifications`}
-                    className="absolute -top-1 -right-1.5 min-w-[15px] h-[15px] px-1 bg-destructive text-destructive-foreground text-[9px] font-bold rounded-full flex items-center justify-center ring-2 ring-[#050B16] shadow-sm"
+                    className="absolute -top-1 -right-1.5 min-w-[15px] h-[15px] px-1 bg-destructive text-destructive-foreground text-[9px] font-bold rounded-full flex items-center justify-center ring-2 ring-[#050805] shadow-sm"
                   >
                     {item.badge > 9 ? '9+' : item.badge}
                   </span>
@@ -112,7 +112,7 @@ export function MobileNav() {
 
               {/* Label */}
               <span className={`text-[10px] tracking-tight mt-1 transition-all ${
-                isActive ? 'font-bold text-[#168BFF]' : 'font-medium text-muted-foreground'
+                isActive ? 'font-bold text-primary' : 'font-medium text-muted-foreground'
               }`}>
                 {item.name}
               </span>

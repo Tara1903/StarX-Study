@@ -6,8 +6,8 @@ import { MobileNav } from '@/components/layout/mobile-nav';
 import { MessageSquare, ShieldCheck, Zap, Users } from 'lucide-react';
 
 export const metadata: Metadata = {
-  title: 'Chats | studchat',
-  description: 'Your class cohort and personal messaging hub on studchat.',
+  title: 'Chats | StarX Study',
+  description: 'Your class cohort and personal messaging hub on StarX Study.',
 };
 
 export default async function ChatHubPage() {
@@ -19,7 +19,7 @@ export default async function ChatHubPage() {
   }
 
   return (
-    <div className="h-full w-full flex overflow-hidden bg-[#050B16]">
+    <div className="h-full w-full flex overflow-hidden bg-background">
       {/* Mobile Root View: Conversation List taking full mobile screen (Hidden on Desktop) */}
       <div className="lg:hidden flex flex-col w-full h-full relative">
         <ChatConversationList className="border-r-0 pb-16" />
@@ -27,7 +27,7 @@ export default async function ChatHubPage() {
       </div>
 
       {/* Desktop View: Premium Restrained Empty Conversation Placeholder (Hidden on Mobile) */}
-      <div className="hidden lg:flex flex-1 flex-col items-center justify-center bg-[#070E1B] p-8 text-center select-none">
+      <div className="hidden lg:flex flex-1 flex-col items-center justify-center bg-[#08110B] p-8 text-center select-none">
         <div className="max-w-md flex flex-col items-center space-y-4 animate-in fade-in zoom-in-95 duration-200">
           <div className="w-16 h-16 rounded-3xl bg-primary/10 border border-primary/25 flex items-center justify-center text-primary shadow-xl shadow-primary/10">
             <MessageSquare className="w-8 h-8" />

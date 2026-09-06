@@ -43,7 +43,7 @@ export default async function AdminSubjectsPage() {
           <h1 className="text-2xl font-bold text-foreground">Subjects</h1>
           <p className="text-muted-foreground mt-1">Manage course offerings and subject assignments.</p>
         </div>
-        <button className="flex items-center space-x-2 bg-primary hover:bg-[#12CFEA] text-primary-foreground px-4 py-2 rounded-md font-medium transition-colors">
+        <button className="flex items-center space-x-2 bg-primary hover:bg-[#22C55E] text-primary-foreground px-4 py-2 rounded-md font-medium transition-colors">
           <Plus className="h-4 w-4" />
           <span>Add Subject</span>
         </button>

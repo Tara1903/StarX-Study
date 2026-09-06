@@ -19,28 +19,28 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 5,
   viewportFit: "cover",
-  themeColor: "#050B16",
+  themeColor: "#050805",
 };
 
 export const metadata: Metadata = {
   title: {
-    default: "studchat",
-    template: "%s | studchat",
+    default: "StarX Study",
+    template: "%s | StarX Study",
   },
-  description: "Chat. Share. Learn. Together. - A premium student & teacher communication platform",
-  keywords: ["education", "student", "teacher", "university", "communication", "platform"],
-  applicationName: "studchat",
+  description: "StarX Study — Chat. Share. Learn. Together. BEYOND TOMORROW.",
+  keywords: ["StarX", "StarX Study", "education", "student", "teacher", "communication", "platform", "beyond tomorrow"],
+  applicationName: "StarX Study",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "studchat",
+    title: "StarX Study",
   },
   formatDetection: {
     telephone: false,
   },
   icons: {
-    icon: "/icon.jpg",
-    apple: "/icon.jpg",
+    icon: "/images/starx-emblem.png",
+    apple: "/images/starx-emblem.png",
   },
 };
 

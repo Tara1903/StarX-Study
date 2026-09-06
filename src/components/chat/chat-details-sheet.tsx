@@ -126,7 +126,7 @@ export function ChatDetailsSheet({
                   </span>
                   <span className="px-2.5 py-1 rounded-lg text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-1.5">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                    Active on StudChat
+                    Active on StarX Study
                   </span>
                 </>
               )}
@@ -199,12 +199,12 @@ export function ChatDetailsSheet({
           </div>
 
           {/* Privacy & Security Note */}
-          <div className="p-3.5 rounded-xl bg-blue-500/5 border border-blue-500/15 flex items-start gap-2.5">
+          <div className="p-3.5 rounded-xl bg-primary/5 border border-primary/20 flex items-start gap-2.5">
             <ShieldCheck className="w-4 h-4 text-primary shrink-0 mt-0.5" />
             <p className="text-[11px] text-muted-foreground leading-relaxed">
               {isSubject
                 ? 'Subject messages are protected by cohort-based RLS permissions and audited under institutional guidelines.'
-                : 'Personal messages are encrypted and strictly participant-authorized. StudChat enforces zero-trust participant access.'}
+                : 'Personal messages are encrypted and strictly participant-authorized. StarX Study enforces zero-trust participant access.'}
             </p>
           </div>
         </div>

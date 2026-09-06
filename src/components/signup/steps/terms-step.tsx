@@ -65,21 +65,21 @@ export function TermsStep({ data, onNext, onPrev }: TermsStepProps) {
         <h2 className="text-2xl font-bold text-white">Terms & Privacy</h2>
       </div>
 
-      <div className="p-6 rounded-xl border border-white/10 bg-[#111D31] space-y-4 text-sm text-[#A8B2C2]">
+      <div className="p-6 rounded-xl border border-border bg-card space-y-4 text-sm text-muted-foreground">
         <div className="flex items-start gap-4">
-          <ShieldCheck className="w-6 h-6 text-[#168BFF] shrink-0 mt-0.5" />
+          <ShieldCheck className="w-6 h-6 text-primary shrink-0 mt-0.5" />
           <p>
-            By creating an account, you agree to studchat's Terms of Service and Privacy Policy.
+            By creating an account, you agree to StarX Study&apos;s Terms of Service and Privacy Policy.
             We ensure that your academic data is securely protected and only shared with your affiliated institution.
           </p>
         </div>
         
-        <label className="flex items-start gap-3 p-3 rounded-lg border border-white/5 bg-white/5 cursor-pointer hover:bg-white/10 transition-colors">
+        <label className="flex items-start gap-3 p-3 rounded-lg border border-border/50 bg-background/50 cursor-pointer hover:bg-background transition-colors">
           <input
             type="checkbox"
             checked={agreed}
             onChange={(e) => setAgreed(e.target.checked)}
-            className="mt-1 rounded border-white/20 bg-black/20 text-[#168BFF] focus:ring-[#168BFF]/50"
+            className="mt-1 rounded border-border bg-card text-primary focus:ring-primary/50"
           />
           <span className="text-white font-medium">I agree to the Terms of Service and Privacy Policy</span>
         </label>
@@ -91,7 +91,7 @@ export function TermsStep({ data, onNext, onPrev }: TermsStepProps) {
         type="button"
         disabled={!agreed || isSubmitting}
         onClick={handleSubmit}
-        className="flex w-full items-center justify-center gap-2 h-11 rounded-lg bg-[#168BFF] px-4 py-2 text-sm font-medium text-white hover:bg-[#12CFEA] transition-all group disabled:opacity-50 disabled:cursor-not-allowed"
+        className="flex w-full items-center justify-center gap-2 h-11 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-[#22C55E] transition-all group disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
       >
         {isSubmitting ? (
           <Loader2 className="w-5 h-5 animate-spin" />

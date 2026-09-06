@@ -21,8 +21,8 @@ export async function generateMetadata({
 }: ChatConversationPageProps): Promise<Metadata> {
   const { conversationId } = await params;
   return {
-    title: 'Chat | studchat',
-    description: 'Realtime chat session on studchat',
+    title: 'Chat | StarX Study',
+    description: 'Realtime chat session on StarX Study',
   };
 }
 
@@ -143,10 +143,10 @@ export default async function ChatConversationPage({ params, searchParams }: Cha
   }
 
   return (
-    <div className="flex-1 flex flex-col h-full w-full overflow-hidden min-w-0 bg-[#050B16]">
+    <div className="flex-1 flex flex-col h-full w-full overflow-hidden min-w-0 bg-background">
       <Suspense
         fallback={
-          <div className="h-full flex items-center justify-center bg-[#050B16]">
+          <div className="h-full flex items-center justify-center bg-background">
             <Loader2 className="w-8 h-8 animate-spin text-primary" />
           </div>
         }

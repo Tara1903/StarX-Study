@@ -74,7 +74,7 @@ export function AnnouncementsClient({
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      localStorage.setItem('studchat_main_announcements', JSON.stringify(announcements));
+      localStorage.setItem('starx_main_announcements', JSON.stringify(announcements));
     }
   }, [announcements]);
 

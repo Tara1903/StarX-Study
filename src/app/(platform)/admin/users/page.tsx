@@ -41,7 +41,7 @@ export default async function AdminUsersPage() {
           <h1 className="text-2xl font-bold text-foreground">Users</h1>
           <p className="text-muted-foreground mt-1">Manage university staff, teachers, and students.</p>
         </div>
-        <button className="flex items-center space-x-2 bg-primary hover:bg-[#12CFEA] text-primary-foreground px-4 py-2 rounded-md font-medium transition-colors">
+        <button className="flex items-center space-x-2 bg-primary hover:bg-[#22C55E] text-primary-foreground px-4 py-2 rounded-md font-medium transition-colors">
           <UserPlus className="h-4 w-4" />
           <span>Invite User</span>
         </button>

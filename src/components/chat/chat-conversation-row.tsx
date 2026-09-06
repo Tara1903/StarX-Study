@@ -1,6 +1,6 @@
 import { memo } from 'react';
 import Link from 'next/link';
-import { Pin, BellOff, CheckCheck, Users } from 'lucide-react';
+import { Pin, BellOff, CheckCheck, Users, BookOpen } from 'lucide-react';
 import { UserAvatar } from '@/components/ui/user-avatar';
 import type { ChatConversation } from '@/lib/conversations';
 import { cn } from '@/lib/utils';
@@ -44,9 +44,9 @@ export const ChatConversationRow = memo(function ChatConversationRow({
             style={{
               backgroundColor: conversation.color
                 ? `${conversation.color}25`
-                : 'rgba(59, 130, 246, 0.2)',
-              color: conversation.color || '#3B82F6',
-              border: `1px solid ${conversation.color ? `${conversation.color}40` : 'rgba(59, 130, 246, 0.3)'}`,
+                : 'rgba(22, 163, 74, 0.2)',
+              color: conversation.color || '#22C55E',
+              border: `1px solid ${conversation.color ? `${conversation.color}40` : 'rgba(22, 163, 74, 0.3)'}`,
             }}
           >
             {conversation.facultyAbb ? (
@@ -54,7 +54,7 @@ export const ChatConversationRow = memo(function ChatConversationRow({
                 {conversation.facultyAbb.slice(0, 3)}
               </span>
             ) : (
-              <Users className="w-5 h-5" />
+              <BookOpen className="w-5 h-5 text-primary" />
             )}
           </div>
         ) : (
@@ -71,7 +71,7 @@ export const ChatConversationRow = memo(function ChatConversationRow({
 
         {/* Online Status Dot for personal */}
         {!isSubject && conversation.onlineStatus === 'online' && (
-          <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-500 ring-2 ring-[#050B16]" />
+          <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-500 ring-2 ring-background" />
         )}
       </div>
 

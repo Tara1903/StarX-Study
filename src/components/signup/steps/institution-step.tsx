@@ -79,7 +79,7 @@ export function InstitutionStep({ data, onNext, onPrev }: InstitutionStepProps) 
         <button
           onClick={() => setSelectedType(selectedType === 'university' ? null : 'university')}
           className={`px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-1 transition-colors ${
-            selectedType === 'university' ? 'bg-[#168BFF] text-white' : 'bg-white/5 text-[#A8B2C2] hover:bg-white/10'
+            selectedType === 'university' ? 'bg-primary text-white' : 'bg-card text-muted-foreground hover:bg-card/80 border border-border'
           }`}
         >
           <Building className="w-3 h-3" /> University
@@ -87,7 +87,7 @@ export function InstitutionStep({ data, onNext, onPrev }: InstitutionStepProps) 
         <button
           onClick={() => setSelectedType(selectedType === 'college' ? null : 'college')}
           className={`px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-1 transition-colors ${
-            selectedType === 'college' ? 'bg-[#168BFF] text-white' : 'bg-white/5 text-[#A8B2C2] hover:bg-white/10'
+            selectedType === 'college' ? 'bg-primary text-white' : 'bg-card text-muted-foreground hover:bg-card/80 border border-border'
           }`}
         >
           <GraduationCap className="w-3 h-3" /> College
@@ -95,7 +95,7 @@ export function InstitutionStep({ data, onNext, onPrev }: InstitutionStepProps) 
         <button
           onClick={() => setSelectedType(selectedType === 'school' ? null : 'school')}
           className={`px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-1 transition-colors ${
-            selectedType === 'school' ? 'bg-[#168BFF] text-white' : 'bg-white/5 text-[#A8B2C2] hover:bg-white/10'
+            selectedType === 'school' ? 'bg-primary text-white' : 'bg-card text-muted-foreground hover:bg-card/80 border border-border'
           }`}
         >
           <Library className="w-3 h-3" /> School
@@ -104,21 +104,21 @@ export function InstitutionStep({ data, onNext, onPrev }: InstitutionStepProps) 
 
       <div className="relative">
         <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-          <Search className="h-5 w-5 text-[#6F7B8E]" />
+          <Search className="h-5 w-5 text-muted-foreground" />
         </div>
         <input
           type="text"
           value={search}
           onChange={e => setSearch(e.target.value)}
-          className="block w-full h-11 rounded-lg border border-white/10 bg-[#111D31] text-white pl-10 px-3 py-2 text-sm placeholder-[#6F7B8E] focus:border-[#168BFF] focus:outline-none focus:ring-2 focus:ring-[#168BFF]/20"
+          className="block w-full h-11 rounded-lg border border-border bg-card text-white pl-10 px-3 py-2 text-sm placeholder-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
           placeholder="Search institutions..."
         />
       </div>
 
       <div className="flex-1 overflow-y-auto space-y-2 pr-2 custom-scrollbar">
         {isLoading ? (
-          <div className="flex items-center justify-center py-12 text-[#6F7B8E] text-sm">
-            <Loader2 className="w-5 h-5 animate-spin mr-2 text-[#168BFF]" /> Loading institutions...
+          <div className="flex items-center justify-center py-12 text-muted-foreground text-sm">
+            <Loader2 className="w-5 h-5 animate-spin mr-2 text-primary" /> Loading institutions...
           </div>
         ) : filtered.length === 0 ? (
           <div className="text-center py-8 text-[#6F7B8E] text-sm">

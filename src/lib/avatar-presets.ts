@@ -1,5 +1,5 @@
 // ============================================
-// StudChat Curated Avatar Presets & Emojis
+// StarX Study Curated Avatar Presets & Emojis
 // 100% Original, Zero External Copyrights
 // ============================================
 
@@ -19,7 +19,7 @@ export interface AvatarStyle {
   border: string;
 }
 
-// Approved StudChat Emojis
+// Approved StarX Emojis
 export const APPROVED_EMOJIS = [
   '🎓', '📚', '💻', '🧠', '⚡', '🧪', 
   '📐', '🎨', '🚀', '☕', '🎮', '📖', 
@@ -29,8 +29,22 @@ export const APPROVED_EMOJIS = [
 
 export type ApprovedEmoji = (typeof APPROVED_EMOJIS)[number];
 
-// Approved StudChat Brand Styles for Emoji Avatars
+// Approved StarX Brand Styles for Emoji Avatars
 export const APPROVED_AVATAR_STYLES: AvatarStyle[] = [
+  {
+    id: 'style-starx-emerald',
+    name: 'StarX Emerald',
+    className: 'from-emerald-600 via-green-600 to-emerald-950 text-white',
+    gradient: 'linear-gradient(135deg, #16A34A 0%, #22C55E 50%, #052E16 100%)',
+    border: '#22C55E',
+  },
+  {
+    id: 'style-emerald-circuit',
+    name: 'Emerald Matrix',
+    className: 'from-emerald-600 to-teal-900 text-white',
+    gradient: 'linear-gradient(135deg, #059669 0%, #134E4A 100%)',
+    border: '#34D399',
+  },
   {
     id: 'style-electric-blue',
     name: 'Electric Blue',
@@ -53,20 +67,6 @@ export const APPROVED_AVATAR_STYLES: AvatarStyle[] = [
     border: '#C084FC',
   },
   {
-    id: 'style-neon-cyan',
-    name: 'Neon Cyan',
-    className: 'from-cyan-600 via-teal-700 to-emerald-800 text-white',
-    gradient: 'linear-gradient(135deg, #0891B2 0%, #0F766E 50%, #065F46 100%)',
-    border: '#2DD4BF',
-  },
-  {
-    id: 'style-emerald-circuit',
-    name: 'Emerald Matrix',
-    className: 'from-emerald-600 to-teal-900 text-white',
-    gradient: 'linear-gradient(135deg, #059669 0%, #134E4A 100%)',
-    border: '#34D399',
-  },
-  {
     id: 'style-sunset-amber',
     name: 'Solar Flare',
     className: 'from-amber-600 via-orange-600 to-rose-700 text-white',
@@ -76,7 +76,27 @@ export const APPROVED_AVATAR_STYLES: AvatarStyle[] = [
 ];
 
 // Curated Studio Presets
-export const STUDCHAT_PRESETS: AvatarPreset[] = [
+export const STARX_PRESETS: AvatarPreset[] = [
+  {
+    id: 'preset_starx_core',
+    name: 'StarX Core',
+    category: 'tech',
+    accent: '#22C55E',
+    svgContent: `
+      <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-full h-full">
+        <rect width="100" height="100" fill="#08110B"/>
+        <circle cx="50" cy="50" r="34" stroke="#16A34A" stroke-width="2" stroke-dasharray="6 3" opacity="0.7"/>
+        <path d="M50 16L59 38L82 41L65 57L70 80L50 68L30 80L35 57L18 41L41 38Z" fill="url(#starx_preset_grad)" stroke="#22C55E" stroke-width="1.5"/>
+        <path d="M30 30L70 70M70 30L30 70" stroke="#86EFAC" stroke-width="2.5" stroke-linecap="round" opacity="0.9"/>
+        <defs>
+          <linearGradient id="starx_preset_grad" x1="18" y1="16" x2="82" y2="80" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#16A34A"/>
+            <stop offset="1" stop-color="#052E16"/>
+          </linearGradient>
+        </defs>
+      </svg>
+    `,
+  },
   {
     id: 'preset_quantum_core',
     name: 'Quantum Core',
@@ -288,14 +308,15 @@ export const STUDCHAT_PRESETS: AvatarPreset[] = [
   },
 ];
 
-export const PRESET_AVATAR_IDS = STUDCHAT_PRESETS.map((p) => p.id);
+export const STUDCHAT_PRESETS: AvatarPreset[] = STARX_PRESETS;
+export const PRESET_AVATAR_IDS = STARX_PRESETS.map((p) => p.id);
 
 export function getPresetById(id: string): AvatarPreset | undefined {
-  return STUDCHAT_PRESETS.find((p) => p.id === id);
+  return STARX_PRESETS.find((p) => p.id === id);
 }
 
 export function isValidPresetId(id: string): boolean {
-  return STUDCHAT_PRESETS.some((p) => p.id === id);
+  return STARX_PRESETS.some((p) => p.id === id);
 }
 
 export function isValidEmoji(emoji: string): boolean {

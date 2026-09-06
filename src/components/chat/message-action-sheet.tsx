@@ -96,9 +96,9 @@ export function MessageActionSheet({
         <div className="w-10 h-1 bg-white/20 rounded-full mx-auto my-2.5 shrink-0" />
 
         {/* Message Preview */}
-        <div className="px-4 py-2 border-b border-white/5 flex items-center justify-between gap-3">
+        <div className="px-4 py-2 border-b border-border flex items-center justify-between gap-3">
           <div className="min-w-0 flex-1">
-            <span className="text-[11px] font-semibold text-[#168BFF] block truncate">
+            <span className="text-[11px] font-semibold text-primary block truncate">
               {senderName}
             </span>
             <p className="text-xs text-muted-foreground truncate">
@@ -116,7 +116,7 @@ export function MessageActionSheet({
         </div>
 
         {/* Quick Reaction Bar */}
-        <div className="px-4 py-3 border-b border-white/5 flex items-center justify-around gap-1 bg-white/[0.02]">
+        <div className="px-4 py-3 border-b border-border flex items-center justify-around gap-1 bg-white/[0.02]">
           {QUICK_EMOJIS.map((emoji) => (
             <button
               key={emoji}
@@ -143,7 +143,7 @@ export function MessageActionSheet({
             }}
             className="w-full h-12 px-4 rounded-xl flex items-center gap-3 text-sm font-medium text-foreground hover:bg-white/5 active:bg-white/10 transition-colors cursor-pointer"
           >
-            <Reply className="w-4 h-4 text-[#168BFF]" />
+            <Reply className="w-4 h-4 text-primary" />
             <span>Reply</span>
           </button>
 
@@ -174,7 +174,7 @@ export function MessageActionSheet({
                 </>
               ) : (
                 <>
-                  <Bookmark className="w-4 h-4 text-[#168BFF]" />
+                  <Bookmark className="w-4 h-4 text-primary" />
                   <span>Save to Profile</span>
                 </>
               )}

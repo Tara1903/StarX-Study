@@ -19,7 +19,7 @@ export function PlatformShell({ children }: PlatformShellProps) {
     // Immersive, dedicated messaging application taking 100% available viewport width & height.
     // The global application sidebar, global header, and mobile dashboard shell are NOT rendered.
     return (
-      <div className="h-screen w-full bg-[#050B16] text-foreground overflow-hidden">
+      <div className="h-screen w-full bg-background text-foreground overflow-hidden">
         {children}
       </div>
     );

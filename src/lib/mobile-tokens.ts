@@ -1,5 +1,5 @@
 /**
- * studchat Mobile Web Design System Tokens
+ * StarX Study Mobile Web Design System Tokens
  * Defined shared tokens for mobile header, navigation, typography, safe areas, and geometry.
  */
 
@@ -187,7 +187,7 @@ export function getMobileHeaderInfo(pathname: string): {
 
   return {
     isRoot: false,
-    title: 'studchat',
+    title: 'StarX Study',
     showBack: true,
     backHref: '/dashboard',
   };

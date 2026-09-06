@@ -55,18 +55,18 @@ export function TokenStep({ data, onNext, onPrev }: TokenStepProps) {
 
       <div className="space-y-4">
         <div className="space-y-1">
-          <label className="text-sm font-medium text-[#F5F7FB]">Enter Token</label>
+          <label className="text-sm font-medium text-foreground">Enter Token</label>
           <div className="relative">
             <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-              <Building className="h-5 w-5 text-[#6F7B8E]" />
+              <Building className="h-5 w-5 text-muted-foreground" />
             </div>
             <input
               type="text"
               value={token}
               onChange={e => setToken(e.target.value)}
-              className={`block w-full h-11 rounded-lg border bg-[#111D31] text-white ${
-                error ? 'border-red-500/50 focus:border-red-500 focus:ring-red-500/20' : 'border-white/10 focus:border-[#168BFF] focus:ring-[#168BFF]/20'
-              } pl-10 px-3 py-2 text-sm placeholder-[#6F7B8E] focus:outline-none focus:ring-2`}
+              className={`block w-full h-11 rounded-lg border bg-card text-white ${
+                error ? 'border-red-500/50 focus:border-red-500 focus:ring-red-500/20' : 'border-border focus:border-primary focus:ring-primary/20'
+              } pl-10 px-3 py-2 text-sm placeholder-muted-foreground focus:outline-none focus:ring-2`}
               placeholder="PT-XXXXXXXXXXXXXXXX"
             />
           </div>
@@ -77,7 +77,7 @@ export function TokenStep({ data, onNext, onPrev }: TokenStepProps) {
       <button
         type="submit"
         disabled={isValidating}
-        className="flex w-full items-center justify-center gap-2 h-11 rounded-lg bg-[#168BFF] px-4 py-2 text-sm font-medium text-white hover:bg-[#12CFEA] transition-all group disabled:opacity-50"
+        className="flex w-full items-center justify-center gap-2 h-11 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-[#22C55E] transition-all group disabled:opacity-50 shadow-sm"
       >
         {isValidating ? (
           <Loader2 className="h-5 w-5 animate-spin" />

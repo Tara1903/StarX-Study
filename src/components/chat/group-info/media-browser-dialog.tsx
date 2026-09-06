@@ -45,9 +45,9 @@ export function MediaBrowserDialog({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-3 sm:p-6 animate-in fade-in duration-200 select-none">
-      <div className="relative w-full max-w-2xl bg-[#070E1B] border border-white/10 rounded-2xl sm:rounded-3xl shadow-2xl flex flex-col h-[85vh] overflow-hidden animate-in zoom-in-95 duration-200">
+      <div className="relative w-full max-w-2xl bg-card border border-border rounded-2xl sm:rounded-3xl shadow-2xl flex flex-col h-[85vh] overflow-hidden animate-in zoom-in-95 duration-200">
         {/* Header */}
-        <div className="p-4 sm:p-5 border-b border-white/10 flex items-center justify-between shrink-0 bg-[#050B16]/80">
+        <div className="p-4 sm:p-5 border-b border-border flex items-center justify-between shrink-0 bg-[#08110B]/80">
           <div>
             <h2 className="text-base sm:text-lg font-bold text-foreground">Media, links and docs</h2>
             <p className="text-xs text-muted-foreground truncate">{groupName}</p>

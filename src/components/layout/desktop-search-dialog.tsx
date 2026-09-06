@@ -268,7 +268,7 @@ export function DesktopSearchDialog({ isOpen, onClose }: DesktopSearchDialogProp
               Open
             </span>
           </div>
-          <span>studchat Global Search</span>
+          <span>StarX Study Global Search</span>
         </div>
       </div>
     </div>

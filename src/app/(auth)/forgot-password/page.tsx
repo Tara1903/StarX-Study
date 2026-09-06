@@ -67,7 +67,7 @@ export default function ForgotPasswordPage() {
         </div>
         <Link
           href="/login"
-          className="flex w-full items-center justify-center h-11 rounded-lg bg-[#168BFF] px-4 py-2 text-sm font-medium text-white hover:bg-[#12CFEA] transition-colors"
+          className="flex w-full items-center justify-center h-11 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-[#22C55E] transition-colors"
         >
           Return to login
         </Link>
@@ -80,13 +80,13 @@ export default function ForgotPasswordPage() {
       <div className="text-center sm:text-left">
         <Link 
           href="/login" 
-          className="inline-flex items-center text-sm font-medium text-[#168BFF] hover:text-[#12CFEA] mb-6 transition-colors"
+          className="inline-flex items-center text-sm font-medium text-primary hover:text-[#34D399] mb-6 transition-colors"
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back to login
         </Link>
         <h1 className="text-3xl font-bold tracking-tight text-white">Forgot password?</h1>
-        <p className="mt-2 text-sm text-[#A8B2C2]">
+        <p className="mt-2 text-sm text-muted-foreground">
           No worries, we&apos;ll send you reset instructions.
         </p>
       </div>
@@ -99,12 +99,12 @@ export default function ForgotPasswordPage() {
         )}
 
         <div className="space-y-1">
-          <label className="text-sm font-medium text-[#F5F7FB]" htmlFor="email">
+          <label className="text-sm font-medium text-foreground" htmlFor="email">
             Email address
           </label>
           <div className="relative">
             <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-              <Mail className="h-5 w-5 text-[#6F7B8E]" />
+              <Mail className="h-5 w-5 text-muted-foreground" />
             </div>
             <input
               id="email"
@@ -117,9 +117,9 @@ export default function ForgotPasswordPage() {
                 if (error) setError(null);
               }}
               disabled={isLoading}
-              className={`block w-full h-11 rounded-lg border bg-[#111D31] text-white ${
-                error ? 'border-red-500/50 focus:border-red-500 focus:ring-red-500/20' : 'border-white/10 focus:border-[#168BFF] focus:ring-[#168BFF]/20'
-              } pl-10 px-3 py-2 text-sm placeholder-[#6F7B8E] focus:outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-50 transition-colors`}
+              className={`block w-full h-11 rounded-lg border bg-[#0E1A12] text-white ${
+                error ? 'border-red-500/50 focus:border-red-500 focus:ring-red-500/20' : 'border-[#193022] focus:border-primary focus:ring-primary/20'
+              } pl-10 px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-50 transition-colors`}
               placeholder="you@example.com"
             />
           </div>
@@ -128,7 +128,7 @@ export default function ForgotPasswordPage() {
         <button
           type="submit"
           disabled={isLoading}
-          className="flex w-full items-center justify-center h-11 rounded-lg bg-[#168BFF] px-4 py-2 text-sm font-medium text-white hover:bg-[#12CFEA] focus:outline-none focus:ring-2 focus:ring-[#168BFF]/50 focus:ring-offset-2 focus:ring-offset-[#050B16] disabled:cursor-not-allowed disabled:opacity-50 transition-colors shadow-sm"
+          className="flex w-full items-center justify-center h-11 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-[#22C55E] focus:outline-none focus:ring-2 focus:ring-primary/50 disabled:cursor-not-allowed disabled:opacity-50 transition-colors shadow-sm"
         >
           {isLoading ? (
             <Loader2 className="mr-2 h-5 w-5 animate-spin" />

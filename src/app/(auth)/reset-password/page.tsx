@@ -96,13 +96,13 @@ export default function ResetPasswordPage() {
         </div>
         <Link
           href="/forgot-password"
-          className="flex w-full items-center justify-center h-11 rounded-lg bg-[#168BFF] px-4 py-2 text-sm font-medium text-white hover:bg-[#12CFEA] transition-colors"
+          className="flex w-full items-center justify-center h-11 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-[#22C55E] transition-colors"
         >
           Request a new reset email
         </Link>
         <Link
           href="/login"
-          className="text-sm font-medium text-[#A8B2C2] hover:text-white transition-colors"
+          className="text-sm font-medium text-[#A7B3AA] hover:text-white transition-colors"
         >
           Back to login
         </Link>
@@ -118,15 +118,15 @@ export default function ResetPasswordPage() {
         </div>
         <div>
           <h2 className="text-2xl font-bold text-white">Password updated</h2>
-          <p className="mt-2 text-sm text-[#A8B2C2]">
+          <p className="mt-2 text-sm text-[#A7B3AA]">
             Your password has been successfully updated. You can now use your new password to sign in.
           </p>
         </div>
         <Link
           href="/dashboard"
-          className="flex w-full items-center justify-center h-11 rounded-lg bg-[#168BFF] px-4 py-2 text-sm font-medium text-white hover:bg-[#12CFEA] transition-colors shadow-sm"
+          className="flex w-full items-center justify-center h-11 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-[#22C55E] transition-colors shadow-sm"
         >
-          Continue to studchat
+          Continue to StarX Study
         </Link>
       </div>
     );
@@ -137,14 +137,14 @@ export default function ResetPasswordPage() {
       <div className="text-center sm:text-left">
         <Link
           href="/login"
-          className="inline-flex items-center text-sm font-medium text-[#168BFF] hover:text-[#12CFEA] mb-6 transition-colors"
+          className="inline-flex items-center text-sm font-medium text-primary hover:text-[#34D399] mb-6 transition-colors"
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back to login
         </Link>
         <h1 className="text-3xl font-bold tracking-tight text-white">Reset your password</h1>
-        <p className="mt-2 text-sm text-[#A8B2C2]">
-          Choose a new, secure password for your studchat account.
+        <p className="mt-2 text-sm text-[#A7B3AA]">
+          Choose a new, secure password for your StarX Study account.
         </p>
       </div>
 
@@ -172,16 +172,16 @@ export default function ResetPasswordPage() {
                 value={formData.password}
                 onChange={handleChange}
                 disabled={isLoading}
-                className={`block w-full h-11 rounded-lg border bg-[#111D31] text-white ${
+                className={`block w-full h-11 rounded-lg border bg-card text-white ${
                   errors.password
                     ? 'border-red-500/50 focus:border-red-500 focus:ring-red-500/20'
-                    : 'border-white/10 focus:border-[#168BFF] focus:ring-[#168BFF]/20'
-                } pl-10 pr-10 px-3 py-2 text-sm placeholder-[#6F7B8E] focus:outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-50 transition-colors`}
+                    : 'border-border focus:border-primary focus:ring-primary/20'
+                } pl-10 pr-10 px-3 py-2 text-sm placeholder-muted-foreground focus:outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-50 transition-colors`}
                 placeholder="At least 8 characters"
               />
               <button
                 type="button"
-                className="absolute inset-y-0 right-0 flex items-center pr-3 text-[#6F7B8E] hover:text-[#A8B2C2] transition-colors"
+                className="absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground hover:text-foreground transition-colors"
                 onClick={() => setShowPassword(!showPassword)}
                 tabIndex={-1}
               >
@@ -192,12 +192,12 @@ export default function ResetPasswordPage() {
           </div>
 
           <div className="space-y-1">
-            <label className="text-sm font-medium text-[#F5F7FB]" htmlFor="confirmPassword">
+            <label className="text-sm font-medium text-[#F5F7F5]" htmlFor="confirmPassword">
               Confirm Password
             </label>
             <div className="relative">
               <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                <Lock className="h-5 w-5 text-[#6F7B8E]" />
+                <Lock className="h-5 w-5 text-muted-foreground" />
               </div>
               <input
                 id="confirmPassword"
@@ -207,16 +207,16 @@ export default function ResetPasswordPage() {
                 value={formData.confirmPassword}
                 onChange={handleChange}
                 disabled={isLoading}
-                className={`block w-full h-11 rounded-lg border bg-[#111D31] text-white ${
+                className={`block w-full h-11 rounded-lg border bg-card text-white ${
                   errors.confirmPassword
                     ? 'border-red-500/50 focus:border-red-500 focus:ring-red-500/20'
-                    : 'border-white/10 focus:border-[#168BFF] focus:ring-[#168BFF]/20'
-                } pl-10 pr-10 px-3 py-2 text-sm placeholder-[#6F7B8E] focus:outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-50 transition-colors`}
+                    : 'border-border focus:border-primary focus:ring-primary/20'
+                } pl-10 pr-10 px-3 py-2 text-sm placeholder-muted-foreground focus:outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-50 transition-colors`}
                 placeholder="Confirm your password"
               />
               <button
                 type="button"
-                className="absolute inset-y-0 right-0 flex items-center pr-3 text-[#6F7B8E] hover:text-[#A8B2C2] transition-colors"
+                className="absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground hover:text-foreground transition-colors"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                 tabIndex={-1}
               >
@@ -230,7 +230,7 @@ export default function ResetPasswordPage() {
         <button
           type="submit"
           disabled={isLoading}
-          className="flex w-full items-center justify-center h-11 rounded-lg bg-[#168BFF] px-4 py-2 text-sm font-medium text-white hover:bg-[#12CFEA] focus:outline-none focus:ring-2 focus:ring-[#168BFF]/50 focus:ring-offset-2 focus:ring-offset-[#050B16] disabled:cursor-not-allowed disabled:opacity-50 transition-colors shadow-sm"
+          className="flex w-full items-center justify-center h-11 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-[#22C55E] focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 focus:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50 transition-colors shadow-sm font-semibold"
         >
           {isLoading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : 'Reset password'}
         </button>

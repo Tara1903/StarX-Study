@@ -119,7 +119,7 @@ function LoginContent() {
         }
 
         if (error.message?.toLowerCase().includes('no credentials') || error.message?.toLowerCase().includes('not found')) {
-          setErrors({ root: 'No passkey found on this device for studchat. Please sign in with email and password, then register a passkey in Security settings.' });
+          setErrors({ root: 'No passkey found on this device for StarX Study. Please sign in with email and password, then register a passkey in Security settings.' });
           return;
         }
 
@@ -172,7 +172,7 @@ function LoginContent() {
             {unconfirmedEmail && (
               <Link
                 href={`/verify-email?email=${encodeURIComponent(unconfirmedEmail)}`}
-                className="inline-block text-xs font-semibold text-[#168BFF] hover:underline"
+                className="inline-block text-xs font-semibold text-primary hover:underline"
               >
                 Resend verification email &rarr;
               </Link>
@@ -182,12 +182,12 @@ function LoginContent() {
 
         <div className="space-y-4">
           <div className="space-y-1">
-            <label className="text-sm font-medium text-[#F5F7FB]" htmlFor="email">
+            <label className="text-sm font-medium text-foreground" htmlFor="email">
               Email address
             </label>
             <div className="relative">
               <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                <Mail className="h-5 w-5 text-[#6F7B8E]" />
+                <Mail className="h-5 w-5 text-muted-foreground" />
               </div>
               <input
                 id="email"
@@ -197,9 +197,9 @@ function LoginContent() {
                 value={formData.email}
                 onChange={handleChange}
                 disabled={isLoading || isPasskeyLoading}
-                className={`block w-full h-11 rounded-lg border bg-[#111D31] text-white ${
-                  errors.email ? 'border-red-500/50 focus:border-red-500 focus:ring-red-500/20' : 'border-white/10 focus:border-[#168BFF] focus:ring-[#168BFF]/20'
-                } pl-10 px-3 py-2 text-sm placeholder-[#6F7B8E] focus:outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-50 transition-colors`}
+                className={`block w-full h-11 rounded-lg border bg-[#0E1A12] text-white ${
+                  errors.email ? 'border-red-500/50 focus:border-red-500 focus:ring-red-500/20' : 'border-[#193022] focus:border-primary focus:ring-primary/20'
+                } pl-10 px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-50 transition-colors`}
                 placeholder="you@example.com"
               />
             </div>
@@ -208,19 +208,19 @@ function LoginContent() {
 
           <div className="space-y-1">
             <div className="flex items-center justify-between">
-              <label className="text-sm font-medium text-[#F5F7FB]" htmlFor="password">
+              <label className="text-sm font-medium text-foreground" htmlFor="password">
                 Password
               </label>
               <Link
                 href="/forgot-password"
-                className="text-sm font-medium text-[#168BFF] hover:text-[#12CFEA] transition-colors"
+                className="text-sm font-medium text-primary hover:text-[#34D399] transition-colors"
               >
                 Forgot password?
               </Link>
             </div>
             <div className="relative">
               <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                <Lock className="h-5 w-5 text-[#6F7B8E]" />
+                <Lock className="h-5 w-5 text-muted-foreground" />
               </div>
               <input
                 id="password"
@@ -230,14 +230,14 @@ function LoginContent() {
                 value={formData.password}
                 onChange={handleChange}
                 disabled={isLoading || isPasskeyLoading}
-                className={`block w-full h-11 rounded-lg border bg-[#111D31] text-white ${
-                  errors.password ? 'border-red-500/50 focus:border-red-500 focus:ring-red-500/20' : 'border-white/10 focus:border-[#168BFF] focus:ring-[#168BFF]/20'
-                } pl-10 pr-10 px-3 py-2 text-sm placeholder-[#6F7B8E] focus:outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-50 transition-colors`}
+                className={`block w-full h-11 rounded-lg border bg-[#0E1A12] text-white ${
+                  errors.password ? 'border-red-500/50 focus:border-red-500 focus:ring-red-500/20' : 'border-[#193022] focus:border-primary focus:ring-primary/20'
+                } pl-10 pr-10 px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-50 transition-colors`}
                 placeholder="••••••••"
               />
               <button
                 type="button"
-                className="absolute inset-y-0 right-0 flex items-center pr-3 text-[#6F7B8E] hover:text-[#A8B2C2] transition-colors"
+                className="absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground hover:text-foreground transition-colors"
                 onClick={() => setShowPassword(!showPassword)}
                 tabIndex={-1}
               >
@@ -255,7 +255,7 @@ function LoginContent() {
         <button
           type="submit"
           disabled={isLoading || isPasskeyLoading}
-          className="flex w-full items-center justify-center h-11 rounded-lg bg-[#168BFF] px-4 py-2 text-sm font-medium text-white hover:bg-[#12CFEA] focus:outline-none focus:ring-2 focus:ring-[#168BFF]/50 focus:ring-offset-2 focus:ring-offset-[#050B16] disabled:cursor-not-allowed disabled:opacity-50 transition-colors shadow-sm"
+          className="flex w-full items-center justify-center h-11 rounded-lg bg-primary hover:bg-[#22C55E] text-white font-medium text-sm transition-colors shadow-sm disabled:cursor-not-allowed disabled:opacity-50"
         >
           {isLoading ? (
             <Loader2 className="mr-2 h-5 w-5 animate-spin" />
@@ -269,9 +269,9 @@ function LoginContent() {
           <div className="space-y-4 pt-2">
             <div className="relative flex items-center justify-center">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-white/10" />
+                <div className="w-full border-t border-[#193022]" />
               </div>
-              <span className="relative bg-[#050B16] px-3 text-xs uppercase text-[#6F7B8E] font-medium">
+              <span className="relative bg-[#050805] px-3 text-xs uppercase text-muted-foreground font-medium">
                 or
               </span>
             </div>
@@ -280,16 +280,16 @@ function LoginContent() {
               type="button"
               onClick={handlePasskeyLogin}
               disabled={isLoading || isPasskeyLoading}
-              className="flex w-full items-center justify-center gap-2 h-11 rounded-lg border border-white/15 bg-white/5 px-4 py-2 text-sm font-medium text-white hover:bg-white/10 hover:border-white/25 focus:outline-none focus:ring-2 focus:ring-[#168BFF]/50 disabled:cursor-not-allowed disabled:opacity-50 transition-all cursor-pointer shadow-sm"
+              className="flex w-full items-center justify-center gap-2 h-11 rounded-lg border border-[#193022] bg-[#0E1A12] px-4 py-2 text-sm font-medium text-white hover:bg-[#193022] hover:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:cursor-not-allowed disabled:opacity-50 transition-all cursor-pointer shadow-sm"
             >
               {isPasskeyLoading ? (
                 <>
-                  <Loader2 className="h-5 w-5 animate-spin text-[#168BFF]" />
+                  <Loader2 className="h-5 w-5 animate-spin text-primary" />
                   <span>Verifying passkey...</span>
                 </>
               ) : (
                 <>
-                  <Fingerprint className="h-5 w-5 text-[#12CFEA]" />
+                  <Fingerprint className="h-5 w-5 text-primary" />
                   <span>Continue with passkey</span>
                 </>
               )}
@@ -298,9 +298,9 @@ function LoginContent() {
         )}
       </form>
 
-      <div className="text-center text-sm text-[#A8B2C2]">
+      <div className="text-center text-sm text-muted-foreground">
         Don&apos;t have an account?{' '}
-        <Link href="/register" className="font-semibold text-[#168BFF] hover:text-[#12CFEA] transition-colors">
+        <Link href="/register" className="font-semibold text-primary hover:text-[#34D399] transition-colors">
           Sign up
         </Link>
       </div>

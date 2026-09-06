@@ -1,9 +1,11 @@
 // ============================================
-// studchat Constants
+// StarX Study Constants
 // ============================================
 
-export const APP_NAME = "studchat";
-export const APP_DESCRIPTION = "Chat. Share. Learn. Together.";
+export const APP_NAME = "StarX Study";
+export const MASTER_BRAND = "StarX";
+export const BRAND_TAGLINE = "BEYOND TOMORROW";
+export const APP_DESCRIPTION = "Chat. Share. Learn. Together. — BEYOND TOMORROW";
 
 // File upload limits (in bytes)
 export const MAX_AVATAR_SIZE = 2 * 1024 * 1024; // 2 MB

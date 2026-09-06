@@ -10,14 +10,23 @@ export interface StoredMediaItem {
   savedAt: string;
 }
 
-const STORAGE_KEY = 'studchat_stored_media';
+const STORAGE_KEY = 'starx_stored_media';
+const LEGACY_STORAGE_KEY = 'studchat_stored_media';
 
 const DEFAULT_STORED_MEDIA: StoredMediaItem[] = [];
 
 export function getStoredMedia(): StoredMediaItem[] {
   if (typeof window === 'undefined') return DEFAULT_STORED_MEDIA;
   try {
-    const saved = localStorage.getItem(STORAGE_KEY);
+    let saved = localStorage.getItem(STORAGE_KEY);
+    if (!saved) {
+      // Fallback migration from legacy key
+      const legacy = localStorage.getItem(LEGACY_STORAGE_KEY);
+      if (legacy) {
+        localStorage.setItem(STORAGE_KEY, legacy);
+        saved = legacy;
+      }
+    }
     if (!saved) {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(DEFAULT_STORED_MEDIA));
       return DEFAULT_STORED_MEDIA;
@@ -47,7 +56,7 @@ export function saveMediaItem(item: Omit<StoredMediaItem, 'id' | 'savedAt'>): St
   if (typeof window !== 'undefined') {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
     // Dispatch custom event so profile tab automatically updates if open
-    window.dispatchEvent(new CustomEvent('studchat_media_updated', { detail: updated }));
+    window.dispatchEvent(new CustomEvent('starx_media_updated', { detail: updated }));
   }
 
   return newItem;
@@ -58,7 +67,7 @@ export function removeStoredMediaItem(id: string): void {
   const updated = current.filter((m) => m.id !== id);
   if (typeof window !== 'undefined') {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-    window.dispatchEvent(new CustomEvent('studchat_media_updated', { detail: updated }));
+    window.dispatchEvent(new CustomEvent('starx_media_updated', { detail: updated }));
   }
 }
 

@@ -54,15 +54,15 @@ export function AcademicBranchStep({ data, onNext, onPrev }: AcademicBranchStepP
       <div className="space-y-4">
         {data.hasCampuses && (
           <div className="space-y-1">
-            <label className="text-sm font-medium text-[#F5F7FB]">Campus</label>
+            <label className="text-sm font-medium text-foreground">Campus</label>
             <div className="relative">
               <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                <Building className="h-5 w-5 text-[#6F7B8E]" />
+                <Building className="h-5 w-5 text-muted-foreground" />
               </div>
               <select
                 value={selections.campusId}
                 onChange={e => handleChange('campusId', e.target.value)}
-                className="block w-full h-11 rounded-lg border border-white/10 bg-[#111D31] text-white pl-10 px-3 py-2 text-sm focus:border-[#168BFF] focus:outline-none focus:ring-2 focus:ring-[#168BFF]/20 appearance-none"
+                className="block w-full h-11 rounded-lg border border-border bg-card text-white pl-10 px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 appearance-none"
               >
                 <option value="" disabled>Select Campus</option>
                 <option value="main">Main Campus</option>
@@ -74,15 +74,15 @@ export function AcademicBranchStep({ data, onNext, onPrev }: AcademicBranchStepP
 
         {data.hasDepartments && (
           <div className="space-y-1">
-            <label className="text-sm font-medium text-[#F5F7FB]">Department</label>
+            <label className="text-sm font-medium text-foreground">Department</label>
             <div className="relative">
               <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                <BookOpen className="h-5 w-5 text-[#6F7B8E]" />
+                <BookOpen className="h-5 w-5 text-muted-foreground" />
               </div>
               <select
                 value={selections.departmentId}
                 onChange={e => handleChange('departmentId', e.target.value)}
-                className="block w-full h-11 rounded-lg border border-white/10 bg-[#111D31] text-white pl-10 px-3 py-2 text-sm focus:border-[#168BFF] focus:outline-none focus:ring-2 focus:ring-[#168BFF]/20 appearance-none"
+                className="block w-full h-11 rounded-lg border border-border bg-card text-white pl-10 px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 appearance-none"
               >
                 <option value="" disabled>Select Department</option>
                 <option value="cs">Computer Science</option>
@@ -94,28 +94,28 @@ export function AcademicBranchStep({ data, onNext, onPrev }: AcademicBranchStepP
 
         {isTeacher ? (
           <div className="space-y-1">
-            <label className="text-sm font-medium text-[#F5F7FB]">Designation</label>
+            <label className="text-sm font-medium text-foreground">Designation</label>
             <input
               type="text"
               value={selections.designation}
               onChange={e => handleChange('designation', e.target.value)}
               placeholder="e.g. Associate Professor"
-              className="block w-full h-11 rounded-lg border border-white/10 bg-[#111D31] text-white px-3 py-2 text-sm focus:border-[#168BFF] focus:outline-none focus:ring-2 focus:ring-[#168BFF]/20"
+              className="block w-full h-11 rounded-lg border border-border bg-card text-white px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
             />
           </div>
         ) : (
           <>
             {data.usesSemesters && (
               <div className="space-y-1">
-                <label className="text-sm font-medium text-[#F5F7FB]">Semester / Year</label>
+                <label className="text-sm font-medium text-foreground">Semester / Year</label>
                 <div className="relative">
                   <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                    <Layers className="h-5 w-5 text-[#6F7B8E]" />
+                    <Layers className="h-5 w-5 text-muted-foreground" />
                   </div>
                   <select
                     value={selections.semesterId}
                     onChange={e => handleChange('semesterId', e.target.value)}
-                    className="block w-full h-11 rounded-lg border border-white/10 bg-[#111D31] text-white pl-10 px-3 py-2 text-sm focus:border-[#168BFF] focus:outline-none focus:ring-2 focus:ring-[#168BFF]/20 appearance-none"
+                    className="block w-full h-11 rounded-lg border border-border bg-card text-white pl-10 px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 appearance-none"
                   >
                     <option value="" disabled>Select Semester</option>
                     <option value="s1">Semester 1 (Year 1)</option>
@@ -133,7 +133,7 @@ export function AcademicBranchStep({ data, onNext, onPrev }: AcademicBranchStepP
         type="button"
         disabled={!canProceed()}
         onClick={handleNext}
-        className="flex w-full items-center justify-center gap-2 h-11 rounded-lg bg-[#168BFF] px-4 py-2 text-sm font-medium text-white hover:bg-[#12CFEA] transition-all group disabled:opacity-50 disabled:cursor-not-allowed"
+        className="flex w-full items-center justify-center gap-2 h-11 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-[#22C55E] transition-all group disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
       >
         Continue
         <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />

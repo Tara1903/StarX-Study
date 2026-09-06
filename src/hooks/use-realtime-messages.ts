@@ -19,15 +19,18 @@ export function useRealtimeMessages(subjectId: string, subjectUuid?: string) {
   const broadcastChannelRef = useRef<any>(null);
 
   const targetUuid = subjectUuid || (isUuid(subjectId) ? subjectId : getSubjectUuid(subjectId));
-  const clearKey = `studchat_cleared_at_${targetUuid || subjectId}`;
-  const muteKey = `studchat_muted_${targetUuid || subjectId}`;
+  const clearKey = `starx_cleared_at_${targetUuid || subjectId}`;
+  const muteKey = `starx_muted_${targetUuid || subjectId}`;
+  const legacyClearKey = `studchat_cleared_at_${targetUuid || subjectId}`;
+  const legacyMuteKey = `studchat_muted_${targetUuid || subjectId}`;
 
   // Check initial mute state
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      setIsMuted(localStorage.getItem(muteKey) === 'true');
+      const val = localStorage.getItem(muteKey) ?? localStorage.getItem(legacyMuteKey);
+      setIsMuted(val === 'true');
     }
-  }, [muteKey]);
+  }, [muteKey, legacyMuteKey]);
 
   const fetchMessages = useCallback(async (isLoadMore = false) => {
     if (!targetUuid || !isUuid(targetUuid)) {

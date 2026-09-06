@@ -62,7 +62,7 @@ export function GroupInfoPanel({
   // State management
   const [description, setDescription] = useState(() => {
     if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem(`studchat_group_desc_${data.id}`);
+      const saved = localStorage.getItem(`starx_group_desc_${data.id}`) ?? localStorage.getItem(`studchat_group_desc_${data.id}`);
       if (saved) return saved;
     }
     return data.description;
@@ -87,8 +87,10 @@ export function GroupInfoPanel({
   useEffect(() => {
     if (typeof window !== 'undefined') {
       try {
-        const key = `studchat_group_members_${data.id}`;
-        const extra = JSON.parse(localStorage.getItem(key) || '[]');
+        const key = `starx_group_members_${data.id}`;
+        const legacyKey = `studchat_group_members_${data.id}`;
+        const saved = localStorage.getItem(key) ?? localStorage.getItem(legacyKey);
+        const extra = JSON.parse(saved || '[]');
         if (extra.length > 0) {
           setMembersList((prev) => {
             const seen = new Set(prev.map((m) => m.id));
@@ -126,7 +128,7 @@ export function GroupInfoPanel({
         return;
       }
       if (typeof window !== 'undefined') {
-        localStorage.setItem(`studchat_group_desc_${data.id}`, editDescText);
+        localStorage.setItem(`starx_group_desc_${data.id}`, editDescText);
       }
       setDescription(editDescText);
       setIsEditingDesc(false);
@@ -142,7 +144,7 @@ export function GroupInfoPanel({
     setMembersList((prev) => [newMember, ...prev]);
     if (typeof window !== 'undefined') {
       try {
-        const key = `studchat_group_members_${data.id}`;
+        const key = `starx_group_members_${data.id}`;
         const existing = JSON.parse(localStorage.getItem(key) || '[]');
         localStorage.setItem(key, JSON.stringify([newMember, ...existing]));
       } catch {}
@@ -152,13 +154,13 @@ export function GroupInfoPanel({
   return (
     <div
       className={cn(
-        'flex flex-col h-full bg-[#050B16] text-foreground overflow-y-auto select-none',
+        'flex flex-col h-full bg-background border-l border-border text-foreground overflow-y-auto select-none',
         isMobileFullPage ? 'w-full pb-10' : 'w-full border-l border-white/10',
         className
       )}
     >
       {/* 1. Top Navigation Bar */}
-      <div className="sticky top-0 z-30 px-4 py-3 bg-[#050B16]/95 backdrop-blur-md border-b border-white/10 flex items-center justify-between shrink-0 pt-[calc(0.6rem+env(safe-area-inset-top,0px))]">
+      <div className="sticky top-0 z-30 px-4 py-3 bg-[#050805]/95 backdrop-blur-md border-b border-border flex items-center justify-between shrink-0 pt-[calc(0.6rem+env(safe-area-inset-top,0px))]">
         <div className="flex items-center gap-3">
           {onClose && (
             <button

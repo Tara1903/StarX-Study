@@ -31,7 +31,7 @@ const resetPasswordSchema = z
     path: ['confirmPassword'],
   });
 
-describe('StudChat Auth & Passkey Architecture', () => {
+describe('StarX Study Auth & Passkey Architecture', () => {
   describe('Login Validation', () => {
     it('accepts valid email and password', () => {
       const result = loginSchema.safeParse({
@@ -180,7 +180,7 @@ describe('StudChat Auth & Passkey Architecture', () => {
       expect(fs.existsSync(filePath)).toBe(true);
       const content = fs.readFileSync(filePath, 'utf8');
       expect(content).toContain('{{ .ConfirmationURL }}');
-      expect(content).toContain('Welcome to studchat');
+      expect(content).toContain('Welcome to StarX Study');
       expect(content).toContain('Verify Email');
       expect(content).not.toContain('<script');
     });

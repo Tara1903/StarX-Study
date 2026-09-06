@@ -92,35 +92,35 @@ function VerifyEmailContent() {
   return (
     <div className="flex flex-col space-y-6 text-center">
       {/* Icon */}
-      <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-[#168BFF]/10 border border-[#168BFF]/20 shadow-lg">
-        <Mail className="h-8 w-8 text-[#168BFF]" />
+      <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/15 border border-primary/30 shadow-lg">
+        <Mail className="h-8 w-8 text-primary" />
       </div>
 
       {/* Heading */}
       <div className="space-y-2">
         <h1 className="text-3xl font-bold tracking-tight text-white">Check your email</h1>
-        <p className="text-sm text-[#A8B2C2] max-w-sm mx-auto">
-          We&apos;ve sent a verification link to your email address. Verify your email to continue using studchat.
+        <p className="text-sm text-[#A7B3AA] max-w-sm mx-auto">
+          We&apos;ve sent a verification link to your email address. Verify your email to continue using StarX Study.
         </p>
       </div>
 
       {/* Target Email Card */}
-      <div className="p-4 rounded-xl border border-white/10 bg-[#111D31] text-sm text-center">
+      <div className="p-4 rounded-xl border border-[#193022] bg-[#0E1A12] text-sm text-center">
         {isEditingEmail ? (
           <form onSubmit={handleSaveEmail} className="space-y-3">
-            <label className="text-xs text-[#A8B2C2] block text-left font-medium">Enter your email address</label>
+            <label className="text-xs text-[#A7B3AA] block text-left font-medium">Enter your email address</label>
             <input
               type="email"
               value={newEmailInput}
               onChange={(e) => setNewEmailInput(e.target.value)}
               placeholder="you@example.com"
-              className="w-full h-10 px-3 rounded-lg bg-[#050B16] border border-white/10 text-white text-sm focus:outline-none focus:border-[#168BFF]"
+              className="w-full h-10 px-3 rounded-lg bg-[#050805] border border-[#193022] text-white text-sm focus:outline-none focus:border-primary"
               required
             />
             <div className="flex gap-2">
               <button
                 type="submit"
-                className="flex-1 py-2 rounded-lg bg-[#168BFF] text-white text-xs font-semibold hover:bg-[#12CFEA] transition-colors"
+                className="flex-1 py-2 rounded-lg bg-primary text-white text-xs font-semibold hover:bg-[#22C55E] transition-colors"
               >
                 Save
               </button>
@@ -141,7 +141,7 @@ function VerifyEmailContent() {
         ) : (
           <div className="flex items-center justify-between gap-2">
             <div className="text-left overflow-hidden">
-              <p className="text-xs text-[#6F7B8E]">Verification sent to</p>
+              <p className="text-xs text-[#748078]">Verification sent to</p>
               <p className="font-semibold text-white truncate text-sm">{email}</p>
             </div>
             <button
@@ -150,7 +150,7 @@ function VerifyEmailContent() {
                 setNewEmailInput(email);
                 setIsEditingEmail(true);
               }}
-              className="inline-flex items-center gap-1 text-xs text-[#168BFF] hover:text-[#12CFEA] px-2 py-1 rounded hover:bg-white/5 transition-colors shrink-0"
+              className="inline-flex items-center gap-1 text-xs text-primary hover:text-[#34D399] px-2 py-1 rounded hover:bg-white/5 transition-colors shrink-0"
             >
               <Edit3 className="w-3.5 h-3.5" />
               Change
@@ -183,7 +183,7 @@ function VerifyEmailContent() {
           type="button"
           onClick={handleResend}
           disabled={isResending || cooldown > 0 || !email}
-          className="flex w-full items-center justify-center h-11 rounded-lg bg-[#168BFF] px-4 py-2 text-sm font-medium text-white hover:bg-[#12CFEA] focus:outline-none focus:ring-2 focus:ring-[#168BFF]/50 disabled:cursor-not-allowed disabled:opacity-50 transition-colors shadow-sm"
+          className="flex w-full items-center justify-center h-11 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-[#22C55E] focus:outline-none focus:ring-2 focus:ring-primary/50 disabled:cursor-not-allowed disabled:opacity-50 transition-colors shadow-sm"
         >
           {isResending ? (
             <>

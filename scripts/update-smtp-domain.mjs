@@ -53,10 +53,10 @@ function getAccessToken() {
 async function run() {
   const token = getAccessToken();
   const targetSenderEmail = process.argv[2];
-  const targetSenderName = process.argv[3] || 'StudChat';
+  const targetSenderName = process.argv[3] || 'StarX Study';
 
   console.log(`\n======================================================`);
-  console.log(`StudChat Production SMTP & Resend Domain Manager`);
+  console.log(`StarX Study Production SMTP & Domain Manager`);
   console.log(`Target Supabase Project: ${projectRef}`);
   console.log(`======================================================\n`);
 
@@ -83,13 +83,13 @@ async function run() {
       console.log(`⚠️  Currently using 'onboarding@resend.dev' (Resend Sandbox).`);
       console.log(`   In this mode, verification emails can ONLY be sent to your registered developer email.`);
       console.log(`\nTo send emails to ANY student or teacher email address:`);
-      console.log(`1. Go to https://resend.com/domains and click 'Add Domain' (e.g. 'studchat.in' or 'mail.yourdomain.com').`);
+      console.log(`1. Go to https://resend.com/domains and click 'Add Domain' (e.g. 'starxstudy.com' or 'mail.yourdomain.com').`);
       console.log(`2. Add the DNS records provided by Resend to your domain registrar:`);
       console.log(`   - Type: TXT   | Name: resend._domainkey | Value: <DKIM-key>`);
       console.log(`   - Type: TXT   | Name: @ or subdomain   | Value: v=spf1 include:resend.com ~all`);
       console.log(`   - Type: MX    | Name: @ or subdomain   | Value: feedback-smtp.resend.com (Priority 10)`);
       console.log(`3. Once verified in Resend, run this command to update Supabase in 1 click:`);
-      console.log(`   node scripts/update-smtp-domain.mjs noreply@yourdomain.com "StudChat"`);
+      console.log(`   node scripts/update-smtp-domain.mjs noreply@yourdomain.com "StarX Study"`);
     } else {
       console.log(`✅ Configured with custom sending email: ${currentSender}`);
     }
@@ -98,7 +98,7 @@ async function run() {
 
   // Validate email format
   if (!targetSenderEmail.includes('@') || !targetSenderEmail.includes('.')) {
-    console.error(`❌ Invalid email address: "${targetSenderEmail}". Please provide a valid email (e.g. noreply@studchat.in).`);
+    console.error(`❌ Invalid email address: "${targetSenderEmail}". Please provide a valid email (e.g. support@starxstudy.com).`);
     process.exit(1);
   }
 

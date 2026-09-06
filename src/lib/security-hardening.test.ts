@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { sanitizeFileName, isSafeUrl, validateAttachment, sanitizeInputText } from './security';
 import { updateProfile } from '@/actions/profile';
 
-describe('StudChat Production Security Hardening', () => {
+describe('StarX Study Production Security Hardening', () => {
   describe('Filename Sanitization', () => {
     it('strips directory traversal sequences', () => {
       expect(sanitizeFileName('../../etc/passwd')).not.toContain('..');

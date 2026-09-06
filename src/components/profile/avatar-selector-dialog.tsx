@@ -16,7 +16,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { UserAvatar } from '@/components/ui/user-avatar';
 import { 
-  STUDCHAT_PRESETS, 
+  STARX_PRESETS, 
   APPROVED_EMOJIS, 
   APPROVED_AVATAR_STYLES,
   type AvatarPreset,
@@ -48,8 +48,8 @@ export function AvatarSelectorDialog({
     currentProfile.avatar_type || (currentProfile.avatar_url ? 'uploaded' : 'initials')
   );
   const [draftUrl, setDraftUrl] = useState<string | null>(currentProfile.avatar_url || null);
-  const [draftPresetId, setDraftPresetId] = useState<string | null>(
-    currentProfile.avatar_preset_id || STUDCHAT_PRESETS[0].id
+  const [draftPresetId, setDraftPresetId] = useState<string>(
+    currentProfile.avatar_preset_id || STARX_PRESETS[0].id
   );
   const [draftEmoji, setDraftEmoji] = useState<string>(
     currentProfile.avatar_emoji || '🎓'
@@ -156,8 +156,8 @@ export function AvatarSelectorDialog({
   };
 
   const filteredPresets = presetCategory === 'all'
-    ? STUDCHAT_PRESETS
-    : STUDCHAT_PRESETS.filter((p) => p.category === presetCategory);
+    ? STARX_PRESETS
+    : STARX_PRESETS.filter((p) => p.category === presetCategory);
 
   return (
     <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in">
@@ -176,7 +176,7 @@ export function AvatarSelectorDialog({
               <span>Personalize Your Avatar</span>
             </h2>
             <p className="text-[11px] sm:text-xs text-muted-foreground mt-0.5">
-              Choose an identity representation across StudChat
+              Choose an identity representation across StarX Study
             </p>
           </div>
           <button
@@ -359,7 +359,7 @@ export function AvatarSelectorDialog({
               {/* Select Emoji */}
               <div>
                 <label className="text-xs font-semibold text-foreground block mb-2">
-                  2. Select StudChat Icon:
+                  2. Select StarX Icon:
                 </label>
                 <div className="grid grid-cols-6 sm:grid-cols-8 gap-2">
                   {APPROVED_EMOJIS.map((emoji) => {

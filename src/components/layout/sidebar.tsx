@@ -7,6 +7,7 @@ import { useUser } from '@/components/providers/user-provider';
 import { ROUTES } from '@/lib/constants';
 import { createClient } from '@/lib/supabase/client';
 import { UserAvatar } from '@/components/ui/user-avatar';
+import { StarXLogo } from '@/components/ui/starx-logo';
 import {
   LayoutDashboard,
   MessageSquare,
@@ -96,10 +97,7 @@ export function Sidebar() {
     <aside className="hidden lg:flex lg:flex-col w-64 bg-sidebar border-r border-border h-full overflow-hidden shrink-0 select-none">
       {/* Brand Header */}
       <div className="h-16 flex items-center px-5 border-b border-border">
-        <Link href={ROUTES.DASHBOARD} className="flex items-center gap-2.5 hover:opacity-90 transition-opacity">
-          <img src="/logo.jpg" alt="studchat logo" className="w-8 h-8 rounded-lg object-cover" />
-          <span className="font-bold text-lg tracking-tight text-foreground">studchat</span>
-        </Link>
+        <StarXLogo variant="header" size="md" href={ROUTES.DASHBOARD} />
       </div>
 
       {/* Primary Navigation */}

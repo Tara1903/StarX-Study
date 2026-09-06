@@ -42,7 +42,7 @@ export default async function AdminDepartmentsPage() {
           <h1 className="text-2xl font-bold text-foreground">Departments & Semesters</h1>
           <p className="text-muted-foreground mt-1">Manage the academic structure of your university.</p>
         </div>
-        <button className="flex items-center space-x-2 bg-primary hover:bg-[#12CFEA] text-primary-foreground px-4 py-2 rounded-md font-medium transition-colors">
+        <button className="flex items-center space-x-2 bg-primary hover:bg-[#22C55E] text-primary-foreground px-4 py-2 rounded-md font-medium transition-colors">
           <Plus className="h-4 w-4" />
           <span>Add Class</span>
         </button>
@@ -53,7 +53,7 @@ export default async function AdminDepartmentsPage() {
           <Layers className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
           <h3 className="text-lg font-medium text-foreground mb-1">No Departments Setup</h3>
           <p className="text-muted-foreground mb-4">Start by adding an academic year and creating departments.</p>
-          <button className="bg-primary hover:bg-[#12CFEA] text-primary-foreground px-4 py-2 rounded-md font-medium inline-flex items-center">
+          <button className="bg-primary hover:bg-[#22C55E] text-primary-foreground px-4 py-2 rounded-md font-medium inline-flex items-center">
             <Plus className="h-4 w-4 mr-2" />
             Add Academic Year
           </button>

@@ -238,7 +238,7 @@ export function ChatContainer({
   ]);
 
   return (
-    <div className="flex h-full w-full bg-[#050B16] overflow-hidden select-text relative">
+    <div className="flex h-full w-full bg-background overflow-hidden select-text relative">
       {/* Center Chat Area */}
       <div className="flex-1 flex flex-col h-full overflow-hidden min-w-0">
         {/* WhatsApp-Style Chat Header */}
@@ -757,7 +757,7 @@ export function ChatContainer({
 
       {/* Small Desktop (1024px - 1279px): Floating side panel to prevent squeezing conversation */}
       {isGroupInfoOpen && groupInfoData && (
-        <div className="hidden lg:flex xl:hidden absolute right-0 top-0 bottom-0 w-[380px] max-w-full h-full z-30 bg-[#050B16] border-l border-white/10 shadow-2xl animate-in slide-in-from-right duration-200">
+        <div className="hidden lg:flex xl:hidden absolute right-0 top-0 bottom-0 w-[380px] max-w-full h-full z-30 bg-background border-l border-white/10 shadow-2xl animate-in slide-in-from-right duration-200">
           <GroupInfoPanel
             data={groupInfoData}
             onClose={() => setIsGroupInfoOpen(false)}
@@ -771,7 +771,7 @@ export function ChatContainer({
 
       {/* Mobile Full-Screen View (< 1024px): Group Info full page */}
       {isGroupInfoOpen && groupInfoData && (
-        <div className="lg:hidden fixed inset-0 z-50 bg-[#050B16] overflow-hidden animate-in slide-in-from-right duration-200">
+        <div className="lg:hidden fixed inset-0 z-50 bg-background overflow-hidden animate-in slide-in-from-right duration-200">
           <GroupInfoPanel
             data={groupInfoData}
             onClose={() => setIsGroupInfoOpen(false)}

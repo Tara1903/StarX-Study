@@ -33,6 +33,7 @@ import { useUser } from '@/components/providers/user-provider';
 import { UserAvatar } from '@/components/ui/user-avatar';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { StarXLogo } from '@/components/ui/starx-logo';
 
 interface ChatConversationListProps {
   currentConversationId?: string;
@@ -254,23 +255,16 @@ export function ChatConversationList({
   }, []);
 
   return (
-    <div className={cn('flex flex-col h-full bg-[#050B16] border-r border-white/10 select-none relative', className)}>
-      {/* Top Header: ← studchat Workspace Exit + Profile */}
-      <div className="px-3.5 py-2.5 flex items-center justify-between border-b border-white/5 bg-[#070E1B]/80 shrink-0 select-none">
+    <div className={cn('flex flex-col h-full bg-background border-r border-border select-none relative', className)}>
+      {/* Top Header: ← StarX Study Workspace Exit + Profile */}
+      <div className="px-3.5 py-2.5 flex items-center justify-between border-b border-border bg-[#08110B]/80 shrink-0 select-none">
         <Link
           href="/dashboard"
-          title="Back to studchat (Dashboard)"
+          title="Back to StarX Study (Dashboard)"
           className="inline-flex items-center gap-2 px-2 py-1 -ml-1 rounded-xl text-muted-foreground hover:text-foreground hover:bg-white/5 active:scale-95 transition-all group cursor-pointer"
         >
           <ArrowLeft className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
-          <img
-            src="/logo.jpg"
-            alt="studchat logo"
-            className="w-5 h-5 rounded-lg object-cover ring-1 ring-white/15"
-          />
-          <span className="font-bold text-sm tracking-tight text-foreground group-hover:text-primary transition-colors">
-            studchat
-          </span>
+          <StarXLogo variant="header" size="sm" />
         </Link>
 
         {/* Profile Shortcut */}
@@ -520,7 +514,7 @@ export function ChatConversationList({
                             size="md"
                             className="w-10 h-10 rounded-2xl ring-1 ring-white/10"
                           />
-                          <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-[#050B16]" />
+                          <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-background" />
                         </div>
 
                         <div className="min-w-0">

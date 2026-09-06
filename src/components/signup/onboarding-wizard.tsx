@@ -84,7 +84,7 @@ export function OnboardingWizard() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center w-full min-h-screen bg-[#050B16] text-white overflow-hidden p-4">
+    <div className="flex flex-col items-center justify-center w-full min-h-screen bg-background text-foreground overflow-hidden p-4">
       {/* Progress Bar (hidden on welcome and success) */}
       {step > 1 && step < 7 && (
         <div className="absolute top-8 left-0 right-0 max-w-md mx-auto px-4 w-full">
@@ -93,7 +93,7 @@ export function OnboardingWizard() {
               <div 
                 key={idx} 
                 className={`h-1.5 flex-1 rounded-full transition-colors duration-300 ${
-                  step >= idx ? 'bg-[#168BFF]' : 'bg-white/10'
+                  step >= idx ? 'bg-primary' : 'bg-white/10'
                 }`}
               />
             ))}

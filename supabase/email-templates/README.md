@@ -1,15 +1,15 @@
-# StudChat — Supabase Auth + Resend SMTP + Passkeys Configuration Guide
+# StarX Study — Supabase Auth + SMTP + Passkeys Configuration Guide
 
-This guide details how Supabase Auth, Resend SMTP, and WebAuthn Passkeys are configured for StudChat.
+This guide details how Supabase Auth, Custom SMTP, and WebAuthn Passkeys are configured for StarX Study.
 
 ---
 
-## 1. Resend Custom SMTP in Supabase
+## 1. Custom SMTP in Supabase
 
-Supabase Auth uses Resend as its custom SMTP email delivery provider:
+Supabase Auth uses custom SMTP email delivery:
 
 ```
-STUDCHAT  ──>  SUPABASE AUTH  ──>  RESEND SMTP  ──>  USER INBOX
+STARX STUDY  ──>  SUPABASE AUTH  ──>  SMTP SENDER  ──>  USER INBOX
 ```
 
 ### Configuration Steps in Supabase Dashboard:
@@ -17,12 +17,10 @@ STUDCHAT  ──>  SUPABASE AUTH  ──>  RESEND SMTP  ──>  USER INBOX
 1. Open your project on [Supabase Dashboard](https://supabase.com/dashboard).
 2. Navigate to **Project Settings** → **Authentication** → **SMTP Settings**.
 3. Enable **Enable Custom SMTP**:
-   - **Sender Email**: `onboarding@resend.dev` (for initial testing/dev) or your verified domain sender (e.g. `no-reply@studchat.com`).
-   - **Sender Name**: `studchat`
-   - **Host**: `smtp.resend.com`
-   - **Port**: `465` (SSL) or `587` (TLS)
-   - **Username**: `resend`
-   - **Password**: Your Resend API Key (`re_...`)
+   - **Sender Email**: `starxstudy.support@gmail.com`
+   - **Sender Name**: `StarX Study`
+   - **Host**: `smtp.gmail.com`
+   - **Port**: `587` (TLS) or `465` (SSL)
 4. Save changes.
 
 ---
@@ -48,27 +46,27 @@ STUDCHAT  ──>  SUPABASE AUTH  ──>  RESEND SMTP  ──>  USER INBOX
 In Supabase Dashboard, navigate to **Authentication** → **Email Templates**:
 
 ### 1. Confirm signup (Email Verification)
-- **Subject**: `Verify your studchat email`
+- **Subject**: `Confirm your StarX Study account`
 - **Body**: Copy and paste the contents of [`verify-email.html`](./verify-email.html).
 
 ### 2. Reset password
-- **Subject**: `Reset your studchat password`
+- **Subject**: `Reset your StarX Study password`
 - **Body**: Copy and paste the contents of [`reset-password.html`](./reset-password.html).
 
 ### 3. Change email address
-- **Subject**: `Confirm your new studchat email`
+- **Subject**: `Confirm your new StarX Study email`
 - **Body**: Copy and paste the contents of [`change-email.html`](./change-email.html).
 
 ---
 
-## 4. WebAuthn Passkey Configuration
+## 4. WebAuthn Passkeys Setup
 
-Passkeys enable passwordless biometric sign-in (Face ID, Touch ID, Windows Hello, device PIN):
-
-1. In Supabase Dashboard, navigate to **Authentication** → **Passkeys**.
+1. In Supabase Dashboard, navigate to **Authentication** → **Sign In / Up** → **Passkeys**.
 2. Enable **Allow passkey sign-in**.
-3. Configure Relying Party (RP) settings:
-   - **Relying Party Display Name**: `studchat`
+3. Configure **Relying Party ID**:
+   - For local development: `localhost`
+   - For production: Your domain (e.g. `student-star-6966.vercel.app`)
+   - **Relying Party Display Name**: `StarX Study`
    - **Relying Party ID**: `student-star-6966.vercel.app` *(Note: do NOT include `https://` in RP ID)*
    - **Relying Party Origin**: `https://student-star-6966.vercel.app`
    *(For local testing, RP ID is `localhost` and Origin is `http://localhost:3000`)*.

@@ -148,9 +148,9 @@ export function TimetableClient() {
               ECE Class Time Table
             </h1>
 
-            <p className="text-sm md:text-base text-[#A8B2C2] leading-relaxed">
+            <p className="text-sm md:text-base text-[#A7B3AA] leading-relaxed">
               <strong className="text-white">{ECE_TIMETABLE_METADATA.university}</strong> — {ECE_TIMETABLE_METADATA.institute} <br />
-              <span className="text-[#12CFEA] font-medium">{ECE_TIMETABLE_METADATA.department}</span> • {ECE_TIMETABLE_METADATA.program} ({ECE_TIMETABLE_METADATA.semester})
+              <span className="text-primary font-medium">{ECE_TIMETABLE_METADATA.department}</span> • {ECE_TIMETABLE_METADATA.program} ({ECE_TIMETABLE_METADATA.semester})
             </p>
 
             <div className="flex flex-wrap items-center gap-2 pt-1 text-xs text-[#CBD5E1]">
@@ -172,10 +172,10 @@ export function TimetableClient() {
               onClick={() => window.print()}
               className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/15 text-white text-sm font-medium border border-white/15 transition-all shadow-sm"
             >
-              <Printer className="w-4 h-4 text-[#12CFEA]" />
+              <Printer className="w-4 h-4 text-primary" />
               Print Time Table
             </button>
-            <div className="flex items-center rounded-xl bg-[#0B132B] border border-white/10 p-1">
+            <div className="flex items-center rounded-xl bg-card border border-border p-1">
               <button
                 type="button"
                 onClick={() => setViewMode('grid')}
