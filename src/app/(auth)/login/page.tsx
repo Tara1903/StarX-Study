@@ -264,7 +264,80 @@ function LoginContent() {
         </div>
       )}
 
-      {/* 1. Primary Email + Password Form */}
+      {/* 1. Fast Auth Options: Google, GitHub, Passkey */}
+      <div className="space-y-2.5">
+        {/* Google OAuth Button */}
+        <button
+          type="button"
+          onClick={() => handleOAuthLogin('google')}
+          disabled={isAnyLoading}
+          className="flex w-full items-center justify-center gap-3 h-11 rounded-lg border border-[#193022] bg-[#0E1A12] px-4 py-2 text-sm font-medium text-white hover:bg-[#193022] hover:border-primary/40 active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:cursor-not-allowed disabled:opacity-50 transition-all cursor-pointer shadow-sm"
+        >
+          {isOAuthLoading === 'google' ? (
+            <>
+              <Loader2 className="h-5 w-5 animate-spin text-primary" />
+              <span>Redirecting to Google...</span>
+            </>
+          ) : (
+            <>
+              <GoogleIcon className="h-4 w-4 shrink-0" />
+              <span>Continue with Google</span>
+            </>
+          )}
+        </button>
+
+        {/* GitHub OAuth Button */}
+        <button
+          type="button"
+          onClick={() => handleOAuthLogin('github')}
+          disabled={isAnyLoading}
+          className="flex w-full items-center justify-center gap-3 h-11 rounded-lg border border-[#193022] bg-[#0E1A12] px-4 py-2 text-sm font-medium text-white hover:bg-[#193022] hover:border-primary/40 active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:cursor-not-allowed disabled:opacity-50 transition-all cursor-pointer shadow-sm"
+        >
+          {isOAuthLoading === 'github' ? (
+            <>
+              <Loader2 className="h-5 w-5 animate-spin text-primary" />
+              <span>Redirecting to GitHub...</span>
+            </>
+          ) : (
+            <>
+              <GitHubIcon className="h-4 w-4 shrink-0 text-white fill-current" />
+              <span>Continue with GitHub</span>
+            </>
+          )}
+        </button>
+
+        {/* Passkey Button */}
+        <button
+          type="button"
+          onClick={handlePasskeyLogin}
+          disabled={isAnyLoading}
+          className="flex w-full items-center justify-center gap-3 h-11 rounded-lg border border-[#193022] bg-[#0E1A12] px-4 py-2 text-sm font-medium text-white hover:bg-[#193022] hover:border-primary/40 active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:cursor-not-allowed disabled:opacity-50 transition-all cursor-pointer shadow-sm"
+        >
+          {isPasskeyLoading ? (
+            <>
+              <Loader2 className="h-5 w-5 animate-spin text-primary" />
+              <span>Verifying passkey...</span>
+            </>
+          ) : (
+            <>
+              <Fingerprint className="h-5 w-5 text-primary shrink-0" />
+              <span>Continue with passkey</span>
+            </>
+          )}
+        </button>
+      </div>
+
+      {/* ──────── OR ──────── */}
+      <div className="relative flex items-center justify-center">
+        <div className="absolute inset-0 flex items-center">
+          <div className="w-full border-t border-[#193022]" />
+        </div>
+        <span className="relative bg-[#050805] px-3 text-xs uppercase text-muted-foreground font-medium">
+          or
+        </span>
+      </div>
+
+      {/* 2. Manual Email + Password Form */}
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-3.5">
           <div className="space-y-1">
@@ -357,79 +430,6 @@ function LoginContent() {
           )}
         </button>
       </form>
-
-      {/* ──────── OR ──────── */}
-      <div className="relative flex items-center justify-center">
-        <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t border-[#193022]" />
-        </div>
-        <span className="relative bg-[#050805] px-3 text-xs uppercase text-muted-foreground font-medium">
-          or
-        </span>
-      </div>
-
-      {/* 2. Alternative Auth Hierarchy: Google, GitHub, Passkey */}
-      <div className="space-y-2.5">
-        {/* Google OAuth Button */}
-        <button
-          type="button"
-          onClick={() => handleOAuthLogin('google')}
-          disabled={isAnyLoading}
-          className="flex w-full items-center justify-center gap-3 h-11 rounded-lg border border-[#193022] bg-[#0E1A12] px-4 py-2 text-sm font-medium text-white hover:bg-[#193022] hover:border-primary/40 active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:cursor-not-allowed disabled:opacity-50 transition-all cursor-pointer shadow-sm"
-        >
-          {isOAuthLoading === 'google' ? (
-            <>
-              <Loader2 className="h-5 w-5 animate-spin text-primary" />
-              <span>Redirecting to Google...</span>
-            </>
-          ) : (
-            <>
-              <GoogleIcon className="h-4 w-4 shrink-0" />
-              <span>Continue with Google</span>
-            </>
-          )}
-        </button>
-
-        {/* GitHub OAuth Button */}
-        <button
-          type="button"
-          onClick={() => handleOAuthLogin('github')}
-          disabled={isAnyLoading}
-          className="flex w-full items-center justify-center gap-3 h-11 rounded-lg border border-[#193022] bg-[#0E1A12] px-4 py-2 text-sm font-medium text-white hover:bg-[#193022] hover:border-primary/40 active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:cursor-not-allowed disabled:opacity-50 transition-all cursor-pointer shadow-sm"
-        >
-          {isOAuthLoading === 'github' ? (
-            <>
-              <Loader2 className="h-5 w-5 animate-spin text-primary" />
-              <span>Redirecting to GitHub...</span>
-            </>
-          ) : (
-            <>
-              <GitHubIcon className="h-4 w-4 shrink-0 text-white fill-current" />
-              <span>Continue with GitHub</span>
-            </>
-          )}
-        </button>
-
-        {/* Passkey Button */}
-        <button
-          type="button"
-          onClick={handlePasskeyLogin}
-          disabled={isAnyLoading}
-          className="flex w-full items-center justify-center gap-3 h-11 rounded-lg border border-[#193022] bg-[#0E1A12] px-4 py-2 text-sm font-medium text-white hover:bg-[#193022] hover:border-primary/40 active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:cursor-not-allowed disabled:opacity-50 transition-all cursor-pointer shadow-sm"
-        >
-          {isPasskeyLoading ? (
-            <>
-              <Loader2 className="h-5 w-5 animate-spin text-primary" />
-              <span>Verifying passkey...</span>
-            </>
-          ) : (
-            <>
-              <Fingerprint className="h-5 w-5 text-primary shrink-0" />
-              <span>Continue with passkey</span>
-            </>
-          )}
-        </button>
-      </div>
 
       <div className="text-center text-sm text-muted-foreground pt-1">
         Don&apos;t have an account?{' '}
