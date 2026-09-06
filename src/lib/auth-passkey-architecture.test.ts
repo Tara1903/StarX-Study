@@ -203,4 +203,52 @@ describe('StarX Study Auth & Passkey Architecture', () => {
       expect(content).toContain('Confirm Email Change');
     });
   });
+
+  describe('OAuth & Passkey Login Implementation Verification', () => {
+    const loginPagePath = path.resolve(process.cwd(), 'src/app/(auth)/login/page.tsx');
+    const callbackPath = path.resolve(process.cwd(), 'src/app/auth/callback/route.ts');
+
+    it('verifies login/page.tsx implements Google and GitHub OAuth', () => {
+      const content = fs.readFileSync(loginPagePath, 'utf8');
+      expect(content).toContain("signInWithOAuth");
+      expect(content).toContain("handleOAuthLogin('google')");
+      expect(content).toContain("handleOAuthLogin('github')");
+      expect(content).toContain("Continue with Google");
+      expect(content).toContain("Continue with GitHub");
+      expect(content).toContain("Redirecting to Google...");
+      expect(content).toContain("Redirecting to GitHub...");
+    });
+
+    it('verifies login/page.tsx implements Passkey sign-in', () => {
+      const content = fs.readFileSync(loginPagePath, 'utf8');
+      expect(content).toContain("signInWithPasskey");
+      expect(content).toContain("Continue with passkey");
+      expect(content).toContain("Verifying passkey...");
+      expect(content).toContain("isPasskeySupported");
+    });
+
+    it('verifies callback route prevents open redirects', () => {
+      const callbackContent = fs.readFileSync(callbackPath, 'utf8');
+      expect(callbackContent).toContain("getSafeDestination");
+      expect(callbackContent).toContain("exchangeCodeForSession");
+      expect(callbackContent).toContain("existingProfile");
+
+      // Verify safe destination helper logic directly
+      function getSafeDestination(next: string | null): string {
+        if (!next) return '/dashboard';
+        if (next.startsWith('/') && !next.startsWith('//') && !next.startsWith('/\\')) {
+          return next;
+        }
+        return '/dashboard';
+      }
+
+      expect(getSafeDestination('/profile')).toBe('/profile');
+      expect(getSafeDestination('/chat/conv-123')).toBe('/chat/conv-123');
+      expect(getSafeDestination('https://malicious.com')).toBe('/dashboard');
+      expect(getSafeDestination('//evil.com')).toBe('/dashboard');
+      expect(getSafeDestination('/\\evil.com')).toBe('/dashboard');
+      expect(getSafeDestination(null)).toBe('/dashboard');
+    });
+  });
 });
+

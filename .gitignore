@@ -51,3 +51,5 @@ CLAUDE.md
 
 .vercel
 .env*
+client_secret*.json
+*.credentials.json
