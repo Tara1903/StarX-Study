@@ -29,6 +29,19 @@ export const metadata: Metadata = {
   },
   description: "Chat. Share. Learn. Together. - A premium student & teacher communication platform",
   keywords: ["education", "student", "teacher", "university", "communication", "platform"],
+  applicationName: "studchat",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "studchat",
+  },
+  formatDetection: {
+    telephone: false,
+  },
+  icons: {
+    icon: "/icon.jpg",
+    apple: "/icon.jpg",
+  },
 };
 
 export default function RootLayout({

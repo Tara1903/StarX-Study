@@ -1,6 +1,6 @@
 "use client";
 import { useState, useRef, useEffect } from 'react';
-import { SendHorizontal, Paperclip, X, FileText, Image as ImageIcon } from 'lucide-react';
+import { SendHorizontal, Paperclip, X, FileText, Image as ImageIcon, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import type { MessageWithSender } from '@/types';
@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import { useUser } from '@/components/providers/user-provider';
 import { TypingIndicator } from './typing-indicator';
 import { useTypingIndicator } from '@/hooks/use-typing-indicator';
+import { createClient } from '@/lib/supabase/client';
 
 import { sanitizeFileName, validateAttachment } from '@/lib/security';
 
@@ -22,7 +23,8 @@ interface MessageInputProps {
 export function MessageInput({ subjectId, replyTo, onCancelReply, onMessageSent }: MessageInputProps) {
   const [content, setContent] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [selectedFile, setSelectedFile] = useState<{ name: string; url: string; type: string; size: number } | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<{ file: File; name: string; url: string; type: string; size: number } | null>(null);
   
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -61,6 +63,7 @@ export function MessageInput({ subjectId, replyTo, onCancelReply, onMessageSent 
     const reader = new FileReader();
     reader.onload = (event) => {
       setSelectedFile({
+        file,
         name: safeName,
         url: event.target?.result as string,
         type: file.type || 'application/octet-stream',
@@ -74,15 +77,62 @@ export function MessageInput({ subjectId, replyTo, onCancelReply, onMessageSent 
 
   const handleSubmit = async (e?: React.FormEvent) => {
     e?.preventDefault();
-    if ((!content.trim() && !selectedFile) || isSubmitting || isRestricted) return;
+    if ((!content.trim() && !selectedFile) || isSubmitting || isUploading || isRestricted) return;
 
     try {
       setIsSubmitting(true);
+      let attachmentsPayload: Array<{
+        file_name: string;
+        file_type: string;
+        file_size: number;
+        storage_path: string;
+      }> = [];
+
+      if (selectedFile) {
+        setIsUploading(true);
+        const supabase = createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        const userId = user?.id || profile?.id || 'anonymous';
+        const fileExt = selectedFile.name.split('.').pop() || '';
+        const cleanExt = fileExt ? `.${fileExt}` : '';
+        const uniqueFileName = `${Date.now()}_${Math.random().toString(36).substring(2, 8)}${cleanExt}`;
+        const storagePath = `${userId}/${uniqueFileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('attachments')
+          .upload(storagePath, selectedFile.file, {
+            cacheControl: '3600',
+            upsert: false,
+          });
+
+        if (uploadError) {
+          toast.error(`Failed to upload attachment: ${uploadError.message}`);
+          setIsSubmitting(false);
+          setIsUploading(false);
+          return;
+        }
+
+        const { data: publicUrlData } = supabase.storage
+          .from('attachments')
+          .getPublicUrl(storagePath);
+
+        attachmentsPayload = [
+          {
+            file_name: selectedFile.name,
+            file_type: selectedFile.type,
+            file_size: selectedFile.size,
+            storage_path: publicUrlData?.publicUrl || storagePath,
+          },
+        ];
+        setIsUploading(false);
+      }
+
       const textToSend = content.trim() || (selectedFile ? `Shared file: ${selectedFile.name}` : '');
       const result = await sendMessage({
         subject_id: subjectId,
         content: textToSend,
-        reply_to_id: replyTo?.id
+        reply_to_id: replyTo?.id,
+        attachments: attachmentsPayload,
       });
       
       if (result.error) {
@@ -91,21 +141,7 @@ export function MessageInput({ subjectId, replyTo, onCancelReply, onMessageSent 
       }
 
       if (result.data && onMessageSent) {
-        const fullMsg: MessageWithSender = {
-          ...(result.data as MessageWithSender),
-          attachments: selectedFile ? [
-            {
-              id: `att_${Date.now()}`,
-              message_id: result.data.id,
-              file_name: selectedFile.name,
-              file_type: selectedFile.type,
-              file_size: selectedFile.size,
-              storage_path: selectedFile.url,
-              created_at: new Date().toISOString(),
-            }
-          ] : [],
-        };
-        onMessageSent(fullMsg);
+        onMessageSent(result.data as MessageWithSender);
       }
       
       setContent('');
@@ -118,6 +154,7 @@ export function MessageInput({ subjectId, replyTo, onCancelReply, onMessageSent 
       toast.error('Failed to send message');
     } finally {
       setIsSubmitting(false);
+      setIsUploading(false);
     }
   };
 
@@ -222,9 +259,13 @@ export function MessageInput({ subjectId, replyTo, onCancelReply, onMessageSent 
           type="submit" 
           size="icon" 
           className="shrink-0 rounded-xl h-11 w-11 sm:h-10 sm:w-10 bg-primary text-primary-foreground hover:bg-primary/90 active:scale-95 transition-all cursor-pointer shadow-md" 
-          disabled={(!content.trim() && !selectedFile) || isSubmitting || isRestricted}
+          disabled={(!content.trim() && !selectedFile) || isSubmitting || isUploading || isRestricted}
         >
-          <SendHorizontal className="w-5 h-5 sm:w-4 sm:h-4" />
+          {isSubmitting || isUploading ? (
+            <Loader2 className="w-5 h-5 sm:w-4 sm:h-4 animate-spin" />
+          ) : (
+            <SendHorizontal className="w-5 h-5 sm:w-4 sm:h-4" />
+          )}
         </Button>
       </form>
       

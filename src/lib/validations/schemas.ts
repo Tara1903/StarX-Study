@@ -102,13 +102,23 @@ export const enrollMemberSchema = z.object({
 // Messaging Schemas
 // ============================================
 
+export const messageAttachmentSchema = z.object({
+  file_name: z.string().min(1),
+  file_type: z.string(),
+  file_size: z.number().nonnegative(),
+  storage_path: z.string().min(1),
+});
+
 export const sendMessageSchema = z.object({
   subject_id: z.string().optional().nullable(),
   conversation_id: z.string().uuid().optional().nullable(),
-  content: z.string().min(1, "Message cannot be empty").max(4000, "Message is too long"),
+  content: z.string().max(4000, "Message is too long").default(""),
   reply_to_id: z.string().uuid().optional().nullable(),
+  attachments: z.array(messageAttachmentSchema).optional().default([]),
 }).refine((data) => Boolean(data.subject_id || data.conversation_id), {
   message: "Either subject_id or conversation_id is required",
+}).refine((data) => Boolean((data.content && data.content.trim().length > 0) || (data.attachments && data.attachments.length > 0)), {
+  message: "Message cannot be empty without an attachment",
 });
 
 export const editMessageSchema = z.object({

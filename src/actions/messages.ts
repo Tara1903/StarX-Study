@@ -16,7 +16,7 @@ export async function sendMessage(data: unknown) {
     return { success: false, error: parsed.error.issues[0]?.message || 'Invalid message data' };
   }
 
-  const { subject_id, conversation_id, content, reply_to_id } = parsed.data;
+  const { subject_id, conversation_id, content, reply_to_id, attachments } = parsed.data;
 
   let targetSubjectId: string | null = null;
   let targetConversationId: string | null = null;
@@ -225,6 +225,26 @@ export async function sendMessage(data: unknown) {
 
   if (insertError || !message) {
     return { success: false, error: insertError?.message || 'Failed to save message to database' };
+  }
+
+  // Insert attachments if provided
+  if (attachments && attachments.length > 0) {
+    const attachmentPayload = attachments.map((att) => ({
+      message_id: message.id,
+      file_name: att.file_name,
+      file_type: att.file_type,
+      file_size: att.file_size,
+      storage_path: att.storage_path,
+    }));
+
+    const { data: insertedAttachments, error: attachError } = await supabase
+      .from('message_attachments')
+      .insert(attachmentPayload)
+      .select('*');
+
+    if (!attachError && insertedAttachments) {
+      (message as any).attachments = insertedAttachments;
+    }
   }
 
   // Update conversation timestamp if conversation_id exists
